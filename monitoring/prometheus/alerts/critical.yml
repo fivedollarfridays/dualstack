@@ -1,0 +1,57 @@
+groups:
+  - name: critical_alerts
+    interval: 30s
+    rules:
+      - alert: APIHighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{status_code=~"5.."}[5m]) /
+            rate(http_requests_total[5m])
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate on {{ $labels.endpoint }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook_url: "https://github.com/companion-ai/runbooks/api-high-error-rate.md"
+
+      - alert: APIDown
+        expr: |
+          rate(http_requests_total[2m]) == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "API is not receiving requests"
+          description: "No HTTP requests received in the last 2 minutes"
+          runbook_url: "https://github.com/companion-ai/runbooks/api-down.md"
+
+      - alert: DatabasePoolExhausted
+        expr: |
+          db_connection_pool_checked_out >= db_connection_pool_size
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool exhausted"
+          description: "All {{ $value }} connections are in use, new requests will be blocked"
+          runbook_url: "https://github.com/companion-ai/runbooks/db-pool-exhausted.md"
+
+      - alert: VideoJobFailureSpike
+        expr: |
+          (
+            rate(video_jobs_failed_total[10m]) /
+            (rate(video_jobs_completed_total[10m]) + rate(video_jobs_failed_total[10m]))
+          ) > 0.10
+        for: 10m
+        labels:
+          severity: critical
+          component: video
+        annotations:
+          summary: "High video job failure rate"
+          description: "Failure rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+          runbook_url: "https://github.com/companion-ai/runbooks/video-failure-spike.md"

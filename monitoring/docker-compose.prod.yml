@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  prometheus:
+    command:
+      - '--config.file=/etc/prometheus/prometheus.prod.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'  # Longer retention for production
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+      - backend-network  # Connect to backend's network
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  backend-network:
+    external: true
+    name: companion-backend-network

@@ -1,0 +1,320 @@
+{
+  "dashboard": {
+    "title": "Video Generation",
+    "tags": ["companion-ai", "video", "generation"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Pending Jobs",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "video_jobs_pending",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Processing Jobs",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "video_jobs_processing",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 5, "color": "yellow"},
+                {"value": 20, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Completion Rate (jobs/min)",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "sum(rate(video_jobs_completed_total[5m])) * 60",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 2,
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Failure Rate (%)",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "100 * sum(rate(video_jobs_failed_total[5m])) / (sum(rate(video_jobs_completed_total[5m])) + sum(rate(video_jobs_failed_total[5m])))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "timeseries",
+        "title": "Video Requests by Type",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(video_type) (rate(video_requests_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{video_type}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "timeseries",
+        "title": "Job Queue Depth",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "video_jobs_pending",
+            "refId": "A",
+            "legendFormat": "Pending"
+          },
+          {
+            "expr": "video_jobs_processing",
+            "refId": "B",
+            "legendFormat": "Processing"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "timeseries",
+        "title": "Job Completion/Failure Rate",
+        "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(video_jobs_completed_total[5m]))",
+            "refId": "A",
+            "legendFormat": "Completed"
+          },
+          {
+            "expr": "sum(rate(video_jobs_failed_total[5m]))",
+            "refId": "B",
+            "legendFormat": "Failed"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Failed"},
+              "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]
+            }
+          ]
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "timeseries",
+        "title": "Video Generation Duration",
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(video_type) (rate(video_generation_duration_seconds_sum[5m])) / sum by(video_type) (rate(video_generation_duration_seconds_count[5m]))",
+          "refId": "A",
+          "legendFormat": "{{video_type}} avg"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 0,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean"]
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "timeseries",
+        "title": "Failures by Error Type",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(error_type) (rate(video_jobs_failed_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{error_type}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "sum"]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "timeseries",
+        "title": "Retry Attempts by Error",
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(error_type) (rate(video_retry_attempts_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{error_type}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "sum"]
+          }
+        }
+      },
+      {
+        "id": 11,
+        "type": "stat",
+        "title": "R2 Upload Errors (1h)",
+        "gridPos": {"x": 0, "y": 28, "w": 12, "h": 4},
+        "targets": [{
+          "expr": "increase(video_r2_upload_errors_total[1h])",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

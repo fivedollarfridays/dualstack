@@ -1,0 +1,91 @@
+global:
+  resolve_timeout: 5m
+
+# Root route with default receiver
+route:
+  group_by: ['alertname', 'severity', 'component']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'console'
+
+  # Sub-routes for different severity levels
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical'
+      repeat_interval: 5m
+      group_wait: 10s
+      continue: false
+
+    - match:
+        severity: warning
+      receiver: 'warnings'
+      repeat_interval: 30m
+      group_wait: 30s
+      continue: false
+
+    - match:
+        severity: info
+      receiver: 'info'
+      repeat_interval: 2h
+      group_wait: 5m
+      continue: false
+
+# Receivers for different alert types
+receivers:
+  # Default console receiver (logs to stdout)
+  - name: 'console'
+    webhook_configs:
+      - url: 'http://localhost:9999/webhook'
+        send_resolved: true
+
+  # Critical alerts - immediate notification
+  - name: 'critical'
+    webhook_configs:
+      - url: 'http://localhost:9999/webhook/critical'
+        send_resolved: true
+    # In production, add:
+    # - PagerDuty integration
+    # - Slack #alerts channel
+    # - Email to on-call team
+
+  # Warning alerts - notification with delay
+  - name: 'warnings'
+    webhook_configs:
+      - url: 'http://localhost:9999/webhook/warnings'
+        send_resolved: true
+    # In production, add:
+    # - Slack #monitoring channel
+    # - Email to team
+
+  # Info alerts - low priority notification
+  - name: 'info'
+    webhook_configs:
+      - url: 'http://localhost:9999/webhook/info'
+        send_resolved: true
+    # In production, add:
+    # - Slack #monitoring-info channel
+
+# Inhibition rules to reduce alert noise
+inhibit_rules:
+  # Don't send warnings if critical alert is firing for same alert
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'component']
+
+  # Don't send info if warning is firing for same alert
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'component']
+
+  # Don't send API warnings if API is down
+  - source_match:
+      alertname: 'APIDown'
+    target_match:
+      component: 'api'
+    equal: []

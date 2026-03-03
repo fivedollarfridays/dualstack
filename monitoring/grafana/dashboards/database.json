@@ -1,0 +1,322 @@
+{
+  "dashboard": {
+    "title": "Database",
+    "tags": ["companion-ai", "database", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "gauge",
+        "title": "Connection Pool Utilization",
+        "gridPos": {"x": 0, "y": 0, "w": 8, "h": 6},
+        "targets": [{
+          "expr": "100 * db_connection_pool_checked_out / db_connection_pool_size",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Pool Size",
+        "gridPos": {"x": 8, "y": 0, "w": 4, "h": 3},
+        "targets": [{
+          "expr": "db_connection_pool_size",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Checked Out",
+        "gridPos": {"x": 12, "y": 0, "w": 4, "h": 3},
+        "targets": [{
+          "expr": "db_connection_pool_checked_out",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 8, "color": "yellow"},
+                {"value": 15, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Overflow",
+        "gridPos": {"x": 16, "y": 0, "w": 4, "h": 3},
+        "targets": [{
+          "expr": "db_connection_pool_overflow",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "stat",
+        "title": "Query Rate (queries/sec)",
+        "gridPos": {"x": 20, "y": 0, "w": 4, "h": 3},
+        "targets": [{
+          "expr": "sum(rate(db_query_duration_seconds_count[5m]))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "qps",
+            "decimals": 2,
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "stat",
+        "title": "P95 Query Latency (ms)",
+        "gridPos": {"x": 8, "y": 3, "w": 8, "h": 3},
+        "targets": [{
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(db_query_duration_seconds_bucket[5m]))) * 1000",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 500, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "stat",
+        "title": "Slow Queries (>1s) per min",
+        "gridPos": {"x": 16, "y": 3, "w": 8, "h": 3},
+        "targets": [{
+          "expr": "sum(rate(db_query_duration_seconds_bucket{le=\"+Inf\"}[5m]) - rate(db_query_duration_seconds_bucket{le=\"1\"}[5m])) * 60",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "timeseries",
+        "title": "Connection Pool Metrics",
+        "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "db_connection_pool_size",
+            "refId": "A",
+            "legendFormat": "Pool Size"
+          },
+          {
+            "expr": "db_connection_pool_checked_out",
+            "refId": "B",
+            "legendFormat": "Checked Out"
+          },
+          {
+            "expr": "db_connection_pool_overflow",
+            "refId": "C",
+            "legendFormat": "Overflow"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "timeseries",
+        "title": "Query Rate by Operation",
+        "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(operation) (rate(db_query_duration_seconds_count[5m]))",
+          "refId": "A",
+          "legendFormat": "{{operation}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "qps",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "timeseries",
+        "title": "Query Duration by Operation (P95)",
+        "gridPos": {"x": 0, "y": 14, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "histogram_quantile(0.95, sum by(operation, le) (rate(db_query_duration_seconds_bucket[5m]))) * 1000",
+          "refId": "A",
+          "legendFormat": "{{operation}} p95"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 0,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 11,
+        "type": "timeseries",
+        "title": "Database Operations Rate",
+        "gridPos": {"x": 12, "y": 14, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(operation) (rate(db_operations_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{operation}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": "heatmap",
+        "title": "Query Duration Heatmap",
+        "gridPos": {"x": 0, "y": 22, "w": 24, "h": 8},
+        "targets": [{
+          "expr": "sum by(le) (rate(db_query_duration_seconds_bucket[5m]))",
+          "refId": "A",
+          "format": "heatmap",
+          "legendFormat": "{{le}}"
+        }],
+        "options": {
+          "calculate": true,
+          "color": {
+            "mode": "scheme",
+            "scheme": "Spectral"
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

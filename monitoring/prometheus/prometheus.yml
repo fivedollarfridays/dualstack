@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 30s           # How often to scrape targets
+  evaluation_interval: 30s       # How often to evaluate rules
+  scrape_timeout: 10s
+
+  external_labels:
+    cluster: 'companion-ai'
+    environment: 'production'
+
+# Alert rule files
+rule_files:
+  - '/etc/prometheus/alerts/*.yml'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+# Scrape configurations
+scrape_configs:
+  # Backend API metrics
+  - job_name: 'companion-api'
+    static_configs:
+      - targets: ['backend:8000']  # Docker service name
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

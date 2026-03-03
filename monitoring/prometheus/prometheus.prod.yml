@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 30s           # Standard interval for production
+  evaluation_interval: 30s
+  scrape_timeout: 10s
+
+  external_labels:
+    cluster: 'companion-ai'
+    environment: 'production'
+
+scrape_configs:
+  - job_name: 'companion-api'
+    static_configs:
+      - targets: ['backend:8000']  # Docker service name in production
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

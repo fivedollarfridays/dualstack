@@ -1,0 +1,367 @@
+{
+  "dashboard": {
+    "title": "Background Jobs",
+    "tags": ["companion-ai", "jobs", "background"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Total Job Executions (1h)",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "sum(increase(background_job_executions_total[1h]))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Success Rate (%)",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "100 * sum(rate(background_job_executions_total{status=\"success\"}[5m])) / sum(rate(background_job_executions_total[5m]))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 95, "color": "yellow"},
+                {"value": 99, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Avg Job Duration (sec)",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "sum(rate(background_job_duration_seconds_sum[5m])) / sum(rate(background_job_duration_seconds_count[5m]))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "decimals": 2,
+            "color": {"mode": "palette-classic"}
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Total Failures (1h)",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "sum(increase(background_job_failures_total[1h]))",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "timeseries",
+        "title": "Job Execution Rate by Job Name",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(job_name) (rate(background_job_executions_total{status=\"success\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{job_name}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean", "max"]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "timeseries",
+        "title": "Job Success vs Failure Rate",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(background_job_executions_total{status=\"success\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "Success"
+          },
+          {
+            "expr": "sum(rate(background_job_executions_total{status=\"failure\"}[5m]))",
+            "refId": "B",
+            "legendFormat": "Failure"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Failure"},
+              "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]
+            }
+          ]
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "timeseries",
+        "title": "Job Duration by Job Name (Avg)",
+        "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(job_name) (rate(background_job_duration_seconds_sum[5m])) / sum by(job_name) (rate(background_job_duration_seconds_count[5m]))",
+          "refId": "A",
+          "legendFormat": "{{job_name}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 0,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean"]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "timeseries",
+        "title": "Job Duration Percentiles",
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum by(le) (rate(background_job_duration_seconds_bucket[5m])))",
+            "refId": "A",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum by(le) (rate(background_job_duration_seconds_bucket[5m])))",
+            "refId": "B",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum by(le) (rate(background_job_duration_seconds_bucket[5m])))",
+            "refId": "C",
+            "legendFormat": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 0,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "timeseries",
+        "title": "Job Failures by Error Type",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "sum by(error_type) (rate(background_job_failures_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{error_type}}"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "sum"]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "table",
+        "title": "Last Successful Run by Job",
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "targets": [{
+          "expr": "background_job_last_success_timestamp",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true,
+                "__name__": true,
+                "instance": true,
+                "job": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "job_name": "Job Name",
+                "Value": "Last Success (Unix)"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Last Success (Unix)"},
+              "properties": [
+                {"id": "unit", "value": "dateTimeFromNow"}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 11,
+        "type": "timeseries",
+        "title": "Video Status Check Job Duration",
+        "gridPos": {"x": 0, "y": 28, "w": 8, "h": 6},
+        "targets": [{
+          "expr": "sum(rate(background_job_duration_seconds_sum{job_name=\"video_status_check\"}[5m])) / sum(rate(background_job_duration_seconds_count{job_name=\"video_status_check\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "avg duration"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": "timeseries",
+        "title": "Proactive Check Job Duration",
+        "gridPos": {"x": 8, "y": 28, "w": 8, "h": 6},
+        "targets": [{
+          "expr": "sum(rate(background_job_duration_seconds_sum{job_name=\"proactive_check\"}[5m])) / sum(rate(background_job_duration_seconds_count{job_name=\"proactive_check\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "avg duration"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "type": "timeseries",
+        "title": "Surprise Evaluation Job Duration",
+        "gridPos": {"x": 16, "y": 28, "w": 8, "h": 6},
+        "targets": [{
+          "expr": "sum(rate(background_job_duration_seconds_sum{job_name=\"surprise_evaluation\"}[5m])) / sum(rate(background_job_duration_seconds_count{job_name=\"surprise_evaluation\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "avg duration"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

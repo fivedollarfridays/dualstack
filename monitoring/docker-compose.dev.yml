@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  prometheus:
+    command:
+      - '--config.file=/etc/prometheus/prometheus.dev.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'  # Shorter retention for dev
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+      - host  # Access to host network for localhost:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  host:
+    external: true
+    name: host

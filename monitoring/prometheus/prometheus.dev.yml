@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s           # More frequent scraping in dev
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+  external_labels:
+    cluster: 'companion-ai'
+    environment: 'development'
+
+scrape_configs:
+  - job_name: 'companion-api'
+    static_configs:
+      - targets: ['localhost:8000']  # Local development
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

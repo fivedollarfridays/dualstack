@@ -1,0 +1,52 @@
+groups:
+  - name: info_alerts
+    interval: 120s
+    rules:
+      - alert: DatabasePoolHighUtilization
+        expr: |
+          (db_connection_pool_checked_out / db_connection_pool_size) > 0.80
+        for: 10m
+        labels:
+          severity: info
+          component: database
+        annotations:
+          summary: "Database connection pool utilization high"
+          description: "Pool utilization is {{ $value | humanizePercentage }} (threshold: 80%)"
+          runbook_url: "https://github.com/companion-ai/runbooks/db-pool-utilization.md"
+
+      - alert: VideoGenerationRateHigh
+        expr: |
+          rate(video_requests_total[5m]) > 10
+        for: 10m
+        labels:
+          severity: info
+          component: video
+        annotations:
+          summary: "High video generation rate"
+          description: "Video requests at {{ $value }} req/sec, monitor resource usage"
+          runbook_url: "https://github.com/companion-ai/runbooks/video-rate-high.md"
+
+      - alert: ExternalAPIRateHigh
+        expr: |
+          sum by(service) (rate(external_api_calls_total[5m])) > 5
+        for: 10m
+        labels:
+          severity: info
+          component: external
+        annotations:
+          summary: "High {{ $labels.service }} API call rate"
+          description: "Calling {{ $labels.service }} at {{ $value }} req/sec, monitor rate limits"
+          runbook_url: "https://github.com/companion-ai/runbooks/external-api-rate.md"
+
+      - alert: BackgroundJobSlowExecution
+        expr: |
+          sum by(job_name) (rate(background_job_duration_seconds_sum[5m])) /
+          sum by(job_name) (rate(background_job_duration_seconds_count[5m])) > 30
+        for: 15m
+        labels:
+          severity: info
+          component: jobs
+        annotations:
+          summary: "Background job {{ $labels.job_name }} running slow"
+          description: "Average execution time is {{ $value }}s, consider optimization"
+          runbook_url: "https://github.com/companion-ai/runbooks/job-slow-execution.md"
