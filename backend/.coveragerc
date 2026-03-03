@@ -1,0 +1,63 @@
+[run]
+source = app
+concurrency = thread,greenlet
+branch = true
+relative_files = true
+omit =
+    # Test files
+    tests/*
+    **/test_*.py
+
+[report]
+# Target: 99% coverage on testable code
+# Note: fail_under removed to allow coverage json to succeed
+# Threshold is enforced via pytest --cov-fail-under=99 in CI
+precision = 2
+show_missing = true
+skip_covered = false
+
+# Documented exclusions for non-testable code patterns
+exclude_lines =
+    # Standard pragma
+    pragma: no cover
+
+    # String representations (formatting, not logic)
+    def __repr__
+    def __str__
+
+    # Defensive code that should never execute
+    raise AssertionError
+    raise NotImplementedError
+
+    # Abstract methods (implementation required in subclass)
+    @abstractmethod
+
+    # Type checking blocks (only executed by type checkers, not runtime)
+    if TYPE_CHECKING:
+    if typing.TYPE_CHECKING:
+
+    # Main entry points (tested via integration/CLI tests)
+    if __name__ == .__main__.:
+
+    # Ellipsis in protocols/stubs
+    \.\.\.
+
+    # Empty pass statements in abstract definitions
+    ^\s*pass\s*$
+
+    # Platform-specific branches
+    if sys.platform
+
+    # Optional dependency handling
+    except ImportError:
+    except ModuleNotFoundError:
+
+    # Unreachable code after returns (defensive)
+    ^\s*\.\.\.
+
+[html]
+directory = htmlcov
+title = DualStack Backend Coverage Report
+
+[xml]
+output = coverage.xml
