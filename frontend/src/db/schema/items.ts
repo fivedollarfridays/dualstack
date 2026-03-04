@@ -19,3 +19,4 @@ export const items = sqliteTable('items', {
 
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
+

@@ -239,3 +239,4 @@ hooks:
   on_task_block:
   - sync_trello
   - update_state
+
