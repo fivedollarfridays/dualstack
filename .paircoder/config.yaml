@@ -36,7 +36,7 @@ trello:
     review: In Review
     done: Done
     blocked: Blocked
-    ready: Backlog
+    ready: Ready
   custom_fields:
     agent_task: Agent Task
     priority: Priority
