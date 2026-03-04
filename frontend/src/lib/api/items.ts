@@ -1,0 +1,102 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export interface ItemResponse {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  status: 'draft' | 'active' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ItemListResponse {
+  items: ItemResponse[];
+  total: number;
+}
+
+export interface CreateItemData {
+  title: string;
+  description?: string;
+  status?: 'draft' | 'active' | 'archived';
+}
+
+export interface UpdateItemData {
+  title?: string;
+  description?: string;
+  status?: 'draft' | 'active' | 'archived';
+}
+
+function authHeaders(token: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function listItems(
+  token: string,
+  page = 1,
+  limit = 20
+): Promise<ItemListResponse> {
+  const response = await fetch(
+    `${API_URL}/api/v1/items?page=${page}&limit=${limit}`,
+    { headers: authHeaders(token) }
+  );
+  return handleResponse<ItemListResponse>(response);
+}
+
+export async function createItem(
+  token: string,
+  data: CreateItemData
+): Promise<ItemResponse> {
+  const response = await fetch(`${API_URL}/api/v1/items`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<ItemResponse>(response);
+}
+
+export async function getItem(
+  token: string,
+  id: string
+): Promise<ItemResponse> {
+  const response = await fetch(`${API_URL}/api/v1/items/${id}`, {
+    headers: authHeaders(token),
+  });
+  return handleResponse<ItemResponse>(response);
+}
+
+export async function updateItem(
+  token: string,
+  id: string,
+  data: UpdateItemData
+): Promise<ItemResponse> {
+  const response = await fetch(`${API_URL}/api/v1/items/${id}`, {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<ItemResponse>(response);
+}
+
+export async function deleteItem(
+  token: string,
+  id: string
+): Promise<void> {
+  const response = await fetch(`${API_URL}/api/v1/items/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+}

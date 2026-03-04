@@ -1,0 +1,114 @@
+"""Tests for items schema validation."""
+
+from datetime import datetime
+
+import pytest
+from pydantic import ValidationError
+
+from app.items.schemas import ItemCreate, ItemResponse, ItemUpdate
+from app.items.models import ItemStatus
+
+
+class TestItemStatus:
+    """Test the ItemStatus enum values."""
+
+    def test_draft_value(self):
+        assert ItemStatus.DRAFT == "draft"
+
+    def test_active_value(self):
+        assert ItemStatus.ACTIVE == "active"
+
+    def test_archived_value(self):
+        assert ItemStatus.ARCHIVED == "archived"
+
+    def test_all_values(self):
+        values = [s.value for s in ItemStatus]
+        assert values == ["draft", "active", "archived"]
+
+
+class TestItemCreate:
+    """Test ItemCreate schema validation."""
+
+    def test_valid_minimal(self):
+        item = ItemCreate(title="My Item")
+        assert item.title == "My Item"
+        assert item.description is None
+        assert item.status == "draft"
+
+    def test_valid_full(self):
+        item = ItemCreate(
+            title="My Item",
+            description="A description",
+            status="active",
+        )
+        assert item.title == "My Item"
+        assert item.description == "A description"
+        assert item.status == "active"
+
+    def test_missing_title_raises(self):
+        with pytest.raises(ValidationError):
+            ItemCreate()
+
+    def test_empty_title_raises(self):
+        with pytest.raises(ValidationError):
+            ItemCreate(title="")
+
+    def test_title_too_long_raises(self):
+        with pytest.raises(ValidationError):
+            ItemCreate(title="x" * 256)
+
+    def test_title_max_length_ok(self):
+        item = ItemCreate(title="x" * 255)
+        assert len(item.title) == 255
+
+
+class TestItemUpdate:
+    """Test ItemUpdate schema validation (all fields optional)."""
+
+    def test_empty_update(self):
+        item = ItemUpdate()
+        assert item.title is None
+        assert item.description is None
+        assert item.status is None
+
+    def test_partial_update_title_only(self):
+        item = ItemUpdate(title="New Title")
+        assert item.title == "New Title"
+        assert item.description is None
+        assert item.status is None
+
+    def test_partial_update_status_only(self):
+        item = ItemUpdate(status="archived")
+        assert item.status == "archived"
+        assert item.title is None
+
+    def test_title_too_long_raises(self):
+        with pytest.raises(ValidationError):
+            ItemUpdate(title="x" * 256)
+
+
+class TestItemResponse:
+    """Test ItemResponse model construction."""
+
+    def test_from_dict(self):
+        now = datetime(2026, 1, 1, 12, 0, 0)
+        resp = ItemResponse(
+            id="abc-123",
+            user_id="user-1",
+            title="Test Item",
+            description="A test",
+            status="draft",
+            created_at=now,
+            updated_at=now,
+        )
+        assert resp.id == "abc-123"
+        assert resp.user_id == "user-1"
+        assert resp.title == "Test Item"
+        assert resp.description == "A test"
+        assert resp.status == "draft"
+        assert resp.created_at == now
+        assert resp.updated_at == now
+
+    def test_model_config_from_attributes(self):
+        """ItemResponse should support from_attributes for ORM model conversion."""
+        assert ItemResponse.model_config.get("from_attributes") is True
