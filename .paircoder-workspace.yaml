@@ -1,0 +1,12 @@
+name: SaaS Kits
+projects:
+  dualstack:
+    path: /home/kmasty/projects/kits/dualstack
+    consumers:
+      - edgestack
+  edgestack:
+    path: /home/kmasty/projects/kits/edgestack
+    consumers:
+      - dualstack
+    consumes:
+      - dualstack

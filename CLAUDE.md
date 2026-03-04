@@ -1,84 +1,283 @@
 # Claude Code Instructions
 
-## Project Overview
+> **bpsai-pair** — AI-augmented pair programming framework
 
-DualStack is a FastAPI + Next.js SaaS starter kit. Two-stack architecture:
-- `backend/` -- Python FastAPI API
-- `frontend/` -- Next.js TypeScript app
+---
 
-## Development Workflow
+## ⚠️ NON-NEGOTIABLE REQUIREMENTS
 
-### TDD Required
+These requirements MUST be followed. Failure to follow them is a serious workflow violation.
 
-1. Write failing tests FIRST
-2. Write minimal code to pass
-3. Refactor while keeping tests green
+### 0. Follow TDD for ALL Code Changes
 
-### Coverage Gates
+**MANDATORY for any task involving code:**
+1. **Write failing tests FIRST** - before writing any implementation code
+2. **Write minimal code to pass** - only enough to make tests green
+3. **Refactor** - clean up while keeping tests green
+4. **Repeat** - for each piece of functionality
 
-- Backend: 99% (pytest --cov-fail-under=99)
-- Frontend: 99% (jest --coverage)
-
-### Testing Commands
-
-```bash
-# Backend
-cd backend && pytest tests/ -v
-cd backend && pytest --cov=app --cov-report=term-missing tests/
-
-# Frontend
-cd frontend && npm test
-cd frontend && npm run test:coverage
+**USE THE SKILL:** When implementing code, invoke the `implementing-with-tdd` skill:
+```
+Use Skill tool with skill: "implementing-with-tdd"
 ```
 
-### Build Commands
+**DO NOT:**
+- Write implementation code before tests exist
+- Write all code then add tests after
+- Skip tests for "simple" code
 
-```bash
-# Backend
-cd backend && python -c "from app.main import app"
+### 1. Update state.md After EVERY Task Completion
 
-# Frontend
-cd frontend && npm run build
+**IMMEDIATELY after completing any task**, you MUST update `.paircoder/context/state.md`:
+- Mark the task as done in the task list
+- Add a session entry under "What Was Just Done" describing what was accomplished
+- Update "What's Next" if applicable
+
+**DO NOT:**
+- Proceed to other work before updating state.md
+- Batch multiple task completions before updating
+- Claim a task is complete without documenting it in state.md
+
+### 2. Follow Trello Completion Workflow
+
+When completing tasks with Trello cards:
+1. `bpsai-pair ttask done TRELLO-XX --summary "..."`
+   - ✓ Checks acceptance criteria
+   - ✓ Moves card to Done list
+   - ✓ Auto-updates local task file
+   - ✓ Runs completion hooks (updates state.md)
+
+**DO NOT** use `task update --status done` for Trello-linked tasks.
+The `ttask done` command handles everything automatically.
+
+**Bypasses (audited):**
+- `--no-strict`: Skip AC check (logged to bypass_log.jsonl)
+- `task update --local-only --reason "..."`: Update local only (logged)
+
+---
+
+## Before Doing Anything
+
+1. **Read** `.paircoder/capabilities.yaml` — understand what you can do
+2. **Read** `.paircoder/context/state.md` — understand current status
+3. **Check** if a skill applies to the user's request (see `.claude/skills/`)
+4. **If starting a task**: Run `bpsai-pair task update TASK-XXX --status in_progress`
+
+---
+
+## ⚠️ BEFORE ANY TRELLO OPERATIONS
+
+**MANDATORY:** Before creating plans, syncing to Trello, or updating cards:
+
+1. **Configure your board** — Run `bpsai-pair trello use-board <board-id>` to set your active board
+2. **Set project defaults** — Configure your project name, stack, and repo URL in `.paircoder/config.yaml`
+3. **Use valid values** — Only use dropdown values that exist on your Trello board
+
+**NEVER:**
+- Create new custom field dropdown values without checking the board first
+- Use `maintenance` as plan type (use `chore`)
+
+---
+
+
+## Task Naming Convention
+
+| Sprint Tasks | Format | Example |
+|--------------|--------|---------|
+| Current sprint | `T{sprint}.{seq}` | T18.1, T18.2, T19.1 |
+| Legacy | `TASK-{num}` | TASK-150 |
+| Release | `REL-{sprint}-{seq}` | REL-18-01 |
+
+**Use the format specified in the backlog document.** If backlog says `T18.1`, create task with id `T18.1`, not `TASK-###`.
+
+---
+
+## Valid Plan Types
+
+```
+feature  - New functionality
+bugfix   - Bug fixes  
+refactor - Code improvements
+chore    - Maintenance, cleanup, docs, releases
 ```
 
-## Architecture
+**`maintenance` is NOT valid.** Use `chore` instead.
 
-### Backend Patterns
-
-- **Config**: Pydantic Settings with @lru_cache singleton
-- **Database**: SQLAlchemy 2.0 async with Turso/SQLite
-- **Routes**: FastAPI APIRouter, grouped by feature
-- **Services**: Pure functions, not classes
-- **Auth**: Clerk JWT (prod) / X-User-ID header (dev) via `get_current_user_id` dependency
-- **Errors**: Custom exception hierarchy (AppError base)
-
-### Frontend Patterns
-
-- **Auth**: Clerk (@clerk/nextjs)
-- **Data**: React Query for server state
-- **State**: Zustand for client state
-- **DB**: Drizzle ORM + Turso
-- **UI**: shadcn/ui + Tailwind CSS
-- **API**: Feature-organized typed clients in src/lib/api/
+---
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| backend/app/main.py | FastAPI app entry |
-| backend/app/core/config.py | Configuration |
-| backend/app/core/database.py | DB connection |
-| backend/app/items/ | Example CRUD entity |
-| frontend/src/app/layout.tsx | Root layout |
-| frontend/src/components/providers.tsx | Provider stack |
-| frontend/src/db/schema/ | Drizzle schemas |
-| frontend/src/lib/api/ | API clients |
+| `.paircoder/capabilities.yaml` | Your capabilities and when to use them |
+| `.paircoder/context/project.md` | Project overview and constraints |
+| `.paircoder/context/state.md` | Current plan, tasks, and status |
+| `.paircoder/context/workflow.md` | How we work here |
+| `.paircoder/config.yaml` | Project configuration |
 
-## Coding Standards
+## Your Roles
 
-- Python: type hints on all public functions
-- TypeScript: strict mode enabled
-- Files under 300 lines (warning at 200)
-- Functions under 40 lines
-- Max 12 functions per file
-- TDD workflow: tests first, always
+You can operate in different roles depending on the work:
+
+### Navigator (Planning & Design)
+- Clarify goals, ask questions
+- Propose approaches with tradeoffs
+- Create/update plans and tasks
+- Strategic thinking
+
+### Driver (Implementation)
+- Write and update code
+- Run tests
+- Follow task specifications
+- Tactical execution
+
+### Reviewer (Quality)
+- Review code changes
+- Check for issues
+- Ensure gates pass
+- Suggest improvements
+
+## Skills
+
+Skills in `.claude/skills/` are auto-discovered by Claude Code:
+
+| Skill | Purpose |
+|-------|---------|
+| `designing-and-implementing` | Feature development workflow |
+| `implementing-with-tdd` | Test-driven development |
+| `reviewing-code` | Code review workflow |
+| `finishing-branches` | Branch completion |
+| `managing-task-lifecycle` | Task workflow with Trello |
+| `planning-with-trello` | Planning with Trello integration |
+| `creating-skills` | Skill creation guide |
+| `releasing-versions` | Version release workflow |
+
+## Skill Triggers
+
+When you see these patterns, use the corresponding skill:
+
+| User Says | Suggested Skill |
+|-----------|-----------------|
+| "build a...", "create a...", "add a..." | `designing-and-implementing` |
+| "fix", "bug", "broken", "error" | `implementing-with-tdd` |
+| "review", "check", "look at" | `reviewing-code` |
+| "done", "finished", "ready to merge" | `finishing-branches` |
+| "start task", "work on TRELLO-" | `managing-task-lifecycle` |
+
+## After Completing Work
+
+**⚠️ This is a NON-NEGOTIABLE requirement. See top of this document.**
+
+1. **Trello** (if card exists): `bpsai-pair ttask done TRELLO-XX --summary "..."`
+   - This automatically updates local task file and runs completion hooks
+2. **Non-Trello tasks only**: `bpsai-pair task update <id> --status done`
+3. **IMMEDIATELY update** `.paircoder/context/state.md`:
+   - Mark task as done in task list (✓)
+   - Add session entry under "What Was Just Done"
+   - Update "What's Next"
+
+**You are NOT done until state.md is updated.**
+
+## Project-Specific Notes
+
+## Slash Commands
+
+Quick commands available via `/command` in Claude Code:
+
+| Command | Purpose |
+|---------|---------|
+| `/pc-plan` | Enter Navigator role, create plan with budget validation |
+| `/start-task <ID>` | Enter Driver role, work on task with verification gates |
+| `/prep-release <ver>` | Enter Release Engineer role, prepare release |
+
+**Usage**: Type `/pc-plan backlog-sprint-28.md` in the chat to run the planning workflow.
+
+**Note**: For project status, use `bpsai-pair status` CLI command (no slash command).
+
+## CLI Reference
+
+```bash
+# Status
+bpsai-pair status
+
+# Plans
+bpsai-pair plan list
+bpsai-pair plan show <id>
+
+# Tasks
+bpsai-pair task list --plan <id>
+# For non-Trello tasks:
+bpsai-pair task update <id> --status done
+# For Trello-linked tasks - use ttask done instead (handles local update)
+# Emergency local-only update (audited):
+bpsai-pair task update <id> --status done --local-only --reason "..."
+
+# Skills
+bpsai-pair skill list
+bpsai-pair skill validate
+bpsai-pair skill export --all --format cursor
+
+# Trello Tasks
+bpsai-pair ttask start TRELLO-XX           # Budget check runs automatically
+bpsai-pair ttask start TRELLO-XX --budget-override  # Override budget (audited)
+bpsai-pair ttask done TRELLO-XX --summary "..."     # Complete with AC check
+bpsai-pair ttask done TRELLO-XX --no-strict         # Skip AC check (audited)
+
+# Budget
+bpsai-pair budget status
+bpsai-pair budget check --task <id>
+
+# Context
+bpsai-pair context-sync --last "..." --next "..."
+bpsai-pair pack
+```
+
+---
+
+## Contained Autonomy Mode
+
+You may be running in **Contained Autonomy Mode**. This mode restricts your ability to modify certain files while allowing full autonomous operation in the working area.
+
+### Understanding Your Access Restrictions
+
+In containment mode, files are organized into three tiers:
+
+| Tier | Access | You Can |
+|------|--------|---------|
+| **Blocked** | No read/write | Not access at all |
+| **Read-only** | Read only | Read to understand context |
+| **Read-write** | Full access | Modify freely |
+
+### Protected Paths (Read-only)
+
+You **cannot modify** these paths in containment mode:
+- `.claude/agents/`, `.claude/commands/`, `.claude/skills/`
+- `CLAUDE.md`, `AGENTS.md`
+
+### Blocked Paths (No Access)
+
+You **cannot read or write** these in containment mode:
+- `.env`, `.env.local`, `.env.production`
+- `credentials.json`, `secrets.yaml`
+
+### What You CAN Do
+
+In containment mode, you have full access to:
+- Source code in `src/`, `lib/`, etc.
+- Tests in `tests/`
+- Documentation (except protected files)
+- Task files in `.paircoder/tasks/`
+- State file `.paircoder/context/state.md`
+
+### If You Encounter Restrictions
+
+1. **For legitimate needs**: Ask the user to exit containment mode
+2. **For protected file changes**: The user can make changes manually
+3. **Don't attempt workarounds**: Violations are logged for audit
+
+### Checking Your Mode
+
+If unsure whether you're in containment mode, the user can run:
+```bash
+bpsai-pair containment status
+```

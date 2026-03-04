@@ -1,10 +1,9 @@
-# .claude/agents/security-auditor.md
-
 ---
 name: security-auditor
 description: Security and compliance specialist. Use proactively for security reviews, vulnerability scanning, SOC2 compliance checks, and code audits. Operates in read-only mode - identifies issues but does not fix them.
 tools: Read, Grep, Glob, Bash
 model: sonnet
+permissionMode: plan
 ---
 
 # Security Auditor Agent

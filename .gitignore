@@ -43,6 +43,11 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.clerk/
+
 # Monitoring (secrets)
 monitoring/grafana/data/
 monitoring/prometheus/data/
