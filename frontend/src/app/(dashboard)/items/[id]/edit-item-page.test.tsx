@@ -163,4 +163,84 @@ describe('EditItemPage', () => {
     await user.click(screen.getByRole('button', { name: /back/i }));
     expect(mockPush).toHaveBeenCalledWith('/items');
   });
+
+  it('calls deleteItem.mutate and navigates when delete is confirmed', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(mockDeleteMutate).toHaveBeenCalledWith('item-1');
+    expect(mockPush).toHaveBeenCalledWith('/items');
+  });
+
+  it('does not delete when confirm is cancelled', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(window, 'confirm').mockReturnValue(false);
+
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
+  });
+
+  it('passes queryFn that calls getItem with token and id', async () => {
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    mockGetItem.mockResolvedValueOnce(mockItem);
+
+    render(<EditItemPage />);
+
+    // Extract and invoke the queryFn to cover lines 22-23
+    const queryConfig = mockUseQuery.mock.calls[0][0] as { queryFn: () => Promise<unknown> };
+    const result = await queryConfig.queryFn();
+
+    expect(mockGetItem).toHaveBeenCalledWith('mock-token', 'item-1');
+    expect(result).toEqual(mockItem);
+  });
+
+  it('renders error state when item is null (no data)', () => {
+    mockUseQuery.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    expect(screen.getByText(/error/i)).toBeInTheDocument();
+  });
+
+  it('renders form with empty description when item description is null', () => {
+    const itemWithNullDesc = {
+      ...mockItem,
+      description: null,
+    };
+    mockUseQuery.mockReturnValue({
+      data: itemWithNullDesc,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    expect(screen.getByLabelText(/description/i)).toHaveValue('');
+  });
 });

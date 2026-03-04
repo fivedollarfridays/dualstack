@@ -111,7 +111,7 @@ def get_database_url() -> str:
         if url.startswith("libsql://"):
             # Convert to HTTP endpoint for turso-client
             # For now, use local SQLite for development
-            return "sqlite+aiosqlite:///./companion_ai.db"
+            return "sqlite+aiosqlite:///./dualstack.db"
         return url
 
     # Default to in-memory SQLite for testing

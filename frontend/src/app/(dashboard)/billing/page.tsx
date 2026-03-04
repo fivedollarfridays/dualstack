@@ -38,7 +38,7 @@ export default function BillingPage() {
           price="$0/mo"
           features={FREE_FEATURES}
           isCurrent={true}
-          onSubscribe={() => {}}
+          onSubscribe={handleSubscribe}
         />
         <PlanCard
           name="Pro"

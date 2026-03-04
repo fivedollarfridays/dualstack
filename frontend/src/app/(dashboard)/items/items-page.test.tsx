@@ -120,4 +120,64 @@ describe('ItemsPage', () => {
     await user.click(screen.getByRole('button', { name: /edit/i }));
     expect(mockPush).toHaveBeenCalledWith('/items/item-1');
   });
+
+  it('calls deleteItem.mutate when delete is confirmed', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    mockUseItems.mockReturnValue({
+      data: {
+        items: [
+          {
+            id: 'item-1',
+            user_id: 'user-1',
+            title: 'My Item',
+            description: null,
+            status: 'draft',
+            created_at: '2026-01-01',
+            updated_at: '2026-01-01',
+          },
+        ],
+        total: 1,
+      },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useItems>);
+
+    render(<ItemsPage />);
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(mockDeleteMutate).toHaveBeenCalledWith('item-1');
+  });
+
+  it('does not delete when confirm is cancelled', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(window, 'confirm').mockReturnValue(false);
+
+    mockUseItems.mockReturnValue({
+      data: {
+        items: [
+          {
+            id: 'item-1',
+            user_id: 'user-1',
+            title: 'My Item',
+            description: null,
+            status: 'draft',
+            created_at: '2026-01-01',
+            updated_at: '2026-01-01',
+          },
+        ],
+        total: 1,
+      },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useItems>);
+
+    render(<ItemsPage />);
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
+  });
 });

@@ -87,4 +87,17 @@ describe('ItemForm', () => {
     render(<ItemForm onSubmit={jest.fn()} isLoading={true} />);
     expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
   });
+
+  it('does not submit when title is only whitespace', async () => {
+    const user = userEvent.setup();
+    const onSubmit = jest.fn();
+    render(<ItemForm onSubmit={onSubmit} />);
+
+    // Type spaces into title (passes HTML required but fails trim check)
+    const titleInput = screen.getByLabelText(/title/i);
+    await user.type(titleInput, '   ');
+    await user.click(screen.getByRole('button', { name: /create/i }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });
