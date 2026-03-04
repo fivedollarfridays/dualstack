@@ -1,0 +1,17 @@
+project:
+  name: dualstack
+  primary_goal: "DualStack is a production-ready FastAPI + Next.js SaaS starter kit"
+  coverage_target: 99
+
+workflow:
+  main_branch: main
+  context_dir: .paircoder/context
+
+models:
+  navigator: claude-opus-4-6
+  driver: claude-opus-4-6
+
+architecture:
+  max_file_lines: 300
+  max_function_lines: 40
+  max_functions_per_file: 12

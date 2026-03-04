@@ -65,8 +65,10 @@ except ImportError:
 
 try:
     from app.billing.routes import router as billing_router
+    from app.billing.routes import webhook_router
 
     app.include_router(billing_router, prefix="/api/v1")
+    app.include_router(webhook_router)
 except ImportError:
     pass
 
