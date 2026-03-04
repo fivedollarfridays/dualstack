@@ -6,7 +6,3 @@ projects:
       - edgestack
   edgestack:
     path: /home/kmasty/projects/kits/edgestack
-    consumers:
-      - dualstack
-    consumes:
-      - dualstack
