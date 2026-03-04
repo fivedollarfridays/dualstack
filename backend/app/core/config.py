@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     # Auth
     clerk_secret_key: str = ""
+    clerk_jwks_url: str = ""
 
     # Payments
     stripe_secret_key: str = ""
@@ -21,6 +22,9 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     log_format: str = "json"
+
+    # Metrics
+    metrics_api_key: str = ""
 
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"

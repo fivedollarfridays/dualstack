@@ -96,11 +96,17 @@ def enable_query_metrics_for_testing():
 
 
 def get_database_url() -> str:
-    """
-    Get the database URL for SQLAlchemy.
+    """Get the database URL for SQLAlchemy.
 
-    For Turso, we use libsql:// protocol in production.
-    For testing, we use sqlite+aiosqlite:// with in-memory or file DB.
+    Currently falls back to local SQLite for libsql:// URLs because
+    SQLAlchemy does not natively support the libsql:// protocol.
+    Production Turso support requires an async-compatible driver such
+    as ``libsql-client`` or a dedicated SQLAlchemy dialect (e.g.
+    ``sqlalchemy-libsql``). This is a known limitation of the starter
+    kit -- Turso URLs are detected but served by a local SQLite file
+    (``dualstack.db``) until a compatible driver is integrated.
+
+    For testing, an in-memory SQLite database is used by default.
     """
     settings = get_settings()
 

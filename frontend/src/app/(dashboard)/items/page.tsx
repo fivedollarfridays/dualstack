@@ -14,9 +14,13 @@ export default function ItemsPage() {
     router.push(`/items/${id}`);
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      deleteItem.mutate(id);
+      try {
+        await deleteItem.mutateAsync(id);
+      } catch {
+        // React Query tracks error via deleteItem.error
+      }
     }
   }
 
@@ -26,6 +30,12 @@ export default function ItemsPage() {
         <h1 className="text-2xl font-bold text-white">Items</h1>
         <Button onClick={() => router.push('/items/new')}>New Item</Button>
       </div>
+
+      {deleteItem.error && (
+        <div className="mt-4 rounded-lg border border-red-500/50 bg-red-900/20 p-4">
+          <p className="text-red-400">Delete failed. Please try again.</p>
+        </div>
+      )}
 
       <div className="mt-6">
         {error ? (

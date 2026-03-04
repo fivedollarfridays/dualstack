@@ -3,7 +3,6 @@
 import logging
 import logging.config
 import structlog
-from typing import Any
 
 from app.core.config import get_settings
 
@@ -57,6 +56,6 @@ def configure_logging() -> None:
     )
 
 
-def get_logger(name: str) -> Any:
+def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     """Get a structured logger instance."""
     return structlog.get_logger(name)

@@ -9,6 +9,8 @@ from app.core.errors import NotFoundError
 from app.items.models import Item
 from app.items.schemas import ItemCreate, ItemUpdate
 
+UPDATABLE_FIELDS: frozenset[str] = frozenset({"title", "description", "status"})
+
 
 async def create_item(db: AsyncSession, user_id: str, data: ItemCreate) -> Item:
     """Create a new item for the given user.
@@ -102,7 +104,8 @@ async def update_item(
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(item, field, value)
+        if field in UPDATABLE_FIELDS:
+            setattr(item, field, value)
 
     await db.commit()
     await db.refresh(item)

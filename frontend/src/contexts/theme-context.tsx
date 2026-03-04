@@ -13,7 +13,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'chat-theme';
+const STORAGE_KEY = 'dualstack-theme';
 
 function getSystemTheme(): EffectiveTheme {
   /* istanbul ignore next -- SSR guard */

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_URL, authHeaders, handleResponse } from './shared';
 
 export interface ItemResponse {
   id: string;
@@ -25,20 +25,6 @@ export interface UpdateItemData {
   title?: string;
   description?: string;
   status?: 'draft' | 'active' | 'archived';
-}
-
-function authHeaders(token: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-}
-
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
-  }
-  return response.json();
 }
 
 export async function listItems(
@@ -96,7 +82,5 @@ export async function deleteItem(
     method: 'DELETE',
     headers: authHeaders(token),
   });
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
-  }
+  await handleResponse(response);
 }

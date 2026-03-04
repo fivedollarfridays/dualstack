@@ -195,7 +195,7 @@ describe('updateItem', () => {
 
 describe('deleteItem', () => {
   it('calls DELETE /api/v1/items/:id with auth', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true });
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });
 
     await deleteItem(TEST_TOKEN, 'item-1');
 

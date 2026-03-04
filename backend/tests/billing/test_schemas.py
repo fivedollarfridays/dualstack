@@ -1,10 +1,17 @@
 """Tests for billing schemas."""
 
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.billing.schemas import CheckoutRequest, PortalRequest, WebhookPayload
+from tests.helpers import mock_settings_with_cors
 
 
 class TestCheckoutRequest:
-    def test_valid_with_all_fields(self):
+    @patch("app.core.url_validation.get_settings")
+    def test_valid_with_all_fields(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
         req = CheckoutRequest(
             price_id="price_abc123",
             success_url="https://example.com/success",
@@ -14,30 +21,96 @@ class TestCheckoutRequest:
         assert req.success_url == "https://example.com/success"
         assert req.cancel_url == "https://example.com/cancel"
 
-    def test_defaults_for_urls(self):
-        req = CheckoutRequest(price_id="price_abc123")
-        assert req.success_url == "http://localhost:3000/dashboard?checkout=success"
-        assert req.cancel_url == "http://localhost:3000/dashboard?checkout=cancel"
-
-    def test_price_id_required(self):
-        import pytest
-
+    def test_price_id_required(self) -> None:
         with pytest.raises(Exception):
             CheckoutRequest()  # type: ignore[call-arg]
 
+    def test_success_url_required(self) -> None:
+        with pytest.raises(Exception):
+            CheckoutRequest(price_id="price_abc123", cancel_url="https://x.com")  # type: ignore[call-arg]
+
+    @patch("app.core.url_validation.get_settings")
+    def test_rejects_foreign_success_url(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://myapp.com")
+        with pytest.raises(ValueError, match="URL origin is not allowed"):
+            CheckoutRequest(
+                price_id="price_abc",
+                success_url="https://evil.com/phish",
+                cancel_url="https://myapp.com/cancel",
+            )
+
+    @patch("app.core.url_validation.get_settings")
+    def test_rejects_foreign_cancel_url(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://myapp.com")
+        with pytest.raises(ValueError, match="URL origin is not allowed"):
+            CheckoutRequest(
+                price_id="price_abc",
+                success_url="https://myapp.com/success",
+                cancel_url="https://evil.com/cancel",
+            )
+
+    @patch("app.core.url_validation.get_settings")
+    def test_rejects_invalid_price_id(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
+        with pytest.raises(ValueError, match="Invalid Stripe price ID format"):
+            CheckoutRequest(
+                price_id="invalid_id",
+                success_url="https://example.com/success",
+                cancel_url="https://example.com/cancel",
+            )
+
+    @patch("app.core.url_validation.get_settings")
+    def test_rejects_price_id_with_special_chars(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
+        with pytest.raises(ValueError, match="Invalid Stripe price ID format"):
+            CheckoutRequest(
+                price_id="price_abc-123",
+                success_url="https://example.com/success",
+                cancel_url="https://example.com/cancel",
+            )
+
+    @patch("app.core.url_validation.get_settings")
+    def test_rejects_empty_price_id_suffix(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
+        with pytest.raises(ValueError, match="Invalid Stripe price ID format"):
+            CheckoutRequest(
+                price_id="price_",
+                success_url="https://example.com/success",
+                cancel_url="https://example.com/cancel",
+            )
+
 
 class TestPortalRequest:
-    def test_valid_with_return_url(self):
-        req = PortalRequest(return_url="https://example.com/dashboard")
+    @patch("app.core.url_validation.get_settings")
+    def test_valid_with_return_url_and_customer_id(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
+        req = PortalRequest(
+            return_url="https://example.com/dashboard",
+            customer_id="cus_abc123",
+        )
         assert req.return_url == "https://example.com/dashboard"
+        assert req.customer_id == "cus_abc123"
 
-    def test_default_return_url(self):
-        req = PortalRequest()
-        assert req.return_url == "http://localhost:3000/dashboard"
+    def test_return_url_required(self) -> None:
+        with pytest.raises(Exception):
+            PortalRequest(customer_id="cus_abc123")  # type: ignore[call-arg]
+
+    def test_customer_id_required(self) -> None:
+        with pytest.raises(Exception):
+            PortalRequest(return_url="https://example.com/dashboard")  # type: ignore[call-arg]
+
+    @patch("app.core.url_validation.get_settings")
+    def test_rejects_foreign_return_url(self, mock_gs: MagicMock) -> None:
+        mock_gs.return_value = mock_settings_with_cors("https://myapp.com")
+        with pytest.raises(ValueError, match="URL origin is not allowed"):
+            PortalRequest(
+                return_url="https://evil.com/dashboard",
+                customer_id="cus_abc123",
+            )
 
 
 class TestWebhookPayload:
-    def test_construction(self):
+    def test_construction(self) -> None:
         payload = WebhookPayload(
             type="checkout.session.completed",
             data={"object": {"id": "cs_123", "metadata": {"user_id": "user_1"}}},
@@ -45,7 +118,7 @@ class TestWebhookPayload:
         assert payload.type == "checkout.session.completed"
         assert payload.data["object"]["id"] == "cs_123"
 
-    def test_minimal_data(self):
+    def test_minimal_data(self) -> None:
         payload = WebhookPayload(type="some.event", data={})
         assert payload.type == "some.event"
         assert payload.data == {}

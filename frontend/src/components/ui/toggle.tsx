@@ -46,7 +46,7 @@ export function Toggle({
           relative inline-flex h-6 w-11 items-center rounded-full
           transition-colors duration-200 ease-in-out
           ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-          ${checked ? 'bg-blue-600' : 'bg-gray-300'}
+          ${checked ? 'bg-blue-600' : 'bg-gray-600'}
         `}
       >
         <span
@@ -60,7 +60,7 @@ export function Toggle({
       {label && (
         <label
           className={`
-            text-sm font-medium text-gray-900
+            text-sm font-medium text-gray-200
             ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
           `}
           onClick={handleClick}

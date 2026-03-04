@@ -61,6 +61,17 @@ class TestItemCreate:
         item = ItemCreate(title="x" * 255)
         assert len(item.title) == 255
 
+    def test_rejects_invalid_status(self):
+        """ItemCreate should reject status values outside the allowed literal."""
+        with pytest.raises(ValidationError):
+            ItemCreate(title="X", status="invalid")
+
+    def test_accepts_valid_statuses(self):
+        """ItemCreate should accept all three valid status values."""
+        for status in ("draft", "active", "archived"):
+            item = ItemCreate(title="X", status=status)
+            assert item.status == status
+
 
 class TestItemUpdate:
     """Test ItemUpdate schema validation (all fields optional)."""
@@ -85,6 +96,11 @@ class TestItemUpdate:
     def test_title_too_long_raises(self):
         with pytest.raises(ValidationError):
             ItemUpdate(title="x" * 256)
+
+    def test_rejects_invalid_status(self):
+        """ItemUpdate should reject status values outside the allowed literal."""
+        with pytest.raises(ValidationError):
+            ItemUpdate(status="bogus")
 
 
 class TestItemResponse:

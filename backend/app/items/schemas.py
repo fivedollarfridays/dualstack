@@ -1,8 +1,11 @@
 """Pydantic schemas for the items module."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+ItemStatusType = Literal["draft", "active", "archived"]
 
 
 class ItemCreate(BaseModel):
@@ -10,7 +13,7 @@ class ItemCreate(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
-    status: str = "draft"
+    status: ItemStatusType = "draft"
 
 
 class ItemUpdate(BaseModel):
@@ -18,7 +21,7 @@ class ItemUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
-    status: str | None = None
+    status: ItemStatusType | None = None
 
 
 class ItemResponse(BaseModel):
@@ -30,7 +33,7 @@ class ItemResponse(BaseModel):
     user_id: str
     title: str
     description: str | None = None
-    status: str
+    status: ItemStatusType
     created_at: datetime
     updated_at: datetime
 

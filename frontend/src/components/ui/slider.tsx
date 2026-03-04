@@ -34,12 +34,6 @@ export function Slider({
     }
   };
 
-  const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!disabled) {
-      onChange(parseFloat(e.target.value));
-    }
-  };
-
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (disabled) return;
 
@@ -89,7 +83,7 @@ export function Slider({
           disabled={disabled}
           aria-label={ariaLabel || label}
           onChange={handleChange}
-          onInput={handleInput}
+          onInput={handleChange}
           onKeyDown={handleKeyDown}
           className={cn(
             'w-full h-2 rounded-lg appearance-none cursor-pointer',

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_URL, authHeaders, handleResponse } from './shared';
 
 export async function createCheckout(
   token: string,
@@ -6,29 +6,12 @@ export async function createCheckout(
 ): Promise<string> {
   const res = await fetch(`${API_URL}/api/v1/billing/checkout`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    headers: authHeaders(token),
     body: JSON.stringify({ price_id: priceId }),
   });
-  if (!res.ok) throw new Error('Failed to create checkout');
-  const data = await res.json();
+  const data = await handleResponse<{ url: string }>(res);
   return data.url;
 }
 
-export async function openPortal(token: string): Promise<string> {
-  const res = await fetch(`${API_URL}/api/v1/billing/portal`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      return_url: window.location.origin + '/dashboard',
-    }),
-  });
-  if (!res.ok) throw new Error('Failed to open portal');
-  const data = await res.json();
-  return data.url;
-}
+// TODO: Add openPortal() function once you have a user->customer mapping.
+// See backend/app/billing/service.py for the portal endpoint.

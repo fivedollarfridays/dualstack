@@ -49,7 +49,7 @@ cd frontend && npm run build
 - **Database**: SQLAlchemy 2.0 async with Turso/SQLite
 - **Routes**: FastAPI APIRouter, grouped by feature
 - **Services**: Pure functions, not classes
-- **Auth**: X-User-ID header (Clerk JWT validated upstream)
+- **Auth**: Clerk JWT (prod) / X-User-ID header (dev) via `get_current_user_id` dependency
 - **Errors**: Custom exception hierarchy (AppError base)
 
 ### Frontend Patterns

@@ -1,25 +1,22 @@
 # Current State
 
 Project: DualStack
-Status: v1.0.0 -- Kit ready
+Status: v1.0.0 -- Launch prep in progress
 
 ## Active Plans
 
-None -- Initial extraction complete.
+- **plan-2026-03-launch-prep** — Chore: Launch Prep (Alembic, billing, render.yaml, CLAUDE.md)
+  - T3.1 (P0): Generate initial alembic migration for Item model
+  - T3.2 (P0): Simplify billing portal to documented placeholder
+  - T3.3 (P1): Add render.yaml for backend deployment
+  - T3.4 (P1): Update CLAUDE.md auth description to reflect JWT dual-mode
 
 ## What Was Just Done
 
-- **Sprint 62 complete**: DualStack starter kit extracted from companion-ai
-  - Backend: FastAPI core infrastructure (config, database, errors, logging, middleware, metrics, health)
-  - Backend: Generic items CRUD module (models, schemas, service, routes)
-  - Backend: Minimal Stripe billing integration
-  - Frontend: Next.js shell (Clerk auth, Drizzle DB, shadcn/ui, dashboard layout)
-  - Frontend: Items CRUD (API client, hooks, components, pages)
-  - Frontend: Billing page (plan cards, checkout, portal)
-  - Monitoring: Prometheus + Grafana + Alertmanager
-  - All tests passing, coverage gates met
-- **T62.7 docs/config**: README.md, CLAUDE.md, .paircoder/ config created
+- **Review Round 2 complete** — All T2.x tasks done
+  - Backend: 218 tests, 100% coverage. Frontend: 245 tests, 100% coverage.
+  - Portal IDOR fix, clerk_jwks_url guard, URL hardening, metrics timing-safe comparison, frontend error handling, test coverage improvements
 
 ## What's Next
 
-Ready for customization or MontgoWork hackathon scaffold.
+Execute T3.1-T3.4 launch prep tasks. All independent — can be parallelized.

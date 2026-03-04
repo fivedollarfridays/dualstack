@@ -5,6 +5,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.core.auth import get_current_user_id
 from app.core.database import Base, get_db
 from app.main import app
 
@@ -25,6 +26,11 @@ async def test_app():
             yield session
 
     app.dependency_overrides[get_db] = override_get_db
+
+    async def override_auth() -> str:
+        return "user-1"
+
+    app.dependency_overrides[get_current_user_id] = override_auth
 
     yield app
 
@@ -78,15 +84,6 @@ class TestCreateItem:
         )
 
         assert response.status_code == 422
-
-    async def test_missing_user_id_header(self, client):
-        response = await client.post(
-            "/api/v1/items",
-            json={"title": "No User"},
-        )
-
-        assert response.status_code == 422
-
 
 class TestListItems:
     """Test GET /api/v1/items."""

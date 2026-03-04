@@ -8,7 +8,7 @@ export default function DashboardPage() {
         {/* Items card */}
         <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
           <h3 className="text-sm font-medium text-gray-400">Items</h3>
-          <p className="mt-2 text-3xl font-bold text-white">0</p>
+          <p className="mt-2 text-3xl font-bold text-white">--</p>
           <p className="mt-1 text-sm text-gray-500">Total items created</p>
         </div>
 
@@ -22,7 +22,7 @@ export default function DashboardPage() {
         {/* Credits card */}
         <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
           <h3 className="text-sm font-medium text-gray-400">Credits</h3>
-          <p className="mt-2 text-3xl font-bold text-white">0</p>
+          <p className="mt-2 text-3xl font-bold text-white">--</p>
           <p className="mt-1 text-sm text-gray-500">Available credits</p>
         </div>
       </div>

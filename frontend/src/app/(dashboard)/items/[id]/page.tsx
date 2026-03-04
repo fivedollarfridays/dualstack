@@ -20,7 +20,8 @@ export default function EditItemPage() {
     queryKey: ['items', id],
     queryFn: async () => {
       const token = await getToken();
-      return getItem(token!, id);
+      if (!token) throw new Error('Authentication required');
+      return getItem(token, id);
     },
   });
 
@@ -29,14 +30,22 @@ export default function EditItemPage() {
     description: string;
     status: 'draft' | 'active' | 'archived';
   }) {
-    await updateItem.mutateAsync({ id, data });
-    router.push('/items');
+    try {
+      await updateItem.mutateAsync({ id, data });
+      router.push('/items');
+    } catch {
+      // React Query tracks error via updateItem.error
+    }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      deleteItemMutation.mutate(id);
-      router.push('/items');
+      try {
+        await deleteItemMutation.mutateAsync(id);
+        router.push('/items');
+      } catch {
+        // React Query tracks error via deleteItemMutation.error
+      }
     }
   }
 
@@ -85,6 +94,12 @@ export default function EditItemPage() {
           isLoading={updateItem.isPending}
         />
       </div>
+
+      {(updateItem.error || deleteItemMutation.error) && (
+        <div className="mt-4 rounded-lg border border-red-500/50 bg-red-900/20 p-4">
+          <p className="text-red-400">Operation failed. Please try again.</p>
+        </div>
+      )}
     </div>
   );
 }

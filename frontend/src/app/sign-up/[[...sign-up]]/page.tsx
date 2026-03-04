@@ -1,6 +1,7 @@
 'use client';
 
 import { SignUp } from '@clerk/nextjs';
+import { clerkAppearance } from '@/lib/clerk-config';
 
 export default function SignUpPage() {
   return (
@@ -12,23 +13,11 @@ export default function SignUpPage() {
         </div>
 
         <SignUp
-          appearance={{
-            elements: {
-              rootBox: 'mx-auto',
-              card: 'bg-gray-800 border border-gray-700',
-              headerTitle: 'text-white',
-              headerSubtitle: 'text-gray-400',
-              socialButtonsBlockButton: 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600',
-              formFieldLabel: 'text-gray-300',
-              formFieldInput: 'bg-gray-700 border-gray-600 text-white',
-              footerActionLink: 'text-blue-400 hover:text-blue-300',
-              formButtonPrimary: 'bg-blue-600 hover:bg-blue-500',
-            },
-          }}
+          appearance={clerkAppearance}
           path="/sign-up"
           routing="path"
           signInUrl="/sign-in"
-          afterSignUpUrl="/dashboard"
+          forceRedirectUrl="/dashboard"
         />
       </div>
     </div>

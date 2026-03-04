@@ -124,3 +124,50 @@ describe('useDeleteItem', () => {
     expect(mockApi.deleteItem).toHaveBeenCalledWith('mock-token', 'item-1');
   });
 });
+
+describe('null token handling', () => {
+  beforeEach(() => {
+    mockGetToken.mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    mockGetToken.mockResolvedValue('mock-token');
+  });
+
+  it('useItems throws when token is null', async () => {
+    const { result } = renderHook(() => useItems(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toEqual(new Error('Authentication required'));
+  });
+
+  it('useCreateItem throws when token is null', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateItem(), { wrapper });
+
+    result.current.mutate({ title: 'Test' });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toEqual(new Error('Authentication required'));
+  });
+
+  it('useUpdateItem throws when token is null', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useUpdateItem(), { wrapper });
+
+    result.current.mutate({ id: 'item-1', data: { title: 'Updated' } });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toEqual(new Error('Authentication required'));
+  });
+
+  it('useDeleteItem throws when token is null', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useDeleteItem(), { wrapper });
+
+    result.current.mutate('item-1');
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toEqual(new Error('Authentication required'));
+  });
+});

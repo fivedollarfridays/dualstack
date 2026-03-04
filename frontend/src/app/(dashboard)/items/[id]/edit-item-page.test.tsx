@@ -12,6 +12,9 @@ jest.mock('next/navigation', () => ({
 const mockGetItem = jest.fn();
 const mockUpdateMutateAsync = jest.fn();
 const mockDeleteMutate = jest.fn();
+const mockDeleteMutateAsync = jest.fn();
+let mockUpdateError: Error | null = null;
+let mockDeleteError: Error | null = null;
 
 jest.mock('@/lib/api/items', () => ({
   getItem: (...args: unknown[]) => mockGetItem(...args),
@@ -36,10 +39,13 @@ jest.mock('@/hooks/use-items', () => ({
   useUpdateItem: () => ({
     mutateAsync: mockUpdateMutateAsync,
     isPending: false,
+    error: mockUpdateError,
   }),
   useDeleteItem: () => ({
     mutate: mockDeleteMutate,
+    mutateAsync: mockDeleteMutateAsync,
     isPending: false,
+    error: mockDeleteError,
   }),
 }));
 
@@ -164,9 +170,10 @@ describe('EditItemPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/items');
   });
 
-  it('calls deleteItem.mutate and navigates when delete is confirmed', async () => {
+  it('awaits deleteItem.mutateAsync then navigates when delete is confirmed', async () => {
     const user = userEvent.setup();
     jest.spyOn(window, 'confirm').mockReturnValue(true);
+    mockDeleteMutateAsync.mockResolvedValueOnce(undefined);
 
     mockUseQuery.mockReturnValue({
       data: mockItem,
@@ -178,8 +185,8 @@ describe('EditItemPage', () => {
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
     expect(window.confirm).toHaveBeenCalled();
-    expect(mockDeleteMutate).toHaveBeenCalledWith('item-1');
-    expect(mockPush).toHaveBeenCalledWith('/items');
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/items'));
   });
 
   it('does not delete when confirm is cancelled', async () => {
@@ -210,12 +217,45 @@ describe('EditItemPage', () => {
 
     render(<EditItemPage />);
 
-    // Extract and invoke the queryFn to cover lines 22-23
+    // Extract and invoke the queryFn to cover lines 22-24
     const queryConfig = mockUseQuery.mock.calls[0][0] as { queryFn: () => Promise<unknown> };
     const result = await queryConfig.queryFn();
 
     expect(mockGetItem).toHaveBeenCalledWith('mock-token', 'item-1');
     expect(result).toEqual(mockItem);
+  });
+
+  it('queryFn throws when token is null', async () => {
+    const mockGetTokenNull = jest.fn().mockResolvedValue(null);
+    const { useAuth } = jest.requireMock('@clerk/nextjs');
+    const originalGetToken = useAuth().getToken;
+
+    // Temporarily override getToken to return null
+    jest.mocked(jest.requireMock('@clerk/nextjs')).useAuth = () => ({
+      userId: 'test-user-123',
+      isLoaded: true,
+      isSignedIn: true,
+      getToken: mockGetTokenNull,
+    });
+
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('Authentication required'),
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+
+    const queryConfig = mockUseQuery.mock.calls[0][0] as { queryFn: () => Promise<unknown> };
+    await expect(queryConfig.queryFn()).rejects.toThrow('Authentication required');
+
+    // Restore
+    jest.mocked(jest.requireMock('@clerk/nextjs')).useAuth = () => ({
+      userId: 'test-user-123',
+      isLoaded: true,
+      isSignedIn: true,
+      getToken: jest.fn().mockResolvedValue('mock-token'),
+    });
   });
 
   it('renders error state when item is null (no data)', () => {
@@ -242,5 +282,67 @@ describe('EditItemPage', () => {
 
     render(<EditItemPage />);
     expect(screen.getByLabelText(/description/i)).toHaveValue('');
+  });
+
+  it('displays error message when updateItem has an error', () => {
+    mockUpdateError = new Error('Update failed');
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    expect(screen.getByText('Operation failed. Please try again.')).toBeInTheDocument();
+    mockUpdateError = null;
+  });
+
+  it('displays error message when deleteItemMutation has an error', () => {
+    mockDeleteError = new Error('Delete failed');
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    expect(screen.getByText('Operation failed. Please try again.')).toBeInTheDocument();
+    mockDeleteError = null;
+  });
+
+  it('does not navigate when update mutation rejects', async () => {
+    const user = userEvent.setup();
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+    mockUpdateMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+    render(<EditItemPage />);
+    const titleInput = screen.getByLabelText(/title/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Updated Title');
+    await user.click(screen.getByRole('button', { name: /update/i }));
+
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('does not navigate when delete mutation rejects', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    mockDeleteMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+    mockUseQuery.mockReturnValue({
+      data: mockItem,
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useQuery>);
+
+    render(<EditItemPage />);
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

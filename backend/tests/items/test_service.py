@@ -1,11 +1,20 @@
 """Tests for items service layer."""
 
+from unittest.mock import patch
+
 import pytest
 import pytest_asyncio
 
 from app.items.models import Item
 from app.items.schemas import ItemCreate, ItemUpdate
-from app.items.service import create_item, delete_item, get_item, list_items, update_item
+from app.items.service import (
+    UPDATABLE_FIELDS,
+    create_item,
+    delete_item,
+    get_item,
+    list_items,
+    update_item,
+)
 from app.core.errors import NotFoundError
 
 
@@ -165,6 +174,40 @@ class TestUpdateItem:
                 user_id="user-2",
                 data=ItemUpdate(title="Hacked"),
             )
+
+
+class TestUpdatableFieldsAllowlist:
+    """Test UPDATABLE_FIELDS allowlist for defense-in-depth."""
+
+    def test_updatable_fields_contains_expected(self):
+        """UPDATABLE_FIELDS should contain exactly title, description, status."""
+        assert UPDATABLE_FIELDS == frozenset({"title", "description", "status"})
+
+    async def test_update_item_ignores_non_updatable_fields(self, db_session):
+        """Fields outside UPDATABLE_FIELDS should not be applied via setattr."""
+        created = await create_item(
+            db_session, user_id="user-1", data=ItemCreate(title="Original")
+        )
+        original_id = created.id
+        original_user_id = created.user_id
+
+        data = ItemUpdate(title="Updated")
+
+        # Patch model_dump at class level to inject a non-updatable field
+        poisoned = {"title": "Updated", "user_id": "hacker-99"}
+        with patch.object(
+            ItemUpdate, "model_dump", return_value=poisoned
+        ):
+            updated = await update_item(
+                db_session,
+                item_id=created.id,
+                user_id="user-1",
+                data=data,
+            )
+
+        assert updated.title == "Updated"
+        assert updated.id == original_id
+        assert updated.user_id == original_user_id  # must NOT be changed
 
 
 class TestDeleteItem:

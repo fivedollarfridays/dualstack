@@ -140,11 +140,11 @@ describe('useTheme', () => {
     );
 
     await user.click(screen.getByText('Set Dark'));
-    expect(localStorage.getItem('chat-theme')).toBe('dark');
+    expect(localStorage.getItem('dualstack-theme')).toBe('dark');
   });
 
   it('hydrates theme from localStorage on mount', () => {
-    localStorage.setItem('chat-theme', 'light');
+    localStorage.setItem('dualstack-theme', 'light');
 
     render(
       <ThemeProvider>
@@ -156,7 +156,7 @@ describe('useTheme', () => {
   });
 
   it('ignores invalid stored theme values', () => {
-    localStorage.setItem('chat-theme', 'invalid-theme');
+    localStorage.setItem('dualstack-theme', 'invalid-theme');
 
     render(
       <ThemeProvider>

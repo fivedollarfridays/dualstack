@@ -4,21 +4,11 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 import { ThemeProvider } from '@/contexts/theme-context';
+import { clerkAppearance } from '@/lib/clerk-config';
 
 interface ProvidersProps {
   children: ReactNode;
 }
-
-const clerkAppearance = {
-  variables: {
-    colorPrimary: '#2563eb',
-    colorBackground: '#1f2937',
-    colorText: '#ffffff',
-    colorTextSecondary: '#9ca3af',
-    colorInputBackground: '#374151',
-    colorInputText: '#ffffff',
-  },
-};
 
 // Check if a Clerk publishable key is valid (not a placeholder)
 export function isValidClerkKey(key: string | undefined): boolean {

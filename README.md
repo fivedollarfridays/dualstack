@@ -171,7 +171,7 @@ docker build -t dualstack-api .
 docker run -p 8000:8000 --env-file .env dualstack-api
 ```
 
-Or deploy to Render using the included `render.yaml` (when added).
+Or deploy to Render using the included `render.yaml`.
 
 ### Frontend (Vercel)
 

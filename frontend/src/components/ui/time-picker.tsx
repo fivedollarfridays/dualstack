@@ -65,7 +65,7 @@ export function TimePicker({
     <div className={`flex flex-col gap-1 ${className}`}>
       <label
         className={`text-sm font-medium ${
-          disabled ? 'text-gray-400' : 'text-gray-900'
+          disabled ? 'text-gray-400' : 'text-gray-200'
         }`}
       >
         {label}
@@ -80,8 +80,8 @@ export function TimePicker({
         aria-invalid={!!error}
         className={`
           px-3 py-2 text-sm border rounded-lg
-          ${error ? 'border-red-500' : 'border-gray-300'}
-          ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+          ${error ? 'border-red-500' : 'border-gray-600'}
+          ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-700'}
           focus:outline-none focus:ring-2 focus:ring-blue-500
           disabled:text-gray-400
         `}

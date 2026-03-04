@@ -7,7 +7,7 @@ Usage: python check_completion.py TASK-XXX
 import subprocess
 import sys
 import re
-from pathlib import Path
+from _task_utils import find_task_file, ACCEPTANCE_CRITERIA_HEADING
 
 
 def run_command(cmd: list[str]) -> tuple[bool, str]:
@@ -17,7 +17,7 @@ def run_command(cmd: list[str]) -> tuple[bool, str]:
         return result.returncode == 0, result.stdout + result.stderr
     except subprocess.TimeoutExpired:
         return False, "Command timed out"
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         return False, str(e)
 
 
@@ -39,14 +39,7 @@ def check_linting() -> tuple[bool, str]:
 
 def check_task_file(task_id: str) -> tuple[bool, str]:
     """Check if task file exists and has required fields."""
-    task_dirs = [
-        Path(".paircoder/tasks"),
-    ]
-    found = None
-    for task_dir in task_dirs:
-        for f in task_dir.glob(f"{task_id}*.task.md"):
-            found = f
-            break
+    found = find_task_file(task_id)
 
     if not found:
         return False, f"Task file not found for {task_id}"
@@ -58,7 +51,7 @@ def check_task_file(task_id: str) -> tuple[bool, str]:
         return True, "Task already marked done"
 
     # Check acceptance criteria exist
-    if "## Acceptance Criteria" not in content:
+    if ACCEPTANCE_CRITERIA_HEADING not in content.lower():
         return False, "Missing acceptance criteria section"
 
     return True, f"Task file found: {found}"

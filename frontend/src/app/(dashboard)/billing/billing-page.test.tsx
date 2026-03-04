@@ -1,5 +1,5 @@
 /**
- * Tests for app/(dashboard)/billing/page.tsx — Billing page
+ * Tests for app/(dashboard)/billing/page.tsx -- Billing page
  */
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -8,10 +8,8 @@ import BillingPage from './page';
 
 // Mock the billing API
 const mockCreateCheckout = jest.fn();
-const mockOpenPortal = jest.fn();
 jest.mock('@/lib/api/billing', () => ({
   createCheckout: (...args: unknown[]) => mockCreateCheckout(...args),
-  openPortal: (...args: unknown[]) => mockOpenPortal(...args),
 }));
 
 // Override the global clerk mock to include getToken
@@ -71,13 +69,6 @@ describe('BillingPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders Manage Subscription button', () => {
-    render(<BillingPage />);
-    expect(
-      screen.getByRole('button', { name: /manage subscription/i })
-    ).toBeInTheDocument();
-  });
-
   it('calls createCheckout with token and price on Subscribe click', async () => {
     const user = userEvent.setup();
     mockCreateCheckout.mockResolvedValueOnce('https://checkout.stripe.com/session123');
@@ -90,20 +81,6 @@ describe('BillingPage', () => {
         'mock-token',
         'price_pro_monthly'
       );
-    });
-  });
-
-  it('calls openPortal with token on Manage Subscription click', async () => {
-    const user = userEvent.setup();
-    mockOpenPortal.mockResolvedValueOnce('https://billing.stripe.com/portal123');
-
-    render(<BillingPage />);
-    await user.click(
-      screen.getByRole('button', { name: /manage subscription/i })
-    );
-
-    await waitFor(() => {
-      expect(mockOpenPortal).toHaveBeenCalledWith('mock-token');
     });
   });
 
@@ -120,25 +97,48 @@ describe('BillingPage', () => {
     expect(mockCreateCheckout).not.toHaveBeenCalled();
   });
 
-  it('does not call openPortal if getToken returns null', async () => {
-    mockGetToken.mockResolvedValueOnce(null);
-    const user = userEvent.setup();
-
-    render(<BillingPage />);
-    await user.click(
-      screen.getByRole('button', { name: /manage subscription/i })
-    );
-
-    await waitFor(() => {
-      expect(mockGetToken).toHaveBeenCalled();
-    });
-    expect(mockOpenPortal).not.toHaveBeenCalled();
-  });
-
   it('renders Free plan features', () => {
     render(<BillingPage />);
     expect(screen.getByText('1 project')).toBeInTheDocument();
     expect(screen.getByText('Basic support')).toBeInTheDocument();
     expect(screen.getByText('Community access')).toBeInTheDocument();
+  });
+
+  it('displays error when createCheckout fails', async () => {
+    const user = userEvent.setup();
+    mockCreateCheckout.mockRejectedValueOnce(new Error('Checkout failed'));
+
+    render(<BillingPage />);
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Failed to start checkout. Please try again.')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('clears previous error on new subscribe attempt', async () => {
+    const user = userEvent.setup();
+    mockCreateCheckout.mockRejectedValueOnce(new Error('Checkout failed'));
+
+    render(<BillingPage />);
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Failed to start checkout. Please try again.')
+      ).toBeInTheDocument();
+    });
+
+    // Second attempt succeeds: error should be cleared
+    mockCreateCheckout.mockResolvedValueOnce('https://checkout.stripe.com/ok');
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText('Failed to start checkout. Please try again.')
+      ).not.toBeInTheDocument();
+    });
   });
 });

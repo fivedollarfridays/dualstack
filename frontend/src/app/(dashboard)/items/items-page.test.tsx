@@ -9,11 +9,15 @@ jest.mock('next/navigation', () => ({
 }));
 
 const mockDeleteMutate = jest.fn();
+const mockDeleteMutateAsync = jest.fn();
+let mockDeleteError: Error | null = null;
 jest.mock('@/hooks/use-items', () => ({
   useItems: jest.fn(),
   useDeleteItem: () => ({
     mutate: mockDeleteMutate,
+    mutateAsync: mockDeleteMutateAsync,
     isPending: false,
+    error: mockDeleteError,
   }),
 }));
 
@@ -121,9 +125,10 @@ describe('ItemsPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/items/item-1');
   });
 
-  it('calls deleteItem.mutate when delete is confirmed', async () => {
+  it('awaits deleteItem.mutateAsync when delete is confirmed', async () => {
     const user = userEvent.setup();
     jest.spyOn(window, 'confirm').mockReturnValue(true);
+    mockDeleteMutateAsync.mockResolvedValueOnce(undefined);
 
     mockUseItems.mockReturnValue({
       data: {
@@ -148,7 +153,7 @@ describe('ItemsPage', () => {
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
     expect(window.confirm).toHaveBeenCalled();
-    expect(mockDeleteMutate).toHaveBeenCalledWith('item-1');
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
   });
 
   it('does not delete when confirm is cancelled', async () => {
@@ -179,5 +184,48 @@ describe('ItemsPage', () => {
 
     expect(window.confirm).toHaveBeenCalled();
     expect(mockDeleteMutate).not.toHaveBeenCalled();
+  });
+
+  it('displays delete error message when deleteItem has an error', () => {
+    mockDeleteError = new Error('Delete failed');
+    mockUseItems.mockReturnValue({
+      data: { items: [], total: 0 },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useItems>);
+
+    render(<ItemsPage />);
+    expect(screen.getByText('Delete failed. Please try again.')).toBeInTheDocument();
+    mockDeleteError = null;
+  });
+
+  it('does not throw when delete mutation rejects', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    mockDeleteMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+    mockUseItems.mockReturnValue({
+      data: {
+        items: [
+          {
+            id: 'item-1',
+            user_id: 'user-1',
+            title: 'My Item',
+            description: null,
+            status: 'draft',
+            created_at: '2026-01-01',
+            updated_at: '2026-01-01',
+          },
+        ],
+        total: 1,
+      },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useItems>);
+
+    render(<ItemsPage />);
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
   });
 });
