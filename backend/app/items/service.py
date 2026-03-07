@@ -85,7 +85,7 @@ async def get_item(db: AsyncSession, item_id: str, user_id: str) -> Item:
     result = await db.execute(stmt)
     item = result.scalar_one_or_none()
     if item is None:
-        raise NotFoundError(message=f"Item {item_id} not found")
+        raise NotFoundError(message="Item not found")
     return item
 
 

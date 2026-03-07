@@ -129,6 +129,13 @@ class TestGetItem:
         with pytest.raises(NotFoundError):
             await get_item(db_session, item_id=created.id, user_id="user-2")
 
+    async def test_not_found_does_not_echo_raw_input(self, db_session):
+        """AUDIT-006: Error message should not echo raw client-supplied item_id."""
+        malicious_id = "<script>alert('xss')</script>"
+        with pytest.raises(NotFoundError) as exc_info:
+            await get_item(db_session, item_id=malicious_id, user_id="user-1")
+        assert malicious_id not in str(exc_info.value)
+
 
 class TestUpdateItem:
     """Test update_item service function."""

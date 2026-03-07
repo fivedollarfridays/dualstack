@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAppAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ItemForm } from '@/components/items/item-form';
 import { useUpdateItem, useDeleteItem } from '@/hooks/use-items';
 import { getItem, type ItemStatus } from '@/lib/api/items';
@@ -15,6 +17,7 @@ export default function EditItemPage() {
   const { getToken } = useAppAuth();
   const updateItem = useUpdateItem();
   const deleteItemMutation = useDeleteItem();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: item, isLoading, error } = useQuery({
     queryKey: ['items', id],
@@ -38,15 +41,18 @@ export default function EditItemPage() {
     }
   }
 
-  async function handleDelete() {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        await deleteItemMutation.mutateAsync(id);
-        router.push('/items');
-      } catch {
-        // React Query tracks error via deleteItemMutation.error
-      }
+  function handleDelete() {
+    setShowDeleteConfirm(true);
+  }
+
+  async function confirmDelete() {
+    try {
+      await deleteItemMutation.mutateAsync(id);
+      router.push('/items');
+    } catch {
+      // React Query tracks error via deleteItemMutation.error
     }
+    setShowDeleteConfirm(false);
   }
 
   if (isLoading) {
@@ -100,6 +106,15 @@ export default function EditItemPage() {
           <p className="text-red-400">Operation failed. Please try again.</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

@@ -154,3 +154,62 @@ class TestHandleWebhook:
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
             assert kwargs["action"] == "webhook.signature_failure"
+
+    @patch("app.billing.service.get_settings")
+    async def test_audit_log_on_checkout_completed(self, mock_get_settings: MagicMock) -> None:
+        """AUDIT-008: Successful checkout.session.completed should be audit-logged."""
+        settings = MagicMock()
+        settings.stripe_webhook_secret = "whsec_test_fake"
+        mock_get_settings.return_value = settings
+
+        event = {
+            "type": "checkout.session.completed",
+            "data": {"object": {"id": "cs_123", "metadata": {"user_id": "user_1"}}},
+        }
+
+        with patch("stripe.Webhook.construct_event", return_value=event), \
+             patch("app.billing.service.log_audit_event") as mock_audit:
+            await service.handle_webhook(b"payload", "sig_header")
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["action"] == "webhook.checkout_completed"
+            assert kwargs["outcome"] == "success"
+            assert kwargs["resource_id"] == "cs_123"
+
+    @patch("app.billing.service.get_settings")
+    async def test_audit_log_on_subscription_updated(self, mock_get_settings: MagicMock) -> None:
+        """AUDIT-008: Successful subscription.updated should be audit-logged."""
+        settings = MagicMock()
+        settings.stripe_webhook_secret = "whsec_test_fake"
+        mock_get_settings.return_value = settings
+
+        event = {
+            "type": "customer.subscription.updated",
+            "data": {"object": {"id": "sub_456", "status": "active"}},
+        }
+
+        with patch("stripe.Webhook.construct_event", return_value=event), \
+             patch("app.billing.service.log_audit_event") as mock_audit:
+            await service.handle_webhook(b"payload", "sig_header")
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["action"] == "webhook.subscription_updated"
+            assert kwargs["outcome"] == "success"
+            assert kwargs["resource_id"] == "sub_456"
+
+    @patch("app.billing.service.get_settings")
+    async def test_no_audit_log_on_unhandled_event(self, mock_get_settings: MagicMock) -> None:
+        """AUDIT-008: Unhandled events should NOT be audit-logged."""
+        settings = MagicMock()
+        settings.stripe_webhook_secret = "whsec_test_fake"
+        mock_get_settings.return_value = settings
+
+        event = {
+            "type": "some.unknown.event",
+            "data": {"object": {}},
+        }
+
+        with patch("stripe.Webhook.construct_event", return_value=event), \
+             patch("app.billing.service.log_audit_event") as mock_audit:
+            await service.handle_webhook(b"payload", "sig_header")
+            mock_audit.assert_not_called()

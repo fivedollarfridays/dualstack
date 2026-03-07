@@ -9,9 +9,10 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-    "Content-Security-Policy": "default-src 'self'",
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
 }
+
+CSP_HEADER = "default-src 'self'"
 
 
 MAX_BODY_SIZE = 1 * 1024 * 1024  # 1 MB
@@ -44,4 +45,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         for header, value in SECURITY_HEADERS.items():
             response.headers[header] = value
+        content_type = response.headers.get("content-type", "")
+        if not content_type.startswith("application/json"):
+            response.headers["Content-Security-Policy"] = CSP_HEADER
         return response

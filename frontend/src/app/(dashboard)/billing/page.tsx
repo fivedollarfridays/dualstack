@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAppAuth } from '@/contexts/auth-context';
 import { PlanCard } from '@/components/billing/plan-card';
 import { createCheckout } from '@/lib/api/billing';
+import { isAllowedRedirectUrl } from '@/lib/url-validation';
 
 const STRIPE_PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_pro_monthly';
 
@@ -31,6 +32,10 @@ export default function BillingPage() {
         `${origin}/billing?success=true`,
         `${origin}/billing`
       );
+      if (!isAllowedRedirectUrl(url)) {
+        setError('Invalid checkout URL received. Please try again.');
+        return;
+      }
       window.location.href = url;
     } catch {
       setError('Failed to start checkout. Please try again.');

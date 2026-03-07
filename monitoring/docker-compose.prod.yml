@@ -4,6 +4,7 @@ services:
   prometheus:
     command:
       - '--config.file=/etc/prometheus/prometheus.prod.yml'
+      - '--web.config.file=/etc/prometheus/web.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'  # Longer retention for production
     networks:

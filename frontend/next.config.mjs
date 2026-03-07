@@ -17,6 +17,17 @@ const nextConfig = {
 
   // Security headers
   async headers() {
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https://*.clerk.accounts.dev https://img.clerk.com",
+      "font-src 'self'",
+      "connect-src 'self' https://*.clerk.accounts.dev https://api.stripe.com",
+      "frame-src https://js.stripe.com https://*.clerk.accounts.dev",
+      "worker-src 'self' blob:",
+    ].join('; ');
+
     return [
       {
         source: '/(.*)',
@@ -29,6 +40,7 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
+          { key: 'Content-Security-Policy', value: csp },
         ],
       },
     ];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ItemsPage from './page';
 
@@ -125,9 +125,8 @@ describe('ItemsPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/items/item-1');
   });
 
-  it('awaits deleteItem.mutateAsync when delete is confirmed', async () => {
+  it('shows confirm dialog and deletes when confirmed', async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     mockDeleteMutateAsync.mockResolvedValueOnce(undefined);
 
     mockUseItems.mockReturnValue({
@@ -150,15 +149,19 @@ describe('ItemsPage', () => {
     } as ReturnType<typeof useItems>);
 
     render(<ItemsPage />);
+    // Click delete to open the confirm dialog
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
-    expect(window.confirm).toHaveBeenCalled();
+    // Dialog should appear
+    const dialog = screen.getByRole('dialog');
+
+    // Confirm the deletion via the dialog button
+    await user.click(within(dialog).getByRole('button', { name: /delete/i }));
     expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
   });
 
-  it('does not delete when confirm is cancelled', async () => {
+  it('does not delete when cancel is clicked in confirm dialog', async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, 'confirm').mockReturnValue(false);
 
     mockUseItems.mockReturnValue({
       data: {
@@ -180,10 +183,15 @@ describe('ItemsPage', () => {
     } as ReturnType<typeof useItems>);
 
     render(<ItemsPage />);
+    // Click delete to open the confirm dialog
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
-    expect(window.confirm).toHaveBeenCalled();
-    expect(mockDeleteMutate).not.toHaveBeenCalled();
+    // Dialog should appear
+    const dialog = screen.getByRole('dialog');
+
+    // Cancel the deletion
+    await user.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(mockDeleteMutateAsync).not.toHaveBeenCalled();
   });
 
   it('displays delete error message when deleteItem has an error', () => {
@@ -201,7 +209,6 @@ describe('ItemsPage', () => {
 
   it('does not throw when delete mutation rejects', async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     mockDeleteMutateAsync.mockRejectedValueOnce(new Error('Network error'));
 
     mockUseItems.mockReturnValue({
@@ -224,7 +231,10 @@ describe('ItemsPage', () => {
     } as ReturnType<typeof useItems>);
 
     render(<ItemsPage />);
+    // Open dialog and confirm
     await user.click(screen.getByRole('button', { name: /delete/i }));
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: /delete/i }));
 
     expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
   });

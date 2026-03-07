@@ -1,0 +1,14 @@
+# Prometheus web configuration for production.
+# Enables basic_auth to restrict access to the Prometheus UI and API.
+#
+# IMPORTANT: Prometheus does not support environment variable interpolation.
+# You must substitute the placeholder before mounting this file:
+#
+#   envsubst < web.yml > web.resolved.yml
+#
+# Or replace the placeholder manually with a bcrypt hash:
+#   htpasswd -nBC 10 "" | tr -d ':\n'
+#
+# See: https://prometheus.io/docs/prometheus/latest/configuration/https/
+basic_auth_users:
+  admin: "${PROMETHEUS_BASIC_AUTH_PASSWORD}"

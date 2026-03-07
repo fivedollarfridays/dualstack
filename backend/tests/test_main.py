@@ -116,6 +116,52 @@ class TestCorsHeaders:
             allow_headers = response.headers.get("access-control-allow-headers", "")
             assert "x-user-id" not in allow_headers.lower()
 
+    @pytest.mark.asyncio
+    async def test_dev_mode_cors_no_credentials(self):
+        """AUDIT-013: Dev mode should not set allow_credentials=True."""
+        from app.main import create_app
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.clerk_jwks_url = ""
+        mock_settings.get_cors_origins.return_value = ["http://localhost:3000"]
+        with patch("app.main.get_settings", return_value=mock_settings):
+            dev_app = create_app()
+        transport = ASGITransport(app=dev_app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.options(
+                "/",
+                headers={
+                    "Origin": "http://localhost:3000",
+                    "Access-Control-Request-Method": "GET",
+                },
+            )
+            creds = response.headers.get("access-control-allow-credentials", "")
+            assert creds != "true"
+
+    @pytest.mark.asyncio
+    async def test_prod_mode_cors_with_credentials(self):
+        """AUDIT-013: Production mode (with JWKS) should allow credentials."""
+        from app.main import create_app
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "production"
+        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+        mock_settings.get_cors_origins.return_value = ["https://myapp.com"]
+        with patch("app.main.get_settings", return_value=mock_settings):
+            prod_app = create_app()
+        transport = ASGITransport(app=prod_app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.options(
+                "/",
+                headers={
+                    "Origin": "https://myapp.com",
+                    "Access-Control-Request-Method": "GET",
+                },
+            )
+            creds = response.headers.get("access-control-allow-credentials", "")
+            assert creds == "true"
+
 
 class TestBodySizeLimit:
     """NEW-009: Oversized request bodies should be rejected."""
@@ -396,5 +442,51 @@ class TestLifespan:
             with patch("app.main.logger") as mock_logger:
                 async with lifespan(test_app):
                     pass
-                # No warnings at all (clerk_jwks_url is set, no turso)
+                # No warnings at all (clerk_jwks_url is set, no turso, stripe_secret_key set)
                 mock_logger.warning.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_logs_warning_when_stripe_secret_key_empty(self):
+        """AUDIT-016: Lifespan logs warning in dev when stripe_secret_key is empty."""
+        from fastapi import FastAPI
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.stripe_webhook_secret = ""
+        mock_settings.stripe_secret_key = ""
+        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+        mock_settings.turso_database_url = ""
+
+        test_app = FastAPI()
+        with patch("app.main.get_settings", return_value=mock_settings):
+            with patch("app.main.logger") as mock_logger:
+                async with lifespan(test_app):
+                    pass
+                stripe_warnings = [
+                    call for call in mock_logger.warning.call_args_list
+                    if "STRIPE_SECRET_KEY" in str(call)
+                ]
+                assert len(stripe_warnings) == 1
+
+    @pytest.mark.asyncio
+    async def test_no_stripe_warning_when_key_set(self):
+        """AUDIT-016: No stripe warning when stripe_secret_key is configured."""
+        from fastapi import FastAPI
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.stripe_webhook_secret = ""
+        mock_settings.stripe_secret_key = "sk_test_fake"
+        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+        mock_settings.turso_database_url = ""
+
+        test_app = FastAPI()
+        with patch("app.main.get_settings", return_value=mock_settings):
+            with patch("app.main.logger") as mock_logger:
+                async with lifespan(test_app):
+                    pass
+                stripe_warnings = [
+                    call for call in mock_logger.warning.call_args_list
+                    if "STRIPE_SECRET_KEY" in str(call)
+                ]
+                assert len(stripe_warnings) == 0

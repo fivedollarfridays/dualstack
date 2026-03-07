@@ -6,6 +6,8 @@ from app.billing import service
 from app.billing.schemas import CheckoutRequest
 from app.core.audit import log_audit_event
 from app.core.auth import get_current_user_id
+from app.core.config import get_settings
+from app.core.errors import ServiceUnavailableError
 from app.core.rate_limit import limiter
 
 router = APIRouter(prefix="/billing", tags=["billing"])
@@ -58,6 +60,12 @@ webhook_router = APIRouter(tags=["webhooks"])
 @limiter.limit("60/minute")
 async def stripe_webhook(request: Request):
     """Process Stripe webhook events."""
+    settings = get_settings()
+    if not settings.stripe_webhook_secret:
+        raise ServiceUnavailableError(
+            message="Webhook secret not configured",
+            error_code="WEBHOOK_NOT_CONFIGURED",
+        )
     payload = await request.body()
     sig = request.headers.get("stripe-signature", "")
     result = await service.handle_webhook(payload, sig)

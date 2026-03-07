@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EditItemPage from './page';
 
@@ -164,9 +164,8 @@ describe('EditItemPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/items');
   });
 
-  it('awaits deleteItem.mutateAsync then navigates when delete is confirmed', async () => {
+  it('shows confirm dialog and deletes when confirmed', async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     mockDeleteMutateAsync.mockResolvedValueOnce(undefined);
 
     mockUseQuery.mockReturnValue({
@@ -176,16 +175,20 @@ describe('EditItemPage', () => {
     } as ReturnType<typeof useQuery>);
 
     render(<EditItemPage />);
+    // Click delete to open the confirm dialog
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
-    expect(window.confirm).toHaveBeenCalled();
+    // Dialog should appear
+    const dialog = screen.getByRole('dialog');
+
+    // Confirm the deletion via dialog button
+    await user.click(within(dialog).getByRole('button', { name: /delete/i }));
     expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/items'));
   });
 
-  it('does not delete when confirm is cancelled', async () => {
+  it('does not delete when cancel is clicked in confirm dialog', async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, 'confirm').mockReturnValue(false);
 
     mockUseQuery.mockReturnValue({
       data: mockItem,
@@ -194,10 +197,15 @@ describe('EditItemPage', () => {
     } as ReturnType<typeof useQuery>);
 
     render(<EditItemPage />);
+    // Click delete to open the confirm dialog
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
-    expect(window.confirm).toHaveBeenCalled();
-    expect(mockDeleteMutate).not.toHaveBeenCalled();
+    // Dialog should appear
+    const dialog = screen.getByRole('dialog');
+
+    // Cancel
+    await user.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    expect(mockDeleteMutateAsync).not.toHaveBeenCalled();
   });
 
   it('passes queryFn that calls getItem with token and id', async () => {
@@ -322,7 +330,6 @@ describe('EditItemPage', () => {
 
   it('does not navigate when delete mutation rejects', async () => {
     const user = userEvent.setup();
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     mockDeleteMutateAsync.mockRejectedValueOnce(new Error('Network error'));
 
     mockUseQuery.mockReturnValue({
@@ -332,7 +339,10 @@ describe('EditItemPage', () => {
     } as ReturnType<typeof useQuery>);
 
     render(<EditItemPage />);
+    // Open dialog and confirm
     await user.click(screen.getByRole('button', { name: /delete/i }));
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: /delete/i }));
 
     expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
     expect(mockPush).not.toHaveBeenCalled();

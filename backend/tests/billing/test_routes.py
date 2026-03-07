@@ -7,10 +7,12 @@ from httpx import ASGITransport, AsyncClient
 
 from app.billing.routes import router, webhook_router
 from app.core.auth import get_current_user_id
+from app.core.exception_handlers import register_exception_handlers
 from fastapi import FastAPI
 from tests.helpers import mock_settings_with_cors
 
 app = FastAPI()
+register_exception_handlers(app)
 app.include_router(router, prefix="/api/v1")
 app.include_router(webhook_router)
 
@@ -106,11 +108,16 @@ class TestCheckoutAuditEvent:
 
 class TestWebhookRoute:
     async def test_processes_valid_webhook(self, client):
-        with patch(
-            "app.billing.service.handle_webhook",
-            new_callable=AsyncMock,
-            return_value={"handled": True, "type": "checkout.session.completed"},
-        ):
+        with patch("app.billing.routes.get_settings") as mock_gs, \
+             patch(
+                "app.billing.service.handle_webhook",
+                new_callable=AsyncMock,
+                return_value={"handled": True, "type": "checkout.session.completed"},
+             ):
+            settings = MagicMock()
+            settings.stripe_webhook_secret = "whsec_test"
+            mock_gs.return_value = settings
+
             response = await client.post(
                 "/webhooks/stripe",
                 content=b'{"type": "checkout.session.completed"}',
@@ -122,3 +129,23 @@ class TestWebhookRoute:
 
             assert response.status_code == 200
             assert response.json()["handled"] is True
+
+    async def test_returns_503_when_secret_not_configured(self, client):
+        """AUDIT-001: Webhook returns 503 when stripe_webhook_secret is empty."""
+        with patch("app.billing.routes.get_settings") as mock_gs:
+            settings = MagicMock()
+            settings.stripe_webhook_secret = ""
+            mock_gs.return_value = settings
+
+            response = await client.post(
+                "/webhooks/stripe",
+                content=b'{"type": "checkout.session.completed"}',
+                headers={
+                    "stripe-signature": "t=123,v1=abc",
+                    "content-type": "application/json",
+                },
+            )
+
+            assert response.status_code == 503
+            body = response.json()
+            assert body["error"]["code"] == "WEBHOOK_NOT_CONFIGURED"
