@@ -20,19 +20,13 @@ jest.mock('@/lib/api/items', () => ({
   getItem: (...args: unknown[]) => mockGetItem(...args),
 }));
 
-jest.mock('@clerk/nextjs', () => ({
-  useAuth: () => ({
+jest.mock('@/contexts/auth-context', () => ({
+  useAppAuth: () => ({
     userId: 'test-user-123',
     isLoaded: true,
     isSignedIn: true,
     getToken: jest.fn().mockResolvedValue('mock-token'),
   }),
-  useUser: () => ({ user: { id: 'test-user-123' }, isLoaded: true, isSignedIn: true }),
-  useClerk: () => ({ signOut: jest.fn() }),
-  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
-  SignedIn: ({ children }: { children: React.ReactNode }) => children,
-  SignedOut: () => null,
-  UserButton: () => null,
 }));
 
 jest.mock('@/hooks/use-items', () => ({
@@ -227,11 +221,9 @@ describe('EditItemPage', () => {
 
   it('queryFn throws when token is null', async () => {
     const mockGetTokenNull = jest.fn().mockResolvedValue(null);
-    const { useAuth } = jest.requireMock('@clerk/nextjs');
-    const originalGetToken = useAuth().getToken;
 
-    // Temporarily override getToken to return null
-    jest.mocked(jest.requireMock('@clerk/nextjs')).useAuth = () => ({
+    // Temporarily override useAppAuth to return null token
+    jest.mocked(jest.requireMock('@/contexts/auth-context')).useAppAuth = () => ({
       userId: 'test-user-123',
       isLoaded: true,
       isSignedIn: true,
@@ -250,7 +242,7 @@ describe('EditItemPage', () => {
     await expect(queryConfig.queryFn()).rejects.toThrow('Authentication required');
 
     // Restore
-    jest.mocked(jest.requireMock('@clerk/nextjs')).useAuth = () => ({
+    jest.mocked(jest.requireMock('@/contexts/auth-context')).useAppAuth = () => ({
       userId: 'test-user-123',
       isLoaded: true,
       isSignedIn: true,

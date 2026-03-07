@@ -3,8 +3,9 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI, Request
+from unittest.mock import MagicMock
 
-from app.core.rate_limit import limiter, rate_limit_handler
+from app.core.rate_limit import get_client_ip, limiter, rate_limit_handler
 from slowapi.errors import RateLimitExceeded
 
 
@@ -25,6 +26,43 @@ def rate_limited_app():
         return {"ok": True}
 
     return app
+
+
+class TestGetClientIp:
+    """SEC-004: Test proxy-aware IP extraction."""
+
+    def _make_request(self, headers=None, client_host="127.0.0.1"):
+        request = MagicMock(spec=Request)
+        request.headers = headers or {}
+        request.client = MagicMock()
+        request.client.host = client_host
+        return request
+
+    def test_uses_x_forwarded_for_when_present(self):
+        request = self._make_request(
+            headers={"x-forwarded-for": "203.0.113.50, 70.41.3.18, 150.172.238.178"}
+        )
+        assert get_client_ip(request) == "203.0.113.50"
+
+    def test_falls_back_to_client_host(self):
+        request = self._make_request(client_host="192.168.1.100")
+        assert get_client_ip(request) == "192.168.1.100"
+
+    def test_single_ip_in_forwarded_for(self):
+        request = self._make_request(headers={"x-forwarded-for": "10.0.0.1"})
+        assert get_client_ip(request) == "10.0.0.1"
+
+    def test_strips_whitespace_from_ip(self):
+        request = self._make_request(
+            headers={"x-forwarded-for": "  203.0.113.50 , 70.41.3.18"}
+        )
+        assert get_client_ip(request) == "203.0.113.50"
+
+    def test_empty_forwarded_for_falls_back(self):
+        request = self._make_request(
+            headers={"x-forwarded-for": ""}, client_host="10.10.10.10"
+        )
+        assert get_client_ip(request) == "10.10.10.10"
 
 
 class TestRateLimiting:

@@ -124,6 +124,14 @@ cd monitoring
 docker compose up -d
 ```
 
+### Alternative: Docker Compose (full stack)
+
+```bash
+docker compose up --build
+```
+
+This starts both backend (port 8000) and frontend (port 3000) with health checks. Requires `backend/.env` and `frontend/.env.local` to be configured first.
+
 ### 5. Open your browser
 
 - Frontend: http://localhost:3000

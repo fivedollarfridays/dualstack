@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@clerk/nextjs';
+import { useAppAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { ItemForm } from '@/components/items/item-form';
 import { useUpdateItem, useDeleteItem } from '@/hooks/use-items';
@@ -12,7 +12,7 @@ export default function EditItemPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const updateItem = useUpdateItem();
   const deleteItemMutation = useDeleteItem();
 

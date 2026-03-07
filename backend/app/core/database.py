@@ -27,62 +27,46 @@ _query_start_times = {}
 _metrics_listeners_registered = False
 
 
+_OP_TYPE_MAP = {"SELECT": "select", "INSERT": "insert", "UPDATE": "update", "DELETE": "delete"}
+
+
+def _get_operation_type(statement: str) -> str:
+    """Extract the SQL operation type from a statement."""
+    stripped = statement.strip()
+    keyword = stripped.split(None, 1)[0].upper() if stripped else ""
+    return _OP_TYPE_MAP.get(keyword, "unknown")
+
+
+def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    """Store query start time before execution."""
+    _query_start_times[id(conn)] = time.time()
+
+
+def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    """Calculate and record query duration after execution."""
+    from app.core.metrics import db_query_duration_seconds
+
+    start_time = _query_start_times.pop(id(conn), None)
+    if start_time is not None:
+        duration = time.time() - start_time
+        db_query_duration_seconds.labels(operation=_get_operation_type(statement)).observe(duration)
+
+
 def _register_query_metrics_listeners(engine, force: bool = False):
     """Register database query metrics listeners on the engine.
 
     Only registers if not in test mode (TESTING env var != 'true').
-    This improves test performance by skipping metrics collection overhead.
-
-    Args:
-        engine: SQLAlchemy engine to register listeners on
-        force: If True, register even in test mode (for metrics tests)
     """
     global _metrics_listeners_registered
 
-    # Skip if already registered
     if _metrics_listeners_registered:
         return
-
-    # Skip in test mode unless forced
     if not force and os.getenv("TESTING") == "true":
         return
 
     _metrics_listeners_registered = True
-
-    @event.listens_for(engine, "before_cursor_execute")
-    def receive_before_cursor_execute(
-        conn, cursor, statement, parameters, context, executemany
-    ):
-        """Store query start time before execution."""
-        conn_id = id(conn)
-        _query_start_times[conn_id] = time.time()
-
-    @event.listens_for(engine, "after_cursor_execute")
-    def receive_after_cursor_execute(
-        conn, cursor, statement, parameters, context, executemany
-    ):
-        """Calculate and record query duration after execution."""
-        from app.core.metrics import db_query_duration_seconds
-
-        conn_id = id(conn)
-        start_time = _query_start_times.pop(conn_id, None)
-
-        if start_time is not None:
-            duration = time.time() - start_time
-
-            # Determine operation type from SQL statement
-            operation = "unknown"
-            statement_upper = statement.strip().upper()
-            if statement_upper.startswith("SELECT"):
-                operation = "select"
-            elif statement_upper.startswith("INSERT"):
-                operation = "insert"
-            elif statement_upper.startswith("UPDATE"):
-                operation = "update"
-            elif statement_upper.startswith("DELETE"):
-                operation = "delete"
-
-            db_query_duration_seconds.labels(operation=operation).observe(duration)
+    event.listen(engine, "before_cursor_execute", _before_cursor_execute)
+    event.listen(engine, "after_cursor_execute", _after_cursor_execute)
 
 
 def enable_query_metrics_for_testing():

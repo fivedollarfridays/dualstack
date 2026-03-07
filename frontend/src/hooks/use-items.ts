@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@clerk/nextjs';
+import { useAppAuth } from '@/contexts/auth-context';
 import * as api from '@/lib/api/items';
 
 export function useItems(page = 1, limit = 20) {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   return useQuery({
     queryKey: ['items', page, limit],
     queryFn: async () => {
@@ -15,7 +15,7 @@ export function useItems(page = 1, limit = 20) {
 }
 
 export function useCreateItem() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: api.CreateItemData) => {
@@ -28,7 +28,7 @@ export function useCreateItem() {
 }
 
 export function useUpdateItem() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: api.UpdateItemData }) => {
@@ -41,7 +41,7 @@ export function useUpdateItem() {
 }
 
 export function useDeleteItem() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {

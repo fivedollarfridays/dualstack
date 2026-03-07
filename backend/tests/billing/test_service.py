@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+import stripe
+
 from app.billing import service
 
 
@@ -100,3 +103,54 @@ class TestHandleWebhook:
 
             assert result["handled"] is False
             assert result["type"] == "some.unknown.event"
+
+    @patch("app.billing.service.get_settings")
+    async def test_raises_on_invalid_signature(self, mock_get_settings: MagicMock) -> None:
+        """NEW-003: Invalid webhook signature should raise AuthenticationError."""
+        from app.core.errors import AuthenticationError
+
+        settings = MagicMock()
+        settings.stripe_webhook_secret = "whsec_test_fake"
+        mock_get_settings.return_value = settings
+
+        with patch(
+            "stripe.Webhook.construct_event",
+            side_effect=stripe.error.SignatureVerificationError("bad sig", "sig_header"),
+        ):
+            with pytest.raises(AuthenticationError):
+                await service.handle_webhook(b"payload", "bad_sig")
+
+    @patch("app.billing.service.get_settings")
+    async def test_raises_on_malformed_payload(self, mock_get_settings: MagicMock) -> None:
+        """NEW-003: Malformed webhook payload should raise ValidationError."""
+        from app.core.errors import ValidationError
+
+        settings = MagicMock()
+        settings.stripe_webhook_secret = "whsec_test_fake"
+        mock_get_settings.return_value = settings
+
+        with patch(
+            "stripe.Webhook.construct_event",
+            side_effect=ValueError("Invalid payload"),
+        ):
+            with pytest.raises(ValidationError):
+                await service.handle_webhook(b"bad payload", "sig_header")
+
+    @patch("app.billing.service.get_settings")
+    async def test_audit_log_on_signature_failure(self, mock_get_settings: MagicMock) -> None:
+        """NEW-003: Signature failure should emit an audit event."""
+        from app.core.errors import AuthenticationError
+
+        settings = MagicMock()
+        settings.stripe_webhook_secret = "whsec_test_fake"
+        mock_get_settings.return_value = settings
+
+        with patch(
+            "stripe.Webhook.construct_event",
+            side_effect=stripe.error.SignatureVerificationError("bad sig", "sig_header"),
+        ), patch("app.billing.service.log_audit_event") as mock_audit:
+            with pytest.raises(AuthenticationError):
+                await service.handle_webhook(b"payload", "bad_sig")
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["action"] == "webhook.signature_failure"

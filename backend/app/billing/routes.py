@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.billing import service
 from app.billing.schemas import CheckoutRequest
+from app.core.audit import log_audit_event
 from app.core.auth import get_current_user_id
 from app.core.rate_limit import limiter
 
@@ -21,11 +22,17 @@ async def create_checkout(
     url = await service.create_checkout_session(
         user_id, data.price_id, data.success_url, data.cancel_url
     )
+    log_audit_event(
+        user_id=user_id, action="billing.checkout",
+        resource_type="checkout", resource_id=data.price_id,
+    )
     return {"url": url}
 
 
 @router.post("/portal")
+@limiter.limit("10/minute")
 async def create_portal(
+    request: Request,
     user_id: str = Depends(get_current_user_id),
 ):
     """Create a Stripe Billing Portal session.

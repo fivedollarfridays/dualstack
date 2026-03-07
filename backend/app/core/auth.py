@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import Depends, Header, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.core.audit import log_audit_event
 from app.core.config import get_settings
 from app.core.errors import AuthenticationError
 
@@ -12,7 +13,16 @@ from app.core.errors import AuthenticationError
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
+# Bounded by unique JWKS URLs (typically 1 per deployment)
 _clerk_auth_cache: dict[str, Any] = {}
+
+
+def _audit_auth_failure(action: str, user_id: str = "unknown") -> None:
+    """Log an auth failure audit event."""
+    log_audit_event(
+        user_id=user_id, action=action,
+        resource_type="token", resource_id="unknown", outcome="failure",
+    )
 
 
 async def _verify_clerk_token(
@@ -33,11 +43,13 @@ async def _verify_clerk_token(
         verified = await clerk_auth(request)
         user_id = verified.decoded.get("sub")
         if not user_id:
+            _audit_auth_failure("auth.missing_identity")
             raise AuthenticationError(message="Token missing user identity")
         return user_id
     except AuthenticationError:
         raise
     except Exception as exc:
+        _audit_auth_failure("auth.invalid_token")
         raise AuthenticationError(message="Invalid or expired token") from exc
 
 
@@ -61,12 +73,19 @@ async def get_current_user_id(
 
     # Dev mode: trust X-User-ID header when no JWKS URL configured
     if not settings.clerk_jwks_url:
+        if settings.environment == "production":
+            _audit_auth_failure("auth.dev_mode_rejected", x_user_id or "unknown")
+            raise AuthenticationError(
+                message="Dev-mode auth is disabled in production. Set CLERK_JWKS_URL."
+            )
         if not x_user_id:
+            _audit_auth_failure("auth.missing_header")
             raise AuthenticationError(message="Missing X-User-ID header")
         return x_user_id
 
     # Production mode: validate Bearer token
     if not credentials:
+        _audit_auth_failure("auth.missing_token")
         raise AuthenticationError(message="Missing Authorization header")
 
     return await _verify_clerk_token(request, settings.clerk_jwks_url)

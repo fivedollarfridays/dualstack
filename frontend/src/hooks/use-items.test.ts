@@ -4,21 +4,14 @@ import React from 'react';
 import { useItems, useCreateItem, useUpdateItem, useDeleteItem } from './use-items';
 import * as api from '@/lib/api/items';
 
-// Override the useAuth mock from jest.setup to include getToken
 const mockGetToken = jest.fn().mockResolvedValue('mock-token');
-jest.mock('@clerk/nextjs', () => ({
-  useAuth: () => ({
+jest.mock('@/contexts/auth-context', () => ({
+  useAppAuth: () => ({
     userId: 'test-user-123',
     isLoaded: true,
     isSignedIn: true,
     getToken: mockGetToken,
   }),
-  useUser: () => ({ user: { id: 'test-user-123' }, isLoaded: true, isSignedIn: true }),
-  useClerk: () => ({ signOut: jest.fn() }),
-  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
-  SignedIn: ({ children }: { children: React.ReactNode }) => children,
-  SignedOut: () => null,
-  UserButton: () => null,
 }));
 
 jest.mock('@/lib/api/items');

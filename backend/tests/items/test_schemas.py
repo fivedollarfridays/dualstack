@@ -130,7 +130,6 @@ class TestItemResponse:
         now = datetime(2026, 1, 1, 12, 0, 0)
         resp = ItemResponse(
             id="abc-123",
-            user_id="user-1",
             title="Test Item",
             description="A test",
             status="draft",
@@ -138,12 +137,15 @@ class TestItemResponse:
             updated_at=now,
         )
         assert resp.id == "abc-123"
-        assert resp.user_id == "user-1"
         assert resp.title == "Test Item"
         assert resp.description == "A test"
         assert resp.status == "draft"
         assert resp.created_at == now
         assert resp.updated_at == now
+
+    def test_does_not_include_user_id(self):
+        """SEC-002: ItemResponse must not expose user_id."""
+        assert "user_id" not in ItemResponse.model_fields
 
     def test_model_config_from_attributes(self):
         """ItemResponse should support from_attributes for ORM model conversion."""

@@ -12,21 +12,14 @@ jest.mock('@/lib/api/billing', () => ({
   createCheckout: (...args: unknown[]) => mockCreateCheckout(...args),
 }));
 
-// Override the global clerk mock to include getToken
 const mockGetToken = jest.fn();
-jest.mock('@clerk/nextjs', () => ({
-  useUser: () => ({ user: { id: 'test-user-123' }, isLoaded: true, isSignedIn: true }),
-  useAuth: () => ({
+jest.mock('@/contexts/auth-context', () => ({
+  useAppAuth: () => ({
     userId: 'test-user-123',
     isLoaded: true,
     isSignedIn: true,
     getToken: mockGetToken,
   }),
-  useClerk: () => ({ signOut: jest.fn() }),
-  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
-  SignedIn: ({ children }: { children: React.ReactNode }) => children,
-  SignedOut: ({ children }: { children: React.ReactNode }) => null,
-  UserButton: () => null,
 }));
 
 beforeEach(() => {

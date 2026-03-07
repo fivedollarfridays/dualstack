@@ -14,7 +14,7 @@ from app.core.logging import configure_logging
 from app.core.metrics_routes import router as metrics_router
 from app.core.middleware import LoggingMiddleware
 from app.core.rate_limit import limiter, rate_limit_handler
-from app.core.security_headers import SecurityHeadersMiddleware
+from app.core.security_headers import ContentSizeLimitMiddleware, SecurityHeadersMiddleware
 from app.health import router as health_router
 
 logger = logging.getLogger(__name__)
@@ -27,79 +27,103 @@ configure_logging()
 async def lifespan(app: FastAPI):
     """Manage application lifespan."""
     settings = get_settings()
-    if settings.environment != "development" and not settings.stripe_webhook_secret:
+    if settings.environment == "production" and not settings.stripe_webhook_secret:
         raise RuntimeError(
-            "STRIPE_WEBHOOK_SECRET must be set in non-development environments"
+            "STRIPE_WEBHOOK_SECRET must be set in production"
         )
-    if settings.environment != "development" and not settings.clerk_jwks_url:
+    if settings.environment == "production" and not settings.clerk_jwks_url:
         raise RuntimeError(
-            "CLERK_JWKS_URL must be set in non-development environments"
+            "CLERK_JWKS_URL must be set in production"
         )
     if not settings.clerk_jwks_url:
         logger.warning(
             "WARNING: Running without Clerk JWT validation. All X-User-ID headers "
             "are trusted. Do NOT deploy to production without setting CLERK_JWKS_URL."
         )
+    # Turso libsql:// guard
+    if settings.turso_database_url.startswith("libsql://"):
+        if settings.environment == "production":
+            raise RuntimeError(
+                "TURSO_DATABASE_URL uses libsql:// which is not yet supported by "
+                "SQLAlchemy. The app would silently fall back to local SQLite. "
+                "Either use a sqlite+aiosqlite:// URL directly, integrate the "
+                "sqlalchemy-libsql dialect, or remove TURSO_DATABASE_URL."
+            )
+        logger.warning(
+            "WARNING: TURSO_DATABASE_URL starts with libsql:// which SQLAlchemy "
+            "cannot connect to directly. Falling back to local SQLite file "
+            "(dualstack.db). This is expected in development."
+        )
+    if settings.environment == "production" and not settings.metrics_api_key:
+        raise RuntimeError(
+            "METRICS_API_KEY is required in production to protect the /metrics endpoint."
+        )
     stripe.api_key = settings.stripe_secret_key
     yield
 
 
-# Get settings for CORS configuration
-settings = get_settings()
+def _register_routers(application: FastAPI) -> None:
+    """Register all routers on the application."""
+    application.include_router(health_router)
+    application.include_router(metrics_router)
 
-app = FastAPI(
-    title="DualStack API",
-    description="FastAPI + Next.js SaaS Starter Kit",
-    version="1.0.0",
-    lifespan=lifespan,
-)
+    try:
+        from app.items.routes import router as items_router
 
-# Register exception handlers
-register_exception_handlers(app)
+        application.include_router(items_router, prefix="/api/v1")
+    except ImportError as e:
+        logger.info("Items module not available: %s", e)
 
-# Rate limiting
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+    try:
+        from app.billing.routes import router as billing_router
+        from app.billing.routes import webhook_router
 
-# Add security headers middleware
-app.add_middleware(SecurityHeadersMiddleware)
+        application.include_router(billing_router, prefix="/api/v1")
+        application.include_router(webhook_router)
+    except ImportError as e:
+        logger.info("Billing module not available: %s", e)
 
-# Add logging middleware
-app.add_middleware(LoggingMiddleware)
-
-# CORS for frontend - configurable via CORS_ORIGINS env var
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
-)
-
-# Include health router (no prefix for /health endpoints)
-app.include_router(health_router)
-
-# Include metrics router (no prefix for /metrics endpoint)
-app.include_router(metrics_router)
-
-# Include API routers (catch ImportError for optional modules)
-try:
-    from app.items.routes import router as items_router
-
-    app.include_router(items_router, prefix="/api/v1")
-except ImportError as e:
-    logger.info("Items module not available: %s", e)
-
-try:
-    from app.billing.routes import router as billing_router
-    from app.billing.routes import webhook_router
-
-    app.include_router(billing_router, prefix="/api/v1")
-    app.include_router(webhook_router)
-except ImportError as e:
-    logger.info("Billing module not available: %s", e)
+    @application.get("/")
+    async def root():
+        return {"message": "DualStack API", "status": "running"}
 
 
-@app.get("/")
-async def root():
-    return {"message": "DualStack API", "status": "running"}
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    settings = get_settings()
+    is_production = settings.environment == "production"
+
+    application = FastAPI(
+        title="DualStack API",
+        description="FastAPI + Next.js SaaS Starter Kit",
+        version="1.0.0",
+        lifespan=lifespan,
+        docs_url=None if is_production else "/docs",
+        redoc_url=None if is_production else "/redoc",
+        openapi_url=None if is_production else "/openapi.json",
+    )
+
+    register_exception_handlers(application)
+    application.state.limiter = limiter
+    application.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
+    application.add_middleware(SecurityHeadersMiddleware)
+    application.add_middleware(ContentSizeLimitMiddleware)
+    application.add_middleware(LoggingMiddleware)
+    cors_headers = ["Authorization", "Content-Type"]
+    if not is_production:
+        cors_headers.append("X-User-ID")
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.get_cors_origins(),
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=cors_headers,
+    )
+
+    _register_routers(application)
+    return application
+
+
+app = create_app()

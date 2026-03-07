@@ -30,7 +30,6 @@ class ItemResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     id: str
-    user_id: str
     title: str
     description: str | None = None
     status: ItemStatusType

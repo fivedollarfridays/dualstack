@@ -44,3 +44,20 @@ class TestSecurityHeadersMiddleware:
         async with AsyncClient(transport=transport, base_url="http://test") as c:
             r = await c.get("/test")
             assert r.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+
+    async def test_content_security_policy(self, app_with_headers):
+        """SEC-007: CSP header must be present."""
+        transport = ASGITransport(app=app_with_headers)
+        async with AsyncClient(transport=transport, base_url="http://test") as c:
+            r = await c.get("/test")
+            assert "content-security-policy" in r.headers
+            assert "default-src" in r.headers["content-security-policy"]
+
+    async def test_strict_transport_security(self, app_with_headers):
+        """SEC-007: HSTS header must be present with preload."""
+        transport = ASGITransport(app=app_with_headers)
+        async with AsyncClient(transport=transport, base_url="http://test") as c:
+            r = await c.get("/test")
+            hsts = r.headers["strict-transport-security"]
+            assert "max-age" in hsts
+            assert "preload" in hsts

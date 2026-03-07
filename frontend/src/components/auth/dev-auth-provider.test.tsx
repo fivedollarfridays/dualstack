@@ -39,4 +39,16 @@ describe('DevAuthProvider', () => {
     const token = await result.current.getToken();
     expect(token).toBe('dev-token');
   });
+
+  it('logs a warning when active', () => {
+    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <DevAuthProvider>{children}</DevAuthProvider>
+    );
+    renderHook(() => useAppAuth(), { wrapper });
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('[DevAuthProvider]')
+    );
+    spy.mockRestore();
+  });
 });

@@ -74,15 +74,40 @@ class TestGenericErrorHandler:
         assert body["error"]["message"] == "An internal error occurred"
 
 
+class TestValidationErrorHandler:
+    """NEW-004: 422 validation errors should not leak field details."""
+
+    @pytest.mark.asyncio
+    async def test_sanitized_422_response(self):
+        """RequestValidationError should return sanitized response without field details."""
+        from fastapi.exceptions import RequestValidationError
+        from app.core.exception_handlers import validation_error_handler
+
+        request = _make_request()
+        exc = RequestValidationError(
+            errors=[{"loc": ["body", "price_id"], "msg": "field required", "type": "value_error.missing"}]
+        )
+        response = await validation_error_handler(request, exc)
+        assert response.status_code == 422
+        body = json.loads(response.body)
+        assert body["error"]["code"] == "VALIDATION_ERROR"
+        assert body["error"]["message"] == "Invalid request"
+        assert "loc" not in json.dumps(body)
+        assert "price_id" not in json.dumps(body)
+
+
 class TestRegisterExceptionHandlers:
     """Test register_exception_handlers."""
 
-    def test_registers_both_handlers(self):
-        """Should register handlers for AppError and Exception."""
+    def test_registers_all_handlers(self):
+        """Should register handlers for AppError, Exception, and RequestValidationError."""
+        from fastapi.exceptions import RequestValidationError
+
         mock_app = MagicMock()
         register_exception_handlers(mock_app)
-        assert mock_app.add_exception_handler.call_count == 2
+        assert mock_app.add_exception_handler.call_count == 3
         calls = mock_app.add_exception_handler.call_args_list
         registered_types = {call.args[0] for call in calls}
         assert AppError in registered_types
         assert Exception in registered_types
+        assert RequestValidationError in registered_types

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { UserButton } from '@clerk/nextjs';
+import { AppUserButton } from '@/components/auth/app-user-button';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -62,7 +62,7 @@ export default function DashboardLayout({
             </Link>
           </div>
           <div className="hidden md:block" />
-          <UserButton afterSignOutUrl="/" />
+          <AppUserButton />
         </header>
 
         {/* Mobile navigation */}

@@ -4,7 +4,9 @@ import asyncio
 
 import stripe
 
+from app.core.audit import log_audit_event
 from app.core.config import get_settings
+from app.core.errors import AuthenticationError, ValidationError
 
 
 async def create_checkout_session(
@@ -41,12 +43,24 @@ async def create_portal_session(customer_id: str, return_url: str) -> str:
 async def handle_webhook(payload: bytes, sig_header: str) -> dict:
     """Process a Stripe webhook event."""
     settings = get_settings()
-    event = await asyncio.to_thread(
-        stripe.Webhook.construct_event,
-        payload,
-        sig_header,
-        settings.stripe_webhook_secret,
-    )
+    try:
+        event = await asyncio.to_thread(
+            stripe.Webhook.construct_event,
+            payload,
+            sig_header,
+            settings.stripe_webhook_secret,
+        )
+    except stripe.error.SignatureVerificationError:
+        log_audit_event(
+            user_id="stripe",
+            action="webhook.signature_failure",
+            resource_type="webhook",
+            resource_id="unknown",
+            outcome="failure",
+        )
+        raise AuthenticationError(message="Invalid webhook signature")
+    except ValueError:
+        raise ValidationError(message="Invalid webhook payload")
 
     if event["type"] == "checkout.session.completed":
         return {"handled": True, "type": event["type"]}

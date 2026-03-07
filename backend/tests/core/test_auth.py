@@ -10,6 +10,111 @@ from app.core.auth import _clerk_auth_cache, get_current_user_id
 from app.core.exception_handlers import register_exception_handlers
 
 
+class TestAuthAuditEvents:
+    """NEW-006: Auth failures should emit audit events."""
+
+    @pytest.fixture(autouse=True)
+    def _clear_clerk_cache(self):
+        _clerk_auth_cache.clear()
+        yield
+        _clerk_auth_cache.clear()
+
+    @pytest.fixture
+    def app(self):
+        return _create_test_app()
+
+    @pytest.fixture
+    def client(self, app):
+        transport = ASGITransport(app=app)
+        return AsyncClient(transport=transport, base_url="http://test")
+
+    async def test_audit_on_missing_header_dev_mode(self, client):
+        """Missing X-User-ID in dev mode should emit audit event."""
+        with (
+            patch("app.core.auth.get_settings", return_value=_mock_settings("")),
+            patch("app.core.auth.log_audit_event") as mock_audit,
+        ):
+            await client.get("/me")
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["outcome"] == "failure"
+            assert kwargs["action"] == "auth.missing_header"
+
+    async def test_audit_on_dev_mode_rejected_in_prod(self, client):
+        """Dev-mode auth rejected in production should emit audit event."""
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings("", environment="production"),
+            ),
+            patch("app.core.auth.log_audit_event") as mock_audit,
+        ):
+            await client.get("/me", headers={"x-user-id": "user-42"})
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["outcome"] == "failure"
+            assert kwargs["action"] == "auth.dev_mode_rejected"
+
+    async def test_audit_on_missing_bearer_token(self, client):
+        """Missing Authorization header in prod mode should emit audit event."""
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings(PROD_JWKS),
+            ),
+            patch("app.core.auth.log_audit_event") as mock_audit,
+        ):
+            await client.get("/me", headers={"x-user-id": "user-1"})
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["outcome"] == "failure"
+            assert kwargs["action"] == "auth.missing_token"
+
+    async def test_audit_on_invalid_jwt(self, client):
+        """Invalid JWT should emit audit event."""
+        mock_clerk_auth = AsyncMock(side_effect=ValueError("bad token"))
+
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings(PROD_JWKS),
+            ),
+            patch("fastapi_clerk_auth.ClerkConfig"),
+            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.log_audit_event") as mock_audit,
+        ):
+            await client.get(
+                "/me", headers={"Authorization": "Bearer bad-jwt"}
+            )
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["outcome"] == "failure"
+            assert kwargs["action"] == "auth.invalid_token"
+
+    async def test_audit_on_missing_sub_claim(self, client):
+        """Token missing sub claim should emit audit event."""
+        mock_verified = MagicMock()
+        mock_verified.decoded = {"iss": "clerk"}
+        mock_clerk_auth = AsyncMock(return_value=mock_verified)
+
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings(PROD_JWKS),
+            ),
+            patch("fastapi_clerk_auth.ClerkConfig"),
+            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.log_audit_event") as mock_audit,
+        ):
+            await client.get(
+                "/me", headers={"Authorization": "Bearer no-sub-jwt"}
+            )
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["outcome"] == "failure"
+            assert kwargs["action"] == "auth.missing_identity"
+
+
 def _create_test_app() -> FastAPI:
     """Create a minimal FastAPI app with the auth dependency."""
     test_app = FastAPI()
@@ -25,10 +130,11 @@ def _create_test_app() -> FastAPI:
 PROD_JWKS = "https://clerk.example.com/.well-known/jwks.json"
 
 
-def _mock_settings(clerk_jwks_url: str = ""):
+def _mock_settings(clerk_jwks_url: str = "", environment: str = "development"):
     """Return a mock Settings object with the given clerk_jwks_url."""
     settings = MagicMock()
     settings.clerk_jwks_url = clerk_jwks_url
+    settings.environment = environment
     return settings
 
 
@@ -71,6 +177,31 @@ class TestDevMode:
 
         assert response.status_code == 200
         assert response.json() == {"user_id": "user-99"}
+
+    async def test_rejects_dev_bypass_in_production(self, client):
+        """SEC-001: Dev bypass must be rejected when environment=production."""
+        with patch(
+            "app.core.auth.get_settings",
+            return_value=_mock_settings("", environment="production"),
+        ):
+            response = await client.get(
+                "/me", headers={"x-user-id": "user-42"}
+            )
+
+        assert response.status_code == 401
+
+    async def test_allows_dev_bypass_in_development(self, client):
+        """SEC-001: Dev bypass allowed when environment=development."""
+        with patch(
+            "app.core.auth.get_settings",
+            return_value=_mock_settings("", environment="development"),
+        ):
+            response = await client.get(
+                "/me", headers={"x-user-id": "user-42"}
+            )
+
+        assert response.status_code == 200
+        assert response.json() == {"user_id": "user-42"}
 
 
 class TestProdMode:

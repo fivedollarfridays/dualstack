@@ -91,6 +91,18 @@ class TestListItems:
         assert len(items) == 2
         assert total == 5
 
+    async def test_returns_items_ordered_by_created_at_descending(self, db_session):
+        for i in range(3):
+            await create_item(
+                db_session, user_id="user-1", data=ItemCreate(title=f"Item {i}")
+            )
+
+        items, _ = await list_items(db_session, user_id="user-1")
+
+        # Verify created_at is in descending order (newest first)
+        timestamps = [item.created_at for item in items]
+        assert timestamps == sorted(timestamps, reverse=True)
+
 
 class TestGetItem:
     """Test get_item service function."""

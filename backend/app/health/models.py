@@ -8,8 +8,6 @@ class HealthStatus(BaseModel):
     """Overall health status."""
 
     status: Literal["healthy", "degraded", "unhealthy"]
-    version: str
-    uptime_seconds: float
 
 
 class ServiceCheck(BaseModel):
@@ -17,7 +15,6 @@ class ServiceCheck(BaseModel):
 
     name: str
     status: Literal["up", "down", "unknown"]
-    latency_ms: float | None = None
     error: str | None = None
 
 
@@ -32,4 +29,3 @@ class LivenessStatus(BaseModel):
     """Liveness probe response."""
 
     alive: bool
-    uptime_seconds: float

@@ -92,72 +92,69 @@ db_query_duration_seconds = Histogram(
 
 
 def increment_http_requests(method: str, endpoint: str, status_code: int) -> None:
-    """Increment HTTP request counter.
-
-    Args:
-        method: HTTP method (GET, POST, etc.)
-        endpoint: Request endpoint path
-        status_code: HTTP status code
-    """
+    """Increment HTTP request counter."""
     http_requests_total.labels(
         method=method, endpoint=endpoint, status_code=status_code
     ).inc()
 
 
 def observe_http_duration(method: str, endpoint: str, duration: float) -> None:
-    """Observe HTTP request duration.
-
-    Args:
-        method: HTTP method
-        endpoint: Request endpoint path
-        duration: Request duration in seconds
-    """
+    """Observe HTTP request duration."""
     http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(
         duration
     )
 
 
 def increment_db_operations(operation: str, table: str, status: str) -> None:
-    """Increment database operation counter.
-
-    Args:
-        operation: Database operation (select, insert, update, delete)
-        table: Table name
-        status: Operation status (success, error)
-    """
+    """Increment database operation counter."""
     db_operations_total.labels(operation=operation, table=table, status=status).inc()
 
 
 def increment_external_api_calls(service: str, operation: str, status: str) -> None:
-    """Increment external API call counter.
-
-    Args:
-        service: External service name
-        operation: API operation
-        status: Call status (success, error)
-    """
+    """Increment external API call counter."""
     external_api_calls_total.labels(
         service=service, operation=operation, status=status
     ).inc()
 
 
-# Background job metric decorator
+def _record_job_success(job_name: str, duration: float) -> None:
+    """Record metrics for a successful background job execution."""
+    from app.core.logging import get_logger
+
+    background_job_duration_seconds.labels(job_name=job_name).observe(duration)
+    background_job_executions_total.labels(job_name=job_name, status="success").inc()
+    background_job_last_success.labels(job_name=job_name).set(time.time())
+
+    get_logger(__name__).info(
+        "background_job_completed",
+        job_name=job_name,
+        duration_seconds=duration,
+        status="success",
+    )
+
+
+def _record_job_failure(job_name: str, duration: float, exc: Exception) -> None:
+    """Record metrics for a failed background job execution."""
+    from app.core.logging import get_logger
+
+    error_type = type(exc).__name__
+    background_job_duration_seconds.labels(job_name=job_name).observe(duration)
+    background_job_executions_total.labels(job_name=job_name, status="failure").inc()
+    background_job_failures_total.labels(
+        job_name=job_name, error_type=error_type
+    ).inc()
+
+    get_logger(__name__).error(
+        "background_job_failed",
+        job_name=job_name,
+        duration_seconds=duration,
+        error_type=error_type,
+        error=str(exc),
+    )
 
 
 def track_job_metrics(job_name: str) -> Callable:
     """Decorator to track background job metrics.
-
-    Automatically instruments async functions with metrics tracking:
-    - Execution duration (histogram)
-    - Success/failure counts (counter)
-    - Last successful run timestamp (gauge)
-    - Failure counts by error type (counter)
-
-    Args:
-        job_name: Name of the job (e.g., "data_sync")
-
-    Returns:
-        Decorated function with metrics tracking
 
     Usage:
         @track_job_metrics("data_sync")
@@ -168,77 +165,22 @@ def track_job_metrics(job_name: str) -> Callable:
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            from app.core.logging import get_logger
-
             start_time = time.time()
-            logger = get_logger(__name__)
-
             try:
                 result = await func(*args, **kwargs)
-                duration = time.time() - start_time
-
-                # Track success metrics
-                background_job_duration_seconds.labels(job_name=job_name).observe(
-                    duration
-                )
-                background_job_executions_total.labels(
-                    job_name=job_name, status="success"
-                ).inc()
-                background_job_last_success.labels(job_name=job_name).set(time.time())
-
-                logger.info(
-                    "background_job_completed",
-                    job_name=job_name,
-                    duration_seconds=duration,
-                    status="success",
-                )
-
+                _record_job_success(job_name, time.time() - start_time)
                 return result
-
             except Exception as e:
-                duration = time.time() - start_time
-                error_type = type(e).__name__
-
-                # Track failure metrics
-                background_job_duration_seconds.labels(job_name=job_name).observe(
-                    duration
-                )
-                background_job_executions_total.labels(
-                    job_name=job_name, status="failure"
-                ).inc()
-                background_job_failures_total.labels(
-                    job_name=job_name, error_type=error_type
-                ).inc()
-
-                logger.error(
-                    "background_job_failed",
-                    job_name=job_name,
-                    duration_seconds=duration,
-                    error_type=error_type,
-                    error=str(e),
-                )
-
-                raise  # Re-raise to let APScheduler handle it
+                _record_job_failure(job_name, time.time() - start_time, e)
+                raise
 
         return wrapper
 
     return decorator
 
 
-# Database pool metric helpers
-
-
 def update_pool_metrics() -> None:
-    """Update database connection pool metrics.
-
-    Queries the SQLAlchemy engine pool and updates gauge metrics for:
-    - Total pool size
-    - Checked out connections
-    - Overflow connections
-
-    Should be called periodically or on-demand to update metrics.
-    Note: StaticPool (used by SQLite in-memory) doesn't support these metrics.
-    """
+    """Update database connection pool metrics."""
     from app.core.database import get_engine
 
     engine = get_engine()
@@ -246,8 +188,6 @@ def update_pool_metrics() -> None:
         return
 
     pool = engine.pool
-
-    # StaticPool (used by SQLite in-memory for testing) doesn't have size/checkedout
     if not hasattr(pool, "size"):
         return
 
