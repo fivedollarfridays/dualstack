@@ -1,18 +1,21 @@
 """Configuration management"""
 
+from typing import Literal
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    environment: str = "development"
+    environment: Literal["development", "production"] = "development"
 
     # Database
     turso_database_url: str = ""
+    # Loaded from env but not yet wired to the DB engine (see database.py docstring)
     turso_auth_token: str = ""
 
     # Auth
-    clerk_secret_key: str = ""
     clerk_jwks_url: str = ""
 
     # Payments
@@ -29,7 +32,12 @@ class Settings(BaseSettings):
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
 
-    # Add your app-specific settings below
+    @field_validator("metrics_api_key")
+    @classmethod
+    def validate_metrics_api_key(cls, v: str) -> str:
+        if v and len(v) < 16:
+            raise ValueError("metrics_api_key must be at least 16 characters when set")
+        return v
 
     class Config:
         env_file = ".env"

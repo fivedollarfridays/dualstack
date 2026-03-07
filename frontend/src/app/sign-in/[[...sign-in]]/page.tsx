@@ -2,6 +2,8 @@
 
 import { SignIn } from '@clerk/nextjs';
 import { clerkAppearance } from '@/lib/clerk-config';
+import { isClerkEnabled } from '@/lib/auth-config';
+import { DevSignIn } from '@/components/auth/dev-sign-in';
 
 export default function SignInPage() {
   return (
@@ -12,13 +14,17 @@ export default function SignInPage() {
           <p className="mt-2 text-gray-400">Sign in to continue</p>
         </div>
 
-        <SignIn
-          appearance={clerkAppearance}
-          path="/sign-in"
-          routing="path"
-          signUpUrl="/sign-up"
-          forceRedirectUrl="/dashboard"
-        />
+        {isClerkEnabled() ? (
+          <SignIn
+            appearance={clerkAppearance}
+            path="/sign-in"
+            routing="path"
+            signUpUrl="/sign-up"
+            forceRedirectUrl="/dashboard"
+          />
+        ) : (
+          <DevSignIn />
+        )}
       </div>
     </div>
   );

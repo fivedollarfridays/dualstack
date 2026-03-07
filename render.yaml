@@ -9,16 +9,10 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: TURSO_DATABASE_URL
-        sync: false
       - key: TURSO_AUTH_TOKEN
-        sync: false
       - key: CLERK_JWKS_URL
-        sync: false
       - key: STRIPE_SECRET_KEY
-        sync: false
       - key: STRIPE_WEBHOOK_SECRET
-        sync: false
       - key: CORS_ORIGINS
-        sync: false
       - key: METRICS_API_KEY
-        sync: false
+      - key: LOG_LEVEL

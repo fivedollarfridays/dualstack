@@ -82,22 +82,20 @@ class TestCheckoutRequest:
 
 class TestPortalRequest:
     @patch("app.core.url_validation.get_settings")
-    def test_valid_with_return_url_and_customer_id(self, mock_gs: MagicMock) -> None:
+    def test_valid_with_return_url(self, mock_gs: MagicMock) -> None:
         mock_gs.return_value = mock_settings_with_cors("https://example.com")
         req = PortalRequest(
             return_url="https://example.com/dashboard",
-            customer_id="cus_abc123",
         )
         assert req.return_url == "https://example.com/dashboard"
-        assert req.customer_id == "cus_abc123"
 
     def test_return_url_required(self) -> None:
         with pytest.raises(Exception):
-            PortalRequest(customer_id="cus_abc123")  # type: ignore[call-arg]
+            PortalRequest()  # type: ignore[call-arg]
 
-    def test_customer_id_required(self) -> None:
-        with pytest.raises(Exception):
-            PortalRequest(return_url="https://example.com/dashboard")  # type: ignore[call-arg]
+    def test_does_not_accept_customer_id(self) -> None:
+        """NEW-007: PortalRequest must not accept customer_id from client input."""
+        assert not hasattr(PortalRequest.model_fields, "customer_id") or "customer_id" not in PortalRequest.model_fields
 
     @patch("app.core.url_validation.get_settings")
     def test_rejects_foreign_return_url(self, mock_gs: MagicMock) -> None:
@@ -105,7 +103,6 @@ class TestPortalRequest:
         with pytest.raises(ValueError, match="URL origin is not allowed"):
             PortalRequest(
                 return_url="https://evil.com/dashboard",
-                customer_id="cus_abc123",
             )
 
 

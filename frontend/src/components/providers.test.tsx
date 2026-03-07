@@ -3,16 +3,37 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { isValidClerkKey, ClerkNotConfiguredError, Providers } from './providers';
+import { Providers } from './providers';
 
 // Store original env
 const originalEnv = process.env;
 
-beforeEach(() => {
-  // Reset env for each test
-  process.env = { ...originalEnv };
+// Mock the auth modules
+jest.mock('@/lib/auth-config', () => ({
+  isClerkEnabled: jest.fn(),
+  DEV_USER_ID: 'dev-user-001',
+  DEV_TOKEN: 'dev-token',
+}));
 
-  // Mock matchMedia for ThemeProvider (used inside Providers)
+jest.mock('@/components/auth/clerk-auth-bridge', () => ({
+  ClerkAuthBridge: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="clerk-auth-bridge">{children}</div>
+  ),
+}));
+
+jest.mock('@/components/auth/dev-auth-provider', () => ({
+  DevAuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="dev-auth-provider">{children}</div>
+  ),
+}));
+
+import { isClerkEnabled } from '@/lib/auth-config';
+const mockIsClerkEnabled = isClerkEnabled as jest.MockedFunction<typeof isClerkEnabled>;
+
+beforeEach(() => {
+  process.env = { ...originalEnv };
+  jest.clearAllMocks();
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: jest.fn().mockImplementation((query: string) => ({
@@ -28,57 +49,9 @@ afterAll(() => {
   process.env = originalEnv;
 });
 
-describe('isValidClerkKey', () => {
-  it('returns true for a valid test key', () => {
-    expect(isValidClerkKey('pk_test_Y2xlcmsuZXhhbXBsZS5jb20k')).toBe(true);
-  });
-
-  it('returns true for a valid live key', () => {
-    expect(isValidClerkKey('pk_live_Y2xlcmsuZXhhbXBsZS5jb20k')).toBe(true);
-  });
-
-  it('returns false for undefined', () => {
-    expect(isValidClerkKey(undefined)).toBe(false);
-  });
-
-  it('returns false for empty string', () => {
-    expect(isValidClerkKey('')).toBe(false);
-  });
-
-  it('returns false for a placeholder key', () => {
-    expect(isValidClerkKey('pk_test_placeholder')).toBe(false);
-  });
-
-  it('returns false for a key with wrong prefix', () => {
-    expect(isValidClerkKey('sk_test_Y2xlcmsuZXhhbXBsZS5jb20k')).toBe(false);
-  });
-
-  it('returns false for a key that is too short', () => {
-    expect(isValidClerkKey('pk_test_abc')).toBe(false);
-  });
-});
-
-describe('ClerkNotConfiguredError', () => {
-  it('renders the error heading', () => {
-    render(<ClerkNotConfiguredError />);
-    expect(screen.getByText('Clerk Not Configured')).toBeInTheDocument();
-  });
-
-  it('renders instructions about .env.local', () => {
-    render(<ClerkNotConfiguredError />);
-    expect(screen.getByText('.env.local')).toBeInTheDocument();
-  });
-
-  it('renders link to Clerk dashboard', () => {
-    render(<ClerkNotConfiguredError />);
-    const link = screen.getByRole('link', { name: /dashboard\.clerk\.com/i });
-    expect(link).toHaveAttribute('href', 'https://dashboard.clerk.com');
-  });
-});
-
 describe('Providers', () => {
-  it('shows ClerkNotConfiguredError when Clerk key is missing', () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  it('renders DevAuthProvider when Clerk is not enabled', () => {
+    mockIsClerkEnabled.mockReturnValue(false);
 
     render(
       <Providers>
@@ -86,23 +59,12 @@ describe('Providers', () => {
       </Providers>
     );
 
-    expect(screen.getByText('Clerk Not Configured')).toBeInTheDocument();
-    expect(screen.queryByText('child content')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dev-auth-provider')).toBeInTheDocument();
+    expect(screen.getByText('child content')).toBeInTheDocument();
   });
 
-  it('shows ClerkNotConfiguredError when Clerk key is a placeholder', () => {
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_placeholder';
-
-    render(
-      <Providers>
-        <span>child content</span>
-      </Providers>
-    );
-
-    expect(screen.getByText('Clerk Not Configured')).toBeInTheDocument();
-  });
-
-  it('renders children when Clerk key is valid', () => {
+  it('renders ClerkAuthBridge when Clerk is enabled', () => {
+    mockIsClerkEnabled.mockReturnValue(true);
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
       'pk_test_Y2xlcmsuZXhhbXBsZS5jb20k';
 
@@ -112,7 +74,33 @@ describe('Providers', () => {
       </Providers>
     );
 
+    expect(screen.getByTestId('clerk-auth-bridge')).toBeInTheDocument();
     expect(screen.getByText('child content')).toBeInTheDocument();
-    expect(screen.queryByText('Clerk Not Configured')).not.toBeInTheDocument();
+  });
+
+  it('does not render ClerkAuthBridge when Clerk is disabled', () => {
+    mockIsClerkEnabled.mockReturnValue(false);
+
+    render(
+      <Providers>
+        <span>child content</span>
+      </Providers>
+    );
+
+    expect(screen.queryByTestId('clerk-auth-bridge')).not.toBeInTheDocument();
+  });
+
+  it('does not render DevAuthProvider when Clerk is enabled', () => {
+    mockIsClerkEnabled.mockReturnValue(true);
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
+      'pk_test_Y2xlcmsuZXhhbXBsZS5jb20k';
+
+    render(
+      <Providers>
+        <span>child content</span>
+      </Providers>
+    );
+
+    expect(screen.queryByTestId('dev-auth-provider')).not.toBeInTheDocument();
   });
 });

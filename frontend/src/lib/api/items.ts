@@ -4,7 +4,6 @@ export type ItemStatus = 'draft' | 'active' | 'archived';
 
 export interface ItemResponse {
   id: string;
-  user_id: string;
   title: string;
   description: string | null;
   status: ItemStatus;

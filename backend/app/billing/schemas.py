@@ -26,8 +26,8 @@ class CheckoutRequest(BaseModel):
 
 
 class PortalRequest(BaseModel):
+    # customer_id intentionally excluded — must be resolved server-side from user_id
     return_url: str
-    customer_id: str
 
     @field_validator("return_url")
     @classmethod

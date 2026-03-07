@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAppAuth } from '@/contexts/auth-context';
 import { PlanCard } from '@/components/billing/plan-card';
 import { createCheckout } from '@/lib/api/billing';
 
@@ -16,7 +16,7 @@ const PRO_FEATURES = [
 ];
 
 export default function BillingPage() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubscribe() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ItemList } from '@/components/items/item-list';
@@ -17,9 +17,11 @@ export default function ItemsPage() {
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
 
   // Reset to last valid page if items were deleted past current page
-  if (data && page > totalPages) {
-    setPage(totalPages);
-  }
+  useEffect(() => {
+    if (data && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [data, page, totalPages]);
 
   function handleEdit(id: string) {
     router.push(`/items/${id}`);

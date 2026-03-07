@@ -66,6 +66,43 @@ class TestPortalRoute:
         body = response.json()
         assert "user" in body["detail"].lower() or "customer" in body["detail"].lower()
 
+    def test_portal_has_rate_limit_decorator(self):
+        """NEW-011: /billing/portal should have a rate limit decorator."""
+        from app.billing.routes import create_portal
+
+        # slowapi wraps the function, setting __wrapped__
+        assert hasattr(create_portal, "__wrapped__"), "create_portal should have rate limit decorator"
+
+
+class TestCheckoutAuditEvent:
+    """NEW-006: Checkout should emit audit event."""
+
+    @patch("app.core.url_validation.get_settings")
+    async def test_checkout_emits_audit(self, mock_gs: MagicMock, client):
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
+        with (
+            patch(
+                "app.billing.service.create_checkout_session",
+                new_callable=AsyncMock,
+                return_value="https://checkout.stripe.com/session_123",
+            ),
+            patch("app.billing.routes.log_audit_event") as mock_audit,
+        ):
+            await client.post(
+                "/api/v1/billing/checkout",
+                json={
+                    "price_id": "price_abc",
+                    "success_url": "https://example.com/success",
+                    "cancel_url": "https://example.com/cancel",
+                },
+                headers={"x-user-id": "user_1"},
+            )
+            mock_audit.assert_called_once()
+            kwargs = mock_audit.call_args[1]
+            assert kwargs["action"] == "billing.checkout"
+            assert kwargs["user_id"] == "user-1"
+            assert kwargs["resource_type"] == "checkout"
+
 
 class TestWebhookRoute:
     async def test_processes_valid_webhook(self, client):

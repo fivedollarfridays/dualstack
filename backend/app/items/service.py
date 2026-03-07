@@ -54,7 +54,13 @@ async def list_items(
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one()
 
-    stmt = select(Item).where(Item.user_id == user_id).offset(skip).limit(limit)
+    stmt = (
+        select(Item)
+        .where(Item.user_id == user_id)
+        .order_by(Item.created_at.desc(), Item.id.desc())
+        .offset(skip)
+        .limit(limit)
+    )
     result = await db.execute(stmt)
     items = list(result.scalars().all())
 
