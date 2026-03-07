@@ -61,6 +61,16 @@ class TestItemCreate:
         item = ItemCreate(title="x" * 255)
         assert len(item.title) == 255
 
+    def test_description_max_length_ok(self):
+        """ItemCreate should accept description up to 10000 chars."""
+        item = ItemCreate(title="X", description="a" * 10000)
+        assert len(item.description) == 10000
+
+    def test_description_too_long_raises(self):
+        """ItemCreate should reject description over 10000 chars."""
+        with pytest.raises(ValidationError):
+            ItemCreate(title="X", description="a" * 10001)
+
     def test_rejects_invalid_status(self):
         """ItemCreate should reject status values outside the allowed literal."""
         with pytest.raises(ValidationError):
@@ -96,6 +106,16 @@ class TestItemUpdate:
     def test_title_too_long_raises(self):
         with pytest.raises(ValidationError):
             ItemUpdate(title="x" * 256)
+
+    def test_description_max_length_ok(self):
+        """ItemUpdate should accept description up to 10000 chars."""
+        item = ItemUpdate(description="b" * 10000)
+        assert len(item.description) == 10000
+
+    def test_description_too_long_raises(self):
+        """ItemUpdate should reject description over 10000 chars."""
+        with pytest.raises(ValidationError):
+            ItemUpdate(description="b" * 10001)
 
     def test_rejects_invalid_status(self):
         """ItemUpdate should reject status values outside the allowed literal."""

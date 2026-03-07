@@ -24,7 +24,13 @@ export default function BillingPage() {
       setError(null);
       const token = await getToken();
       if (!token) return;
-      const url = await createCheckout(token, STRIPE_PRO_PRICE_ID);
+      const origin = window.location.origin;
+      const url = await createCheckout(
+        token,
+        STRIPE_PRO_PRICE_ID,
+        `${origin}/billing?success=true`,
+        `${origin}/billing`
+      );
       window.location.href = url;
     } catch {
       setError('Failed to start checkout. Please try again.');

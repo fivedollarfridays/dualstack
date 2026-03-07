@@ -1,14 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ItemList } from '@/components/items/item-list';
 import { useItems, useDeleteItem } from '@/hooks/use-items';
 
+const PAGE_SIZE = 20;
+
 export default function ItemsPage() {
   const router = useRouter();
-  const { data, isLoading, error } = useItems();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, error } = useItems(page, PAGE_SIZE);
   const deleteItem = useDeleteItem();
+
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
+
+  // Reset to last valid page if items were deleted past current page
+  if (data && page > totalPages) {
+    setPage(totalPages);
+  }
 
   function handleEdit(id: string) {
     router.push(`/items/${id}`);
@@ -50,6 +61,25 @@ export default function ItemsPage() {
             onDelete={handleDelete}
           />
         )}
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-6 flex items-center justify-between">
+        <Button
+          variant="outline"
+          disabled={page <= 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Previous
+        </Button>
+        <span className="text-sm text-gray-400">Page {page}</span>
+        <Button
+          variant="outline"
+          disabled={page >= totalPages}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

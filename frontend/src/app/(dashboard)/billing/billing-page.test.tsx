@@ -79,7 +79,9 @@ describe('BillingPage', () => {
     await waitFor(() => {
       expect(mockCreateCheckout).toHaveBeenCalledWith(
         'mock-token',
-        'price_pro_monthly'
+        'price_pro_monthly',
+        'http://localhost/billing?success=true',
+        'http://localhost/billing'
       );
     });
   });

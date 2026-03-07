@@ -1,11 +1,13 @@
 import { API_URL, authHeaders, handleResponse } from './shared';
 
+export type ItemStatus = 'draft' | 'active' | 'archived';
+
 export interface ItemResponse {
   id: string;
   user_id: string;
   title: string;
   description: string | null;
-  status: 'draft' | 'active' | 'archived';
+  status: ItemStatus;
   created_at: string;
   updated_at: string;
 }
@@ -18,13 +20,13 @@ export interface ItemListResponse {
 export interface CreateItemData {
   title: string;
   description?: string;
-  status?: 'draft' | 'active' | 'archived';
+  status?: ItemStatus;
 }
 
 export interface UpdateItemData {
   title?: string;
   description?: string;
-  status?: 'draft' | 'active' | 'archived';
+  status?: ItemStatus;
 }
 
 export async function listItems(

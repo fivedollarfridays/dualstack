@@ -1,5 +1,6 @@
 """Health check endpoints."""
 
+import logging
 import time
 from pathlib import Path
 from fastapi import APIRouter, status, Response
@@ -12,6 +13,8 @@ from app.health.models import (
     LivenessStatus,
     ServiceCheck,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -39,8 +42,9 @@ async def check_database() -> ServiceCheck:
             await conn.execute(text("SELECT 1"))
         latency = (time.time() - start) * 1000
         return ServiceCheck(name="database", status="up", latency_ms=latency)
-    except Exception as e:
-        return ServiceCheck(name="database", status="down", error=str(e))
+    except Exception:
+        logger.exception("Database health check failed")
+        return ServiceCheck(name="database", status="down", error="database unavailable")
 
 
 @router.get("/live", response_model=LivenessStatus)

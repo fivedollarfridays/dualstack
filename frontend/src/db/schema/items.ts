@@ -1,23 +1,19 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
-import { users } from './users';
 
 export const items = sqliteTable('items', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
   title: text('title').notNull(),
   description: text('description'),
   status: text('status', { enum: ['draft', 'active', 'archived'] }).notNull().default('draft'),
-  createdAt: integer('created_at', { mode: 'timestamp' })
+  createdAt: text('created_at')
     .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text('updated_at')
     .notNull()
-    .default(sql`(unixepoch())`)
-    .$onUpdate(() => new Date()),
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
-
-

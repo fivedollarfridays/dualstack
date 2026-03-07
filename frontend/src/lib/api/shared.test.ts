@@ -40,9 +40,74 @@ describe('authHeaders', () => {
 });
 
 describe('handleResponse', () => {
-  it('throws on non-ok response', async () => {
-    const response = { ok: false, status: 404, statusText: 'Not Found' } as Response;
-    await expect(handleResponse(response)).rejects.toThrow('API error: 404 Not Found');
+  it('throws with backend error message when response body has error.message', async () => {
+    const response = {
+      ok: false,
+      status: 422,
+      statusText: 'Unprocessable Entity',
+      json: async () => ({ error: { message: 'price_id is required' } }),
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('price_id is required');
+  });
+
+  it('throws with backend detail string when response body has detail', async () => {
+    const response = {
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+      json: async () => ({ detail: 'Item not found' }),
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('Item not found');
+  });
+
+  it('falls back to status text when response body parsing fails', async () => {
+    const response = {
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      json: async () => { throw new Error('not json'); },
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('API error: 500 Internal Server Error');
+  });
+
+  it('falls back to status text when response body has no recognized error field', async () => {
+    const response = {
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      json: async () => ({ unknown: 'field' }),
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('API error: 400 Bad Request');
+  });
+
+  it('falls back to status text when detail is an array (FastAPI validation error)', async () => {
+    const response = {
+      ok: false,
+      status: 422,
+      statusText: 'Unprocessable Entity',
+      json: async () => ({ detail: [{ loc: ['body', 'price_id'], msg: 'field required', type: 'missing' }] }),
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('API error: 422 Unprocessable Entity');
+  });
+
+  it('falls back to status text when response body is null', async () => {
+    const response = {
+      ok: false,
+      status: 502,
+      statusText: 'Bad Gateway',
+      json: async () => null,
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('API error: 502 Bad Gateway');
+  });
+
+  it('extracts error.message when error object exists but no detail', async () => {
+    const response = {
+      ok: false,
+      status: 422,
+      statusText: 'Unprocessable Entity',
+      json: async () => ({ error: { code: 'VALIDATION', message: 'Invalid input' } }),
+    } as unknown as Response;
+    await expect(handleResponse(response)).rejects.toThrow('Invalid input');
   });
 
   it('returns undefined for 204 No Content', async () => {

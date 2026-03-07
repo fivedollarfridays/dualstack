@@ -53,35 +53,18 @@ class TestCheckoutRoute:
 
 
 class TestPortalRoute:
-    @patch("app.core.url_validation.get_settings")
-    async def test_returns_portal_url(self, mock_gs: MagicMock, client):
-        mock_gs.return_value = mock_settings_with_cors("https://example.com")
-        with patch(
-            "app.billing.service.create_portal_session",
-            new_callable=AsyncMock,
-            return_value="https://billing.stripe.com/portal_123",
-        ) as mock_portal:
-            response = await client.post(
-                "/api/v1/billing/portal",
-                json={
-                    "return_url": "https://example.com/dashboard",
-                    "customer_id": "cus_abc123",
-                },
-            )
-
-            assert response.status_code == 200
-            assert response.json() == {"url": "https://billing.stripe.com/portal_123"}
-            mock_portal.assert_called_once_with(
-                "cus_abc123", "https://example.com/dashboard"
-            )
-
-    async def test_requires_customer_id_in_body(self, client):
-        """Portal requires customer_id in the request body, not a header."""
+    async def test_returns_501_not_implemented(self, client):
+        """Portal endpoint returns 501 until user->customer mapping is implemented."""
         response = await client.post(
             "/api/v1/billing/portal",
-            json={"return_url": "https://example.com/dashboard"},
+            json={
+                "return_url": "https://example.com/dashboard",
+                "customer_id": "cus_abc123",
+            },
         )
-        assert response.status_code == 422
+        assert response.status_code == 501
+        body = response.json()
+        assert "user" in body["detail"].lower() or "customer" in body["detail"].lower()
 
 
 class TestWebhookRoute:

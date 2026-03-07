@@ -15,7 +15,6 @@ groups:
         annotations:
           summary: "High error rate on {{ $labels.endpoint }}"
           description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
-          runbook_url: "https://github.com/companion-ai/runbooks/api-high-error-rate.md"
 
       - alert: APIDown
         expr: |
@@ -27,7 +26,6 @@ groups:
         annotations:
           summary: "API is not receiving requests"
           description: "No HTTP requests received in the last 2 minutes"
-          runbook_url: "https://github.com/companion-ai/runbooks/api-down.md"
 
       - alert: DatabasePoolExhausted
         expr: |
@@ -39,19 +37,3 @@ groups:
         annotations:
           summary: "Database connection pool exhausted"
           description: "All {{ $value }} connections are in use, new requests will be blocked"
-          runbook_url: "https://github.com/companion-ai/runbooks/db-pool-exhausted.md"
-
-      - alert: VideoJobFailureSpike
-        expr: |
-          (
-            rate(video_jobs_failed_total[10m]) /
-            (rate(video_jobs_completed_total[10m]) + rate(video_jobs_failed_total[10m]))
-          ) > 0.10
-        for: 10m
-        labels:
-          severity: critical
-          component: video
-        annotations:
-          summary: "High video job failure rate"
-          description: "Failure rate is {{ $value | humanizePercentage }} (threshold: 10%)"
-          runbook_url: "https://github.com/companion-ai/runbooks/video-failure-spike.md"

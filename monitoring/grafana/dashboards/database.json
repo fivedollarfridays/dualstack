@@ -1,7 +1,7 @@
 {
   "dashboard": {
     "title": "Database",
-    "tags": ["companion-ai", "database", "performance"],
+    "tags": ["dualstack", "database", "performance"],
     "timezone": "browser",
     "schemaVersion": 36,
     "version": 1,

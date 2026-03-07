@@ -6,7 +6,6 @@ services:
       - '--config.file=/etc/prometheus/prometheus.dev.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=7d'  # Shorter retention for dev
-      - '--web.enable-lifecycle'
     networks:
       - monitoring
       - host  # Access to host network for localhost:8000

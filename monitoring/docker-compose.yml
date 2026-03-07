@@ -3,12 +3,11 @@ version: '3.8'
 services:
   prometheus:
     image: prom/prometheus:latest
-    container_name: companion-prometheus
+    container_name: dualstack-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
-      - '--web.enable-lifecycle'
     ports:
       - "9090:9090"
     volumes:
@@ -25,7 +24,7 @@ services:
 
   alertmanager:
     image: prom/alertmanager:latest
-    container_name: companion-alertmanager
+    container_name: dualstack-alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
@@ -46,11 +45,12 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: companion-grafana
+    container_name: dualstack-grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Change this password before deploying to production
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_AUTH_ANONYMOUS_ENABLED=false
     volumes:

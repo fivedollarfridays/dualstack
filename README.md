@@ -7,12 +7,12 @@ Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, and
 - **FastAPI Backend** -- Python 3.13, async SQLAlchemy, Pydantic v2, structured logging, Prometheus metrics
 - **Next.js 15 Frontend** -- App Router, TypeScript, Tailwind CSS, shadcn/ui components
 - **Authentication** -- Clerk (backend JWT + frontend components)
-- **Database** -- Turso/SQLite with Drizzle ORM (frontend) and SQLAlchemy (backend)
+- **Database** -- SQLite (Turso-ready) with Drizzle ORM (frontend) and SQLAlchemy (backend)
 - **Payments** -- Stripe Checkout + Customer Portal
 - **Monitoring** -- Prometheus + Grafana + Alertmanager (Docker Compose)
 - **Health Checks** -- Kubernetes liveness + readiness probes
 - **Background Jobs** -- APScheduler for async task scheduling
-- **Testing** -- pytest (backend, 99% coverage) + Jest + Playwright (frontend, 99% coverage)
+- **Testing** -- pytest (backend, 100% coverage) + Jest + Playwright (frontend, 100% coverage)
 - **Generic CRUD Entity** -- "Items" module demonstrating the full pattern to extend
 
 ## Tech Stack
@@ -21,7 +21,7 @@ Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, and
 |-------|-----------|
 | Backend | FastAPI, SQLAlchemy 2.0, Pydantic v2 |
 | Frontend | Next.js 15, React 18, TypeScript 5 |
-| Database | Turso (LibSQL) / SQLite |
+| Database | SQLite (Turso-ready with configuration) |
 | ORM | SQLAlchemy (backend), Drizzle (frontend) |
 | Auth | Clerk |
 | Payments | Stripe |
@@ -41,7 +41,7 @@ dualstack/
 │   │   ├── health/           # K8s health probes
 │   │   ├── items/            # Generic CRUD entity
 │   │   └── billing/          # Stripe integration
-│   ├── tests/                # pytest (99% coverage)
+│   ├── tests/                # pytest (100% coverage)
 │   └── alembic/              # DB migrations
 ├── frontend/                 # Next.js 15 (TypeScript)
 │   ├── src/
@@ -66,10 +66,11 @@ dualstack/
 - Node.js 18+
 - npm or pnpm
 
-### 1. Clone and install
+### 1. Extract and install
 
 ```bash
-git clone <repo-url> dualstack
+# Extract the downloaded archive
+unzip dualstack-v1.0.0.zip
 cd dualstack
 
 # Backend
@@ -153,6 +154,7 @@ docker compose up -d
 ```bash
 # Backend
 cd backend
+pip install -r requirements-dev.txt  # includes test dependencies
 pytest --cov=app --cov-report=term-missing tests/
 
 # Frontend
@@ -171,7 +173,7 @@ docker build -t dualstack-api .
 docker run -p 8000:8000 --env-file .env dualstack-api
 ```
 
-Or deploy to Render using the included `render.yaml`.
+Or deploy to Render using the included [`render.yaml`](render.yaml).
 
 ### Frontend (Vercel)
 
@@ -191,16 +193,38 @@ vercel
 
 ### Adding new API routes
 
-1. Create `app/your_module/routes.py` with FastAPI router
-2. Import in `app/main.py` and include with prefix
+1. Create `app/your_module/routes.py` with a FastAPI `APIRouter`
+2. Add model and schemas in `app/your_module/models.py` and `schemas.py`
 3. Add service layer in `app/your_module/service.py`
-4. Write tests first in `tests/your_module/`
+4. Register the router in `app/main.py`:
+   ```python
+   from app.your_module.routes import router as your_module_router
+   app.include_router(your_module_router, prefix="/api/v1")
+   ```
+5. Create an Alembic migration: `alembic revision --autogenerate -m "add your_module"`
+6. Write tests in `tests/your_module/`
 
-## Built with PairCoder
+### Adding sidebar navigation
 
-This kit was extracted from a production application using [PairCoder](https://github.com/BPSAI/paircoder) -- AI-augmented pair programming.
+Edit `frontend/src/app/(dashboard)/layout.tsx` and add an entry to the `navItems` array:
+
+```typescript
+const navItems = [
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/items', label: 'Items' },
+  { href: '/your-page', label: 'Your Page' },  // add here
+  { href: '/billing', label: 'Billing' },
+  { href: '/settings', label: 'Settings' },
+];
+```
+
+### Customizing billing plans
+
+1. Update the price ID in `frontend/.env.local` (`NEXT_PUBLIC_STRIPE_PRO_PRICE_ID`)
+2. Edit `frontend/src/app/(dashboard)/billing/page.tsx` to match your plan names and pricing
+3. Run `python scripts/stripe_sync.py` to sync plans to Stripe (edit `DEFAULT_PLANS` first)
 
 ## License
 
-MIT
+Personal Use License - Copyright (c) 2026 Kevin Masterson. See [LICENSE](LICENSE) for details.
 

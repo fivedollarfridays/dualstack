@@ -1,3 +1,7 @@
+import Link from 'next/link';
+import { buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
 export default function SettingsPage() {
   return (
     <div>
@@ -6,28 +10,32 @@ export default function SettingsPage() {
 
       <div className="mt-8 max-w-2xl space-y-6">
         {/* Profile section */}
-        <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+        <Card>
           <h2 className="text-lg font-semibold text-white">Profile</h2>
           <p className="mt-1 text-sm text-gray-400">
-            Update your profile information. Manage your account through Clerk.
+            Update your profile information and manage your account through Clerk.
           </p>
-        </div>
+          <Link
+            href="/user-profile"
+            className={buttonVariants({ variant: 'default', className: 'mt-4' })}
+          >
+            Manage Account
+          </Link>
+        </Card>
 
         {/* Billing section */}
-        <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+        <Card>
           <h2 className="text-lg font-semibold text-white">Billing</h2>
           <p className="mt-1 text-sm text-gray-400">
             Manage your subscription and payment methods.
           </p>
-        </div>
-
-        {/* Danger zone */}
-        <div className="rounded-lg border border-red-900/50 bg-red-900/10 p-6">
-          <h2 className="text-lg font-semibold text-red-400">Danger Zone</h2>
-          <p className="mt-1 text-sm text-gray-400">
-            Irreversible actions for your account.
-          </p>
-        </div>
+          <Link
+            href="/billing"
+            className={buttonVariants({ variant: 'secondary', className: 'mt-4' })}
+          >
+            Manage Billing
+          </Link>
+        </Card>
       </div>
     </div>
   );

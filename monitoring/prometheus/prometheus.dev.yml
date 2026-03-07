@@ -4,11 +4,11 @@ global:
   scrape_timeout: 10s
 
   external_labels:
-    cluster: 'companion-ai'
+    cluster: 'dualstack'
     environment: 'development'
 
 scrape_configs:
-  - job_name: 'companion-api'
+  - job_name: 'dualstack-api'
     static_configs:
       - targets: ['localhost:8000']  # Local development
     metrics_path: '/metrics'

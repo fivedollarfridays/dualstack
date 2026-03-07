@@ -5,12 +5,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Home from './page';
 
-// Mock next/link to render a plain anchor
-jest.mock('next/link', () => ({
-  __esModule: true,
-  default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) =>
-    React.createElement('a', { href, ...props }, children),
-}));
 
 describe('Home (Landing Page)', () => {
   it('renders the main heading', () => {

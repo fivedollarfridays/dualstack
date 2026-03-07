@@ -1,7 +1,7 @@
 {
   "dashboard": {
     "title": "Background Jobs",
-    "tags": ["companion-ai", "jobs", "background"],
+    "tags": ["dualstack", "jobs", "background"],
     "timezone": "browser",
     "schemaVersion": 36,
     "version": 1,
@@ -296,69 +296,6 @@
               ]
             }
           ]
-        }
-      },
-      {
-        "id": 11,
-        "type": "timeseries",
-        "title": "Video Status Check Job Duration",
-        "gridPos": {"x": 0, "y": 28, "w": 8, "h": 6},
-        "targets": [{
-          "expr": "sum(rate(background_job_duration_seconds_sum{job_name=\"video_status_check\"}[5m])) / sum(rate(background_job_duration_seconds_count{job_name=\"video_status_check\"}[5m]))",
-          "refId": "A",
-          "legendFormat": "avg duration"
-        }],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "s",
-            "custom": {
-              "lineWidth": 2,
-              "fillOpacity": 10,
-              "showPoints": "never"
-            }
-          }
-        }
-      },
-      {
-        "id": 12,
-        "type": "timeseries",
-        "title": "Proactive Check Job Duration",
-        "gridPos": {"x": 8, "y": 28, "w": 8, "h": 6},
-        "targets": [{
-          "expr": "sum(rate(background_job_duration_seconds_sum{job_name=\"proactive_check\"}[5m])) / sum(rate(background_job_duration_seconds_count{job_name=\"proactive_check\"}[5m]))",
-          "refId": "A",
-          "legendFormat": "avg duration"
-        }],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "s",
-            "custom": {
-              "lineWidth": 2,
-              "fillOpacity": 10,
-              "showPoints": "never"
-            }
-          }
-        }
-      },
-      {
-        "id": 13,
-        "type": "timeseries",
-        "title": "Surprise Evaluation Job Duration",
-        "gridPos": {"x": 16, "y": 28, "w": 8, "h": 6},
-        "targets": [{
-          "expr": "sum(rate(background_job_duration_seconds_sum{job_name=\"surprise_evaluation\"}[5m])) / sum(rate(background_job_duration_seconds_count{job_name=\"surprise_evaluation\"}[5m]))",
-          "refId": "A",
-          "legendFormat": "avg duration"
-        }],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "s",
-            "custom": {
-              "lineWidth": 2,
-              "fillOpacity": 10,
-              "showPoints": "never"
-            }
-          }
         }
       }
     ]
