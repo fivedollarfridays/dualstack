@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { ItemForm } from '@/components/items/item-form';
 import { useUpdateItem, useDeleteItem } from '@/hooks/use-items';
-import { getItem } from '@/lib/api/items';
+import { getItem, type ItemStatus } from '@/lib/api/items';
 
 export default function EditItemPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function EditItemPage() {
   async function handleSubmit(data: {
     title: string;
     description: string;
-    status: 'draft' | 'active' | 'archived';
+    status: ItemStatus;
   }) {
     try {
       await updateItem.mutateAsync({ id, data });

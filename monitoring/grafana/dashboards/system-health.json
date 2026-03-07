@@ -1,7 +1,7 @@
 {
   "dashboard": {
     "title": "System Health",
-    "tags": ["companion-ai", "system", "health"],
+    "tags": ["dualstack", "system", "health"],
     "timezone": "browser",
     "schemaVersion": 36,
     "version": 1,

@@ -1,3 +1,5 @@
+import { Card } from '@/components/ui/card';
+
 interface PlanCardProps {
   name: string;
   price: string;
@@ -14,7 +16,7 @@ export function PlanCard({
   onSubscribe,
 }: PlanCardProps) {
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+    <Card>
       <h3 className="text-xl font-bold text-white">{name}</h3>
       <p className="mt-2 text-3xl font-bold text-white">{price}</p>
       <ul className="mt-4 space-y-2">
@@ -35,6 +37,6 @@ export function PlanCard({
       >
         {isCurrent ? 'Current Plan' : 'Subscribe'}
       </button>
-    </div>
+    </Card>
   );
 }

@@ -6,7 +6,6 @@ services:
       - '--config.file=/etc/prometheus/prometheus.prod.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'  # Longer retention for production
-      - '--web.enable-lifecycle'
     networks:
       - monitoring
       - backend-network  # Connect to backend's network
@@ -21,4 +20,4 @@ services:
 networks:
   backend-network:
     external: true
-    name: companion-backend-network
+    name: dualstack-backend-network

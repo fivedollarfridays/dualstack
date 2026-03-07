@@ -1,10 +1,11 @@
 """API routes for items CRUD operations."""
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.items.schemas import ItemCreate, ItemListResponse, ItemResponse, ItemUpdate
 from app.items.service import create_item, delete_item, get_item, list_items, update_item
 
@@ -28,7 +29,9 @@ async def list_items_route(
 
 
 @router.post("", response_model=ItemResponse, status_code=201)
+@limiter.limit("30/minute")
 async def create_item_route(
+    request: Request,
     data: ItemCreate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),

@@ -5,6 +5,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import SettingsPage from './page';
 
+
 describe('SettingsPage', () => {
   it('renders the page heading', () => {
     render(<SettingsPage />);
@@ -18,27 +19,22 @@ describe('SettingsPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the Profile section', () => {
+  it('renders the Profile section with Manage Account link', () => {
     render(<SettingsPage />);
     expect(screen.getByText('Profile')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Update your profile information/)
-    ).toBeInTheDocument();
+    const manageLink = screen.getByRole('link', { name: /manage account/i });
+    expect(manageLink).toHaveAttribute('href', '/user-profile');
   });
 
-  it('renders the Billing section', () => {
+  it('renders the Billing section with link to billing page', () => {
     render(<SettingsPage />);
     expect(screen.getByText('Billing')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Manage your subscription/)
-    ).toBeInTheDocument();
+    const billingLink = screen.getByRole('link', { name: /manage billing/i });
+    expect(billingLink).toHaveAttribute('href', '/billing');
   });
 
-  it('renders the Danger Zone section', () => {
+  it('does not render a Danger Zone section', () => {
     render(<SettingsPage />);
-    expect(screen.getByText('Danger Zone')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Irreversible actions/)
-    ).toBeInTheDocument();
+    expect(screen.queryByText('Danger Zone')).not.toBeInTheDocument();
   });
 });

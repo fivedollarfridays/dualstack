@@ -6,12 +6,15 @@ from contextlib import asynccontextmanager
 import stripe
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.metrics_routes import router as metrics_router
 from app.core.middleware import LoggingMiddleware
+from app.core.rate_limit import limiter, rate_limit_handler
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.health import router as health_router
 
 logger = logging.getLogger(__name__)
@@ -32,6 +35,11 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(
             "CLERK_JWKS_URL must be set in non-development environments"
         )
+    if not settings.clerk_jwks_url:
+        logger.warning(
+            "WARNING: Running without Clerk JWT validation. All X-User-ID headers "
+            "are trusted. Do NOT deploy to production without setting CLERK_JWKS_URL."
+        )
     stripe.api_key = settings.stripe_secret_key
     yield
 
@@ -49,7 +57,14 @@ app = FastAPI(
 # Register exception handlers
 register_exception_handlers(app)
 
-# Add logging middleware (first, so it wraps everything)
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Add logging middleware
 app.add_middleware(LoggingMiddleware)
 
 # CORS for frontend - configurable via CORS_ORIGINS env var
@@ -57,8 +72,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Include health router (no prefix for /health endpoints)

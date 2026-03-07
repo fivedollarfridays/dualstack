@@ -12,7 +12,7 @@ class ItemCreate(BaseModel):
     """Schema for creating a new item."""
 
     title: str = Field(..., min_length=1, max_length=255)
-    description: str | None = None
+    description: str | None = Field(None, max_length=10000)
     status: ItemStatusType = "draft"
 
 
@@ -20,7 +20,7 @@ class ItemUpdate(BaseModel):
     """Schema for updating an existing item. All fields optional."""
 
     title: str | None = Field(None, min_length=1, max_length=255)
-    description: str | None = None
+    description: str | None = Field(None, max_length=10000)
     status: ItemStatusType | None = None
 
 

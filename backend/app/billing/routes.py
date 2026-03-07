@@ -1,17 +1,21 @@
 """Billing API routes."""
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.billing import service
-from app.billing.schemas import CheckoutRequest, PortalRequest
+from app.billing.schemas import CheckoutRequest
 from app.core.auth import get_current_user_id
+from app.core.rate_limit import limiter
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
 
 @router.post("/checkout")
+@limiter.limit("10/minute")
 async def create_checkout(
-    data: CheckoutRequest, user_id: str = Depends(get_current_user_id)
+    request: Request,
+    data: CheckoutRequest,
+    user_id: str = Depends(get_current_user_id),
 ):
     """Create a Stripe Checkout session."""
     url = await service.create_checkout_session(
@@ -22,11 +26,21 @@ async def create_checkout(
 
 @router.post("/portal")
 async def create_portal(
-    data: PortalRequest, user_id: str = Depends(get_current_user_id)
+    user_id: str = Depends(get_current_user_id),
 ):
-    """Create a Stripe Billing Portal session."""
-    url = await service.create_portal_session(data.customer_id, data.return_url)
-    return {"url": url}
+    """Create a Stripe Billing Portal session.
+
+    Not yet implemented — requires a user->customer mapping table.
+    See backend/app/billing/service.py for implementation guidance.
+    """
+    raise HTTPException(
+        status_code=501,
+        detail=(
+            "Billing portal requires a user->customer mapping. "
+            "Store the Stripe customer_id from the checkout.session.completed "
+            "webhook in a users table, then look it up here by user_id."
+        ),
+    )
 
 
 # Webhook route (no auth - Stripe signs it)
@@ -34,6 +48,7 @@ webhook_router = APIRouter(tags=["webhooks"])
 
 
 @webhook_router.post("/webhooks/stripe")
+@limiter.limit("60/minute")
 async def stripe_webhook(request: Request):
     """Process Stripe webhook events."""
     payload = await request.body()

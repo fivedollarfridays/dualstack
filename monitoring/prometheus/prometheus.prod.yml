@@ -4,15 +4,19 @@ global:
   scrape_timeout: 10s
 
   external_labels:
-    cluster: 'companion-ai'
+    cluster: 'dualstack'
     environment: 'production'
 
 scrape_configs:
-  - job_name: 'companion-api'
+  - job_name: 'dualstack-api'
     static_configs:
       - targets: ['backend:8000']  # Docker service name in production
     metrics_path: '/metrics'
     scrape_interval: 30s
+    # If METRICS_API_KEY is set on the backend, uncomment and set the token:
+    # authorization:
+    #   type: Bearer
+    #   credentials: '<your-metrics-api-key>'
 
   - job_name: 'prometheus'
     static_configs:

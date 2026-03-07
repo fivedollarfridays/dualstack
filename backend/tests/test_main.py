@@ -107,6 +107,45 @@ class TestLifespan:
                 pass  # Should not raise
 
     @pytest.mark.asyncio
+    async def test_logs_warning_when_clerk_jwks_url_empty(self):
+        """Lifespan logs a loud warning in dev mode without clerk_jwks_url."""
+        import logging
+        from fastapi import FastAPI
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.stripe_webhook_secret = ""
+        mock_settings.stripe_secret_key = "sk_test_fake"
+        mock_settings.clerk_jwks_url = ""
+
+        test_app = FastAPI()
+        with patch("app.main.get_settings", return_value=mock_settings):
+            with patch("app.main.logger") as mock_logger:
+                async with lifespan(test_app):
+                    pass
+                mock_logger.warning.assert_called_once()
+                warning_msg = mock_logger.warning.call_args[0][0]
+                assert "CLERK_JWKS_URL" in warning_msg
+
+    @pytest.mark.asyncio
+    async def test_no_warning_when_clerk_jwks_url_set(self):
+        """Lifespan does not log warning when clerk_jwks_url is set."""
+        from fastapi import FastAPI
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.stripe_webhook_secret = ""
+        mock_settings.stripe_secret_key = "sk_test_fake"
+        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+
+        test_app = FastAPI()
+        with patch("app.main.get_settings", return_value=mock_settings):
+            with patch("app.main.logger") as mock_logger:
+                async with lifespan(test_app):
+                    pass
+                mock_logger.warning.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_sets_stripe_api_key_at_startup(self):
         """Lifespan sets stripe.api_key from settings."""
         import stripe

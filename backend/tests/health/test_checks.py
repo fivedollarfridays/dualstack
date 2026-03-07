@@ -75,7 +75,7 @@ class TestCheckDatabase:
 
     @pytest.mark.asyncio
     async def test_database_down(self):
-        """Should return status 'down' when database throws."""
+        """Should return status 'down' with generic error, not leak details."""
         mock_engine = MagicMock()
         mock_engine.connect = MagicMock(side_effect=Exception("Connection refused"))
 
@@ -83,7 +83,8 @@ class TestCheckDatabase:
             result = await check_database()
             assert result.name == "database"
             assert result.status == "down"
-            assert result.error is not None
+            assert result.error == "database unavailable"
+            assert "Connection refused" not in (result.error or "")
 
 
 class TestLivenessEndpoint:

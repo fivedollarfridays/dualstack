@@ -11,13 +11,18 @@ beforeEach(() => {
 });
 
 describe('createCheckout', () => {
-  it('calls POST /api/v1/billing/checkout and returns URL', async () => {
+  it('calls POST /api/v1/billing/checkout with price_id, success_url, and cancel_url', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ url: 'https://checkout.stripe.com/session_123' }),
     });
 
-    const url = await createCheckout(TEST_TOKEN, 'price_abc');
+    const url = await createCheckout(
+      TEST_TOKEN,
+      'price_abc',
+      'https://example.com/success',
+      'https://example.com/cancel'
+    );
 
     expect(mockFetch).toHaveBeenCalledWith(
       `${API_URL}/api/v1/billing/checkout`,
@@ -27,7 +32,11 @@ describe('createCheckout', () => {
           Authorization: `Bearer ${TEST_TOKEN}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ price_id: 'price_abc' }),
+        body: JSON.stringify({
+          price_id: 'price_abc',
+          success_url: 'https://example.com/success',
+          cancel_url: 'https://example.com/cancel',
+        }),
       }
     );
     expect(url).toBe('https://checkout.stripe.com/session_123');
@@ -40,8 +49,8 @@ describe('createCheckout', () => {
       statusText: 'Bad Request',
     });
 
-    await expect(createCheckout(TEST_TOKEN, 'price_abc')).rejects.toThrow(
-      'API error: 400 Bad Request'
-    );
+    await expect(
+      createCheckout(TEST_TOKEN, 'price_abc', 'https://example.com/ok', 'https://example.com/cancel')
+    ).rejects.toThrow('API error: 400 Bad Request');
   });
 });

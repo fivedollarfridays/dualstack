@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { ItemStatus } from '@/lib/api/items';
 
 interface ItemFormData {
   title: string;
   description: string;
-  status: 'draft' | 'active' | 'archived';
+  status: ItemStatus;
 }
 
 interface ItemFormProps {
@@ -21,7 +22,7 @@ interface ItemFormProps {
 export function ItemForm({ onSubmit, initialData, isLoading }: ItemFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
-  const [status, setStatus] = useState<'draft' | 'active' | 'archived'>(
+  const [status, setStatus] = useState<ItemStatus>(
     initialData?.status || 'draft'
   );
 
@@ -63,7 +64,7 @@ export function ItemForm({ onSubmit, initialData, isLoading }: ItemFormProps) {
         <select
           id="status"
           value={status}
-          onChange={(e) => setStatus(e.target.value as 'draft' | 'active' | 'archived')}
+          onChange={(e) => setStatus(e.target.value as ItemStatus)}
           className="flex h-10 w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="draft">Draft</option>

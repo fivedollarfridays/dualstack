@@ -228,4 +228,117 @@ describe('ItemsPage', () => {
 
     expect(mockDeleteMutateAsync).toHaveBeenCalledWith('item-1');
   });
+
+  describe('pagination', () => {
+    it('renders Previous and Next buttons', () => {
+      mockUseItems.mockReturnValue({
+        data: { items: [], total: 0 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
+    });
+
+    it('disables Previous on first page', () => {
+      mockUseItems.mockReturnValue({
+        data: { items: [], total: 0 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      expect(screen.getByRole('button', { name: /previous/i })).toBeDisabled();
+    });
+
+    it('disables Next when on the last page', () => {
+      mockUseItems.mockReturnValue({
+        data: { items: [{ id: '1', user_id: 'u', title: 'T', description: null, status: 'draft', created_at: '', updated_at: '' }], total: 1 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+    });
+
+    it('shows current page number', () => {
+      mockUseItems.mockReturnValue({
+        data: { items: [], total: 0 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      expect(screen.getByText(/page 1/i)).toBeInTheDocument();
+    });
+
+    it('enables Next when there are more pages', () => {
+      // 25 items with page size 20 = 2 pages
+      mockUseItems.mockReturnValue({
+        data: { items: Array(20).fill({ id: '1', user_id: 'u', title: 'T', description: null, status: 'draft', created_at: '', updated_at: '' }), total: 25 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      expect(screen.getByRole('button', { name: /next/i })).not.toBeDisabled();
+    });
+
+    it('advances to next page when Next is clicked', async () => {
+      const user = userEvent.setup();
+      mockUseItems.mockReturnValue({
+        data: { items: Array(20).fill({ id: '1', user_id: 'u', title: 'T', description: null, status: 'draft', created_at: '', updated_at: '' }), total: 25 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      await user.click(screen.getByRole('button', { name: /next/i }));
+      expect(screen.getByText(/page 2/i)).toBeInTheDocument();
+    });
+
+    it('resets to last valid page when total shrinks below current page', async () => {
+      const user = userEvent.setup();
+      // Start with 2 pages worth of items
+      mockUseItems.mockReturnValue({
+        data: { items: Array(20).fill({ id: '1', user_id: 'u', title: 'T', description: null, status: 'draft', created_at: '', updated_at: '' }), total: 25 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      const { rerender } = render(<ItemsPage />);
+      await user.click(screen.getByRole('button', { name: /next/i }));
+      expect(screen.getByText(/page 2/i)).toBeInTheDocument();
+
+      // Now total drops to fit on 1 page (items were deleted)
+      mockUseItems.mockReturnValue({
+        data: { items: [{ id: '1', user_id: 'u', title: 'T', description: null, status: 'draft', created_at: '', updated_at: '' }], total: 1 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      rerender(<ItemsPage />);
+      expect(screen.getByText(/page 1/i)).toBeInTheDocument();
+    });
+
+    it('goes back to previous page when Previous is clicked', async () => {
+      const user = userEvent.setup();
+      mockUseItems.mockReturnValue({
+        data: { items: Array(20).fill({ id: '1', user_id: 'u', title: 'T', description: null, status: 'draft', created_at: '', updated_at: '' }), total: 45 },
+        isLoading: false,
+        error: null,
+      } as ReturnType<typeof useItems>);
+
+      render(<ItemsPage />);
+      // Go to page 2
+      await user.click(screen.getByRole('button', { name: /next/i }));
+      expect(screen.getByText(/page 2/i)).toBeInTheDocument();
+      // Go back to page 1
+      await user.click(screen.getByRole('button', { name: /previous/i }));
+      expect(screen.getByText(/page 1/i)).toBeInTheDocument();
+    });
+  });
 });

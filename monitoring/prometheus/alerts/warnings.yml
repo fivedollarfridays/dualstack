@@ -14,7 +14,6 @@ groups:
         annotations:
           summary: "High API latency"
           description: "P95 latency is {{ $value }}s (threshold: 2s)"
-          runbook_url: "https://github.com/companion-ai/runbooks/api-high-latency.md"
 
       - alert: APIHighLatencyByEndpoint
         expr: |
@@ -28,19 +27,6 @@ groups:
         annotations:
           summary: "High latency on {{ $labels.endpoint }}"
           description: "P95 latency is {{ $value }}s (threshold: 2s)"
-          runbook_url: "https://github.com/companion-ai/runbooks/api-high-latency.md"
-
-      - alert: VideoJobsStuckPending
-        expr: |
-          video_jobs_pending > 100
-        for: 15m
-        labels:
-          severity: warning
-          component: video
-        annotations:
-          summary: "Many video jobs stuck in pending state"
-          description: "{{ $value }} jobs pending for >15 minutes, check video processing pipeline"
-          runbook_url: "https://github.com/companion-ai/runbooks/video-jobs-stuck.md"
 
       - alert: BackgroundJobFailure
         expr: |
@@ -52,7 +38,6 @@ groups:
         annotations:
           summary: "Background job {{ $labels.job_name }} failing"
           description: "Error type: {{ $labels.error_type }}"
-          runbook_url: "https://github.com/companion-ai/runbooks/background-job-failure.md"
 
       - alert: DatabaseSlowQueries
         expr: |
@@ -66,7 +51,6 @@ groups:
         annotations:
           summary: "Slow database queries detected"
           description: "P95 query time is {{ $value }}s (threshold: 1s)"
-          runbook_url: "https://github.com/companion-ai/runbooks/db-slow-queries.md"
 
       - alert: DatabaseSlowQueriesByOperation
         expr: |
@@ -80,4 +64,3 @@ groups:
         annotations:
           summary: "Slow {{ $labels.operation }} queries"
           description: "P95 query time for {{ $labels.operation }} is {{ $value }}s (threshold: 1s)"
-          runbook_url: "https://github.com/companion-ai/runbooks/db-slow-queries.md"

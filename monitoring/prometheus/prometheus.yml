@@ -4,7 +4,7 @@ global:
   scrape_timeout: 10s
 
   external_labels:
-    cluster: 'companion-ai'
+    cluster: 'dualstack'
     environment: 'production'
 
 # Alert rule files
@@ -20,7 +20,7 @@ alerting:
 # Scrape configurations
 scrape_configs:
   # Backend API metrics
-  - job_name: 'companion-api'
+  - job_name: 'dualstack-api'
     static_configs:
       - targets: ['backend:8000']  # Docker service name
     metrics_path: '/metrics'

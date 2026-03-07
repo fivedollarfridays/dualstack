@@ -1,6 +1,8 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
+// Frontend-only table. The backend does not have a users model yet.
+// When you add a users table to the backend, align this schema with it.
 export const users = sqliteTable('users', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   clerkId: text('clerk_id').notNull().unique(),
