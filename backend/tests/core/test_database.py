@@ -7,18 +7,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase
 
 import app.core.database as db_module
+import app.core.db_metrics as db_metrics_module
 from app.core.database import (
     Base,
     get_database_url,
+    get_alembic_database_url,
     get_engine,
     get_async_session_factory,
     get_db,
     init_db,
     close_db,
     reset_engine,
-    _register_query_metrics_listeners,
     enable_query_metrics_for_testing,
 )
+from app.core.db_metrics import register_query_metrics_listeners
 
 
 class TestBase:
@@ -36,28 +38,40 @@ class TestBase:
 class TestGetDatabaseUrl:
     """Test get_database_url function."""
 
-    def test_returns_memory_sqlite_when_no_turso_url(self):
-        """Without turso_database_url, should return in-memory SQLite URL."""
+    def test_database_url_takes_priority(self):
+        """DATABASE_URL env var takes priority over TURSO_DATABASE_URL."""
         from app.core.config import Settings
 
         with patch("app.core.database.get_settings") as mock_settings:
-            mock_settings.return_value = Settings(turso_database_url="")
+            mock_settings.return_value = Settings(
+                database_url="postgresql+asyncpg://user:pass@host/db",
+                turso_database_url="file:local.db",
+            )
             url = get_database_url()
-            assert url == "sqlite+aiosqlite:///:memory:"
+            assert url == "postgresql+asyncpg://user:pass@host/db"
 
-    def test_returns_local_sqlite_for_libsql_url(self):
-        """With libsql:// URL, should convert to local SQLite URL."""
+    def test_file_url_converted_to_aiosqlite(self):
+        """TURSO_DATABASE_URL=file:local.db → sqlite+aiosqlite:///./local.db."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(turso_database_url="file:local.db")
+            url = get_database_url()
+            assert url == "sqlite+aiosqlite:///./local.db"
+
+    def test_libsql_url_raises_with_instructions(self):
+        """Remote libsql:// URL raises ValueError with migration instructions."""
         from app.core.config import Settings
 
         with patch("app.core.database.get_settings") as mock_settings:
             mock_settings.return_value = Settings(
                 turso_database_url="libsql://my-db.turso.io"
             )
-            url = get_database_url()
-            assert url == "sqlite+aiosqlite:///./dualstack.db"
+            with pytest.raises(ValueError, match="DATABASE_URL"):
+                get_database_url()
 
-    def test_returns_url_as_is_for_non_libsql(self):
-        """With non-libsql URL, should return it directly."""
+    def test_aiosqlite_url_passthrough(self):
+        """Already-formatted SQLAlchemy URLs pass through unchanged."""
         from app.core.config import Settings
 
         with patch("app.core.database.get_settings") as mock_settings:
@@ -66,6 +80,64 @@ class TestGetDatabaseUrl:
             )
             url = get_database_url()
             assert url == "sqlite+aiosqlite:///./test.db"
+
+    def test_returns_memory_sqlite_when_no_url(self):
+        """Without any database URL configured, should return in-memory SQLite."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                database_url="", turso_database_url=""
+            )
+            url = get_database_url()
+            assert url == "sqlite+aiosqlite:///:memory:"
+
+
+class TestGetAlembicDatabaseUrl:
+    """Test get_alembic_database_url for sync Alembic migrations."""
+
+    def test_converts_aiosqlite_to_sync(self):
+        """Strips +aiosqlite for sync Alembic use."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(turso_database_url="file:local.db")
+            url = get_alembic_database_url()
+            assert url == "sqlite:///./local.db"
+
+    def test_converts_libsql_for_turso(self):
+        """Remote libsql:// URL is converted to sqlite+libsql:// for sync Alembic."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                turso_database_url="libsql://my-db.turso.io",
+                turso_auth_token="test-token",
+            )
+            url = get_alembic_database_url()
+            assert url == "sqlite+libsql://my-db.turso.io?authToken=test-token&secure=true"
+
+    def test_converts_asyncpg_to_psycopg2(self):
+        """Converts async PostgreSQL URL to sync for Alembic."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                database_url="postgresql+asyncpg://user:pass@host/db",
+            )
+            url = get_alembic_database_url()
+            assert url == "postgresql://user:pass@host/db"
+
+    def test_default_memory_sqlite(self):
+        """No URL configured → sync in-memory SQLite."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                database_url="", turso_database_url=""
+            )
+            url = get_alembic_database_url()
+            assert url == "sqlite:///:memory:"
 
 
 class TestGetEngine:
@@ -204,47 +276,47 @@ class TestResetEngine:
 
 
 class TestRegisterQueryMetricsListeners:
-    """Test _register_query_metrics_listeners."""
+    """Test register_query_metrics_listeners."""
 
     def setup_method(self):
         # Reset the flag
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
 
     def teardown_method(self):
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
 
     def test_skips_in_test_mode(self, monkeypatch):
         """Should skip registration when TESTING=true."""
         monkeypatch.setenv("TESTING", "true")
         mock_engine = MagicMock()
-        _register_query_metrics_listeners(mock_engine)
-        assert db_module._metrics_listeners_registered is False
+        register_query_metrics_listeners(mock_engine)
+        assert db_metrics_module._metrics_listeners_registered is False
 
     def test_registers_when_forced(self, monkeypatch):
         """Should register listeners when force=True even in test mode."""
         monkeypatch.setenv("TESTING", "true")
         # Use a real sync engine so SQLAlchemy event registration works
         sync_engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(sync_engine, force=True)
-        assert db_module._metrics_listeners_registered is True
+        register_query_metrics_listeners(sync_engine, force=True)
+        assert db_metrics_module._metrics_listeners_registered is True
 
     def test_skips_if_already_registered(self, monkeypatch):
         """Should skip if already registered."""
         monkeypatch.delenv("TESTING", raising=False)
-        db_module._metrics_listeners_registered = True
+        db_metrics_module._metrics_listeners_registered = True
         mock_engine = MagicMock()
         # Should not call event.listens_for again
-        _register_query_metrics_listeners(mock_engine)
+        register_query_metrics_listeners(mock_engine)
         # Still True, didn't re-register
-        assert db_module._metrics_listeners_registered is True
+        assert db_metrics_module._metrics_listeners_registered is True
 
     def test_registers_in_non_test_mode(self, monkeypatch):
         """Should register in non-test mode."""
         monkeypatch.delenv("TESTING", raising=False)
         # Use a real sync engine so SQLAlchemy event registration works
         sync_engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(sync_engine)
-        assert db_module._metrics_listeners_registered is True
+        register_query_metrics_listeners(sync_engine)
+        assert db_metrics_module._metrics_listeners_registered is True
 
 
 class TestEnableQueryMetricsForTesting:
@@ -252,37 +324,37 @@ class TestEnableQueryMetricsForTesting:
 
     def setup_method(self):
         reset_engine()
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
 
     def teardown_method(self):
         reset_engine()
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
 
     def test_enables_metrics_for_testing(self):
-        """Should call _register_query_metrics_listeners with force=True."""
+        """Should call register_query_metrics_listeners with force=True."""
         with patch("app.core.database.get_database_url") as mock_url:
             mock_url.return_value = "sqlite+aiosqlite:///:memory:"
             # Create engine first
             engine = get_engine()
             enable_query_metrics_for_testing()
-            assert db_module._metrics_listeners_registered is True
+            assert db_metrics_module._metrics_listeners_registered is True
 
 
 class TestQueryMetricsEventListeners:
     """Test the actual event listener callbacks that track query metrics."""
 
     def setup_method(self):
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
 
     def teardown_method(self):
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
 
     def test_select_query_records_metrics(self):
         """SELECT query should record duration with operation='select'."""
         from sqlalchemy import text
 
         engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(engine, force=True)
+        register_query_metrics_listeners(engine, force=True)
 
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -291,9 +363,9 @@ class TestQueryMetricsEventListeners:
         """INSERT query should record duration with operation='insert'."""
         from sqlalchemy import text
 
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
         engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(engine, force=True)
+        register_query_metrics_listeners(engine, force=True)
 
         with engine.connect() as conn:
             conn.execute(text("CREATE TABLE test_ins (id INTEGER PRIMARY KEY)"))
@@ -304,9 +376,9 @@ class TestQueryMetricsEventListeners:
         """UPDATE query should record duration with operation='update'."""
         from sqlalchemy import text
 
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
         engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(engine, force=True)
+        register_query_metrics_listeners(engine, force=True)
 
         with engine.connect() as conn:
             conn.execute(text("CREATE TABLE test_upd (id INTEGER, val TEXT)"))
@@ -318,9 +390,9 @@ class TestQueryMetricsEventListeners:
         """DELETE query should record duration with operation='delete'."""
         from sqlalchemy import text
 
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
         engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(engine, force=True)
+        register_query_metrics_listeners(engine, force=True)
 
         with engine.connect() as conn:
             conn.execute(text("CREATE TABLE test_del (id INTEGER)"))
@@ -332,15 +404,15 @@ class TestQueryMetricsEventListeners:
         """After-execute should handle missing start_time (None path)."""
         from sqlalchemy import text, event
 
-        db_module._metrics_listeners_registered = False
+        db_metrics_module._metrics_listeners_registered = False
         engine = create_engine("sqlite:///:memory:")
-        _register_query_metrics_listeners(engine, force=True)
+        register_query_metrics_listeners(engine, force=True)
 
-        # Add a listener that clears _query_start_times after before_cursor
+        # Add a listener that clears conn.info after before_cursor
         # fires but before after_cursor fires, simulating the None path
         @event.listens_for(engine, "before_cursor_execute")
         def clear_start_times(conn, cursor, stmt, params, ctx, executemany):
-            db_module._query_start_times.clear()
+            conn.info.pop("query_start_time", None)
 
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))

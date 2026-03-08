@@ -22,7 +22,7 @@ def alembic_config(tmp_path):
     cfg.set_main_option("sqlalchemy.url", db_url)
     cfg.set_main_option("script_location", "alembic")
 
-    with patch("app.core.database.get_database_url", return_value=db_url):
+    with patch("app.core.database.get_alembic_database_url", return_value=db_url):
         yield cfg, db_url
 
 

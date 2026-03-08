@@ -327,27 +327,8 @@ class TestLifespan:
                 assert stripe.api_key == "sk_test_startup_key"
 
     @pytest.mark.asyncio
-    async def test_raises_with_libsql_url_in_production(self):
-        """Lifespan raises RuntimeError when libsql:// URL used in production."""
-        from fastapi import FastAPI
-
-        mock_settings = MagicMock()
-        mock_settings.environment = "production"
-        mock_settings.stripe_webhook_secret = "whsec_test"
-        mock_settings.stripe_secret_key = "sk_test_fake"
-        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
-        mock_settings.turso_database_url = "libsql://my-db.turso.io"
-        mock_settings.metrics_api_key = "a-secure-metrics-key-here"
-
-        test_app = FastAPI()
-        with patch("app.main.get_settings", return_value=mock_settings):
-            with pytest.raises(RuntimeError, match="libsql://"):
-                async with lifespan(test_app):
-                    pass
-
-    @pytest.mark.asyncio
-    async def test_logs_warning_with_libsql_url_in_development(self):
-        """Lifespan logs WARNING when libsql:// URL used in development."""
+    async def test_logs_warning_without_clerk_in_development(self):
+        """Lifespan logs WARNING when Clerk is not configured in development."""
         from fastapi import FastAPI
 
         mock_settings = MagicMock()
@@ -355,20 +336,19 @@ class TestLifespan:
         mock_settings.stripe_webhook_secret = ""
         mock_settings.stripe_secret_key = "sk_test_fake"
         mock_settings.clerk_jwks_url = ""
-        mock_settings.turso_database_url = "libsql://my-db.turso.io"
+        mock_settings.turso_database_url = ""
 
         test_app = FastAPI()
         with patch("app.main.get_settings", return_value=mock_settings):
             with patch("app.main.logger") as mock_logger:
                 async with lifespan(test_app):
                     pass
-                # Should have at least 2 warnings: clerk warning + turso warning
-                assert mock_logger.warning.call_count >= 2
-                turso_warnings = [
+                assert mock_logger.warning.call_count >= 1
+                clerk_warnings = [
                     call for call in mock_logger.warning.call_args_list
-                    if "libsql://" in str(call)
+                    if "Clerk" in str(call)
                 ]
-                assert len(turso_warnings) >= 1
+                assert len(clerk_warnings) >= 1
 
     @pytest.mark.asyncio
     async def test_raises_without_metrics_api_key_in_production(self):

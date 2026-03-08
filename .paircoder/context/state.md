@@ -63,17 +63,21 @@ Status: v1.0.0 — Full remediation backlog planned (S11-S17)
 
 ## Current Focus
 
-Sprint 11 (Security R5 Remediation) — COMPLETE. All R5 findings resolved.
+Sprint 12 (Database Architecture) — COMPLETE. All T12.1-T12.4 done.
 
 ## What Was Just Done
 
-- **T11.4 done** (auto-updated by hook)
+- **T12.4 done** (auto-updated by hook)
 
-- **T11.1 complete** — Streaming body size enforcement for chunked transfer encoding (R5 NEW-007)
-- **T11.2 complete** — Backend URL validation rejects embedded credentials (R5 NEW-008)
-- **T11.3 complete** — DevAuthProvider production build guard (R5 NEW-011)
-- **T11.4 complete** — Removed dead STRIPE_PUBLISHABLE_KEY from .env.example/.env.local, added dev auth docs to Prometheus config (R5 NEW-009, NEW-010)
+- **T12.3 done** (auto-updated by hook)
+
+- **T12.2 done** (auto-updated by hook)
+
+- **T12.1 complete** — Database URL handling refactored: DATABASE_URL for production, file: URL conversion, sqlalchemy-libsql for Alembic, extracted db_metrics.py
+- **T12.2 complete** — Removed unused frontend DB layer (src/db/, drizzle/, drizzle.config.ts) + deps (drizzle-orm, drizzle-kit, @libsql/client, dotenv, tsx)
+- **T12.3 complete** — Consolidated to Alembic as sole migration system (Drizzle already removed in T12.2), documented in ARCHITECTURE.md
+- **T12.4 complete** — Created idempotent seed script (scripts/seed.py) with 7 sample items, 4 tests, documented in ARCHITECTURE.md
 
 ## What's Next
 
-Sprint 11 complete. Next: Sprint 12 (Database Architecture) — `/start-task T12.1`
+Sprint 12 complete. Next: Sprint 13 (Billing & Subscriptions) — `/start-task T13.1`

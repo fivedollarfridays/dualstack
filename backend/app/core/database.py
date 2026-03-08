@@ -1,72 +1,21 @@
 """
 Database Configuration
 
-SQLAlchemy 2.0 async setup for Turso/SQLite.
+SQLAlchemy 2.0 async setup with environment-specific drivers.
 Provides session management and base model class.
 """
 
-import os
-import time
-
-from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import get_settings
+from app.core.db_metrics import register_query_metrics_listeners, reset_metrics_listeners
 
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
 
     pass
-
-
-# Query duration tracking with SQLAlchemy event listeners
-# Only enabled in non-test environments to avoid test overhead
-_query_start_times = {}
-_metrics_listeners_registered = False
-
-
-_OP_TYPE_MAP = {"SELECT": "select", "INSERT": "insert", "UPDATE": "update", "DELETE": "delete"}
-
-
-def _get_operation_type(statement: str) -> str:
-    """Extract the SQL operation type from a statement."""
-    stripped = statement.strip()
-    keyword = stripped.split(None, 1)[0].upper() if stripped else ""
-    return _OP_TYPE_MAP.get(keyword, "unknown")
-
-
-def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    """Store query start time before execution."""
-    _query_start_times[id(conn)] = time.time()
-
-
-def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    """Calculate and record query duration after execution."""
-    from app.core.metrics import db_query_duration_seconds
-
-    start_time = _query_start_times.pop(id(conn), None)
-    if start_time is not None:
-        duration = time.time() - start_time
-        db_query_duration_seconds.labels(operation=_get_operation_type(statement)).observe(duration)
-
-
-def _register_query_metrics_listeners(engine, force: bool = False):
-    """Register database query metrics listeners on the engine.
-
-    Only registers if not in test mode (TESTING env var != 'true').
-    """
-    global _metrics_listeners_registered
-
-    if _metrics_listeners_registered:
-        return
-    if not force and os.getenv("TESTING") == "true":
-        return
-
-    _metrics_listeners_registered = True
-    event.listen(engine, "before_cursor_execute", _before_cursor_execute)
-    event.listen(engine, "after_cursor_execute", _after_cursor_execute)
 
 
 def enable_query_metrics_for_testing():
@@ -76,36 +25,69 @@ def enable_query_metrics_for_testing():
     Must be called after get_engine() has been called.
     """
     engine = get_engine()
-    _register_query_metrics_listeners(engine.sync_engine, force=True)
+    register_query_metrics_listeners(engine.sync_engine, force=True)
 
 
 def get_database_url() -> str:
-    """Get the database URL for SQLAlchemy.
+    """Get the async database URL for SQLAlchemy.
 
-    Currently falls back to local SQLite for libsql:// URLs because
-    SQLAlchemy does not natively support the libsql:// protocol.
-    Production Turso support requires an async-compatible driver such
-    as ``libsql-client`` or a dedicated SQLAlchemy dialect (e.g.
-    ``sqlalchemy-libsql``). This is a known limitation of the starter
-    kit -- Turso URLs are detected but served by a local SQLite file
-    (``dualstack.db``) until a compatible driver is integrated.
-
-    For testing, an in-memory SQLite database is used by default.
+    Resolution order:
+      1. DATABASE_URL (production — PostgreSQL via asyncpg, etc.)
+      2. TURSO_DATABASE_URL with ``file:`` prefix (local dev — SQLite via aiosqlite)
+      3. TURSO_DATABASE_URL with ``libsql://`` prefix → raises ValueError
+         (no async libsql driver; set DATABASE_URL for production)
+      4. TURSO_DATABASE_URL with SQLAlchemy URL → pass through
+      5. Default: in-memory SQLite for testing
     """
     settings = get_settings()
 
+    if settings.database_url:
+        return settings.database_url
+
     if settings.turso_database_url:
-        # Turso uses libsql:// but SQLAlchemy needs sqlite+aiosqlite://
-        # For local dev/test, use SQLite directly
         url = settings.turso_database_url
+        if url.startswith("file:"):
+            path = url.removeprefix("file:")
+            return f"sqlite+aiosqlite:///./{path}"
         if url.startswith("libsql://"):
-            # Convert to HTTP endpoint for turso-client
-            # For now, use local SQLite for development
-            return "sqlite+aiosqlite:///./dualstack.db"
+            raise ValueError(
+                "Remote Turso URLs (libsql://) require a sync driver and cannot "
+                "be used with the async SQLAlchemy engine. Set DATABASE_URL to an "
+                "async-compatible URL (e.g. postgresql+asyncpg://user:pass@host/db) "
+                "for production, or use TURSO_DATABASE_URL=file:local.db for local "
+                "development."
+            )
         return url
 
-    # Default to in-memory SQLite for testing
     return "sqlite+aiosqlite:///:memory:"
+
+
+def get_alembic_database_url() -> str:
+    """Get a sync database URL for Alembic migrations.
+
+    Converts async URLs to sync equivalents, and converts remote
+    Turso ``libsql://`` URLs to the ``sqlite+libsql://`` dialect
+    provided by ``sqlalchemy-libsql``.
+    """
+    settings = get_settings()
+
+    if settings.database_url:
+        url = settings.database_url
+        return url.replace("+asyncpg", "").replace("+aiosqlite", "")
+
+    if settings.turso_database_url:
+        url = settings.turso_database_url
+        if url.startswith("file:"):
+            path = url.removeprefix("file:")
+            return f"sqlite:///./{path}"
+        if url.startswith("libsql://"):
+            host = url.removeprefix("libsql://")
+
+            token = settings.turso_auth_token
+            return f"sqlite+libsql://{host}?authToken={token}&secure=true"
+        return url.replace("+aiosqlite", "")
+
+    return "sqlite:///:memory:"
 
 
 # Engine creation is deferred to allow testing with different URLs
@@ -122,7 +104,7 @@ def get_engine():
             echo=False,  # Disabled for Windows compatibility with emoji content
         )
         # Register metrics listeners (skipped in test mode)
-        _register_query_metrics_listeners(_engine.sync_engine)
+        register_query_metrics_listeners(_engine.sync_engine)
     return _engine
 
 
@@ -163,6 +145,7 @@ async def close_db() -> None:
         await _engine.dispose()
         _engine = None
         _async_session_factory = None
+        reset_metrics_listeners()
 
 
 def reset_engine() -> None:
@@ -170,3 +153,4 @@ def reset_engine() -> None:
     global _engine, _async_session_factory
     _engine = None
     _async_session_factory = None
+    reset_metrics_listeners()

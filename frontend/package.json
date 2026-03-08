@@ -11,20 +11,13 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "test:all": "npm run test:coverage && npm run test:e2e",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "npx tsx src/db/migrate.ts",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "test:all": "npm run test:coverage && npm run test:e2e"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.8",
-    "@libsql/client": "^0.17.0",
     "@tanstack/react-query": "^5.90.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.562.0",
     "next": "^15.5.9",
     "react": "^18",
@@ -49,7 +42,6 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "drizzle-kit": "^0.31.9",
     "eslint": "^8",
     "eslint-config-next": "^15.5.9",
     "jest": "^30.2.0",
@@ -57,7 +49,6 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.4.6",
-    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

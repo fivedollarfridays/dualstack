@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
+from app.core.database import close_db
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.metrics_routes import router as metrics_router
@@ -45,26 +46,13 @@ async def lifespan(app: FastAPI):
             "WARNING: STRIPE_SECRET_KEY is not set. Billing features will not work. "
             "Set this before deploying to production."
         )
-    # Turso libsql:// guard
-    if settings.turso_database_url.startswith("libsql://"):
-        if settings.environment == "production":
-            raise RuntimeError(
-                "TURSO_DATABASE_URL uses libsql:// which is not yet supported by "
-                "SQLAlchemy. The app would silently fall back to local SQLite. "
-                "Either use a sqlite+aiosqlite:// URL directly, integrate the "
-                "sqlalchemy-libsql dialect, or remove TURSO_DATABASE_URL."
-            )
-        logger.warning(
-            "WARNING: TURSO_DATABASE_URL starts with libsql:// which SQLAlchemy "
-            "cannot connect to directly. Falling back to local SQLite file "
-            "(dualstack.db). This is expected in development."
-        )
     if settings.environment == "production" and not settings.metrics_api_key:
         raise RuntimeError(
             "METRICS_API_KEY is required in production to protect the /metrics endpoint."
         )
     stripe.api_key = settings.stripe_secret_key
     yield
+    await close_db()
 
 
 def _register_routers(application: FastAPI) -> None:
