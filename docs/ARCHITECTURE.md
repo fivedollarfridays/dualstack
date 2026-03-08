@@ -1,5 +1,31 @@
 # Architecture Notes
 
+## Database Decision (T12.1)
+
+The backend uses **SQLAlchemy 2.0 async** with environment-specific drivers:
+
+| Environment | URL Source | Driver | Notes |
+|-------------|-----------|--------|-------|
+| Development | `TURSO_DATABASE_URL=file:local.db` | `aiosqlite` | Local SQLite file |
+| Testing | (none set) | `aiosqlite` | In-memory SQLite |
+| Production | `DATABASE_URL=postgresql+asyncpg://...` | `asyncpg` | PostgreSQL recommended |
+| Alembic | Auto-detected | `libsql` or sync | Sync migrations via `sqlalchemy-libsql` |
+
+**Why not remote Turso for the async runtime?**
+
+The `sqlalchemy-libsql` dialect is sync-only — it cannot be used with
+`create_async_engine`. Since all FastAPI route handlers use `async`/`await`
+with SQLAlchemy `AsyncSession`, the runtime engine must use an async driver.
+PostgreSQL via `asyncpg` is the standard production path for async FastAPI apps.
+
+Turso remains the development database (local SQLite via `file:` URLs) and
+Alembic can run sync migrations against remote Turso using `sqlalchemy-libsql`
+when needed (e.g., `alembic upgrade head` with `TURSO_DATABASE_URL=libsql://...`).
+
+**Configuration priority:** `DATABASE_URL` > `TURSO_DATABASE_URL` > in-memory default.
+
+---
+
 ## Data Flow: Single Source of Truth
 
 DualStack uses a **backend-first** data architecture:
@@ -8,44 +34,36 @@ DualStack uses a **backend-first** data architecture:
 - The backend owns validation, authorization, and persistence
 - The frontend calls the backend API for all CRUD operations
 
-### Frontend Database Layer (`frontend/src/db/`)
+### Frontend Database Layer — Removed (T12.2)
 
-The frontend includes a direct database connection via Drizzle ORM + libsql.
-This layer exists for **server-side reads only** (e.g., Next.js Server Components
-or SSR data fetching). It must NOT be used for writes.
+The frontend previously included a Drizzle ORM + libsql layer at
+`frontend/src/db/`. An audit found **zero imports** from this directory anywhere
+in the frontend codebase — no page, component, or API route used it. The layer
+was removed to eliminate:
 
-**Why this matters:**
+- **Dual-write risk**: Two ORM layers could write to the same database
+- **Schema sync burden**: Schema definitions maintained in two places
+- **Unused dependencies**: `drizzle-orm`, `drizzle-kit`, `@libsql/client`, `dotenv`, `tsx`
 
-- Using the frontend DB layer for writes would bypass backend validation,
-  authorization checks, and audit logging
-- Two write paths create consistency risks and make it harder to reason about
-  data flow
-- The backend is the authoritative source for business logic
+All data access goes through the FastAPI backend API. Frontend components use
+React Query + `fetch` for client-side reads and mutations.
 
-**Guidance:**
+### Migration System — Alembic Only (T12.3)
 
-| Operation | Use |
-|-----------|-----|
-| Read (SSR/Server Component) | `frontend/src/db/` is acceptable |
-| Read (client-side) | Backend API via `fetch` / React Query |
-| Write (any) | Backend API only |
-
-### Token Security
-
-The frontend database token (`TURSO_AUTH_TOKEN`) should be scoped to **read-only**
-operations. Turso supports read-only tokens via the CLI:
+**Alembic** (`backend/alembic/`) is the sole migration system. Drizzle Kit
+migrations were removed along with the frontend DB layer. All schema changes
+are managed through Alembic autogenerate against SQLAlchemy models.
 
 ```bash
-turso db tokens create <db-name> --read-only
+# Run migrations
+cd backend && alembic upgrade head
+
+# Create a new migration
+cd backend && alembic revision --autogenerate -m "description"
+
+# Downgrade one step
+cd backend && alembic downgrade -1
+
+# Seed sample data (idempotent — safe to re-run)
+cd backend && python -m scripts.seed
 ```
-
-This provides a technical enforcement layer in addition to the code-level convention.
-The `validateDbEnv()` function in `frontend/src/db/validate-env.ts` enforces that
-remote database URLs have a non-empty token, while local `file:` URLs (development)
-are allowed without one.
-
-### Recommended Future Action
-
-If the frontend DB layer is not actively used for SSR reads, consider removing
-`frontend/src/db/` entirely to eliminate the dual write path risk. If it is
-needed, add a lint rule or runtime guard to prevent write operations.

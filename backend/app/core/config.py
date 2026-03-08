@@ -10,9 +10,9 @@ from functools import lru_cache
 class Settings(BaseSettings):
     environment: Literal["development", "production"] = "development"
 
-    # Database
+    # Database — DATABASE_URL takes priority for production (e.g. PostgreSQL)
+    database_url: str = ""
     turso_database_url: str = ""
-    # Loaded from env but not yet wired to the DB engine (see database.py docstring)
     turso_auth_token: str = ""
 
     # Auth
