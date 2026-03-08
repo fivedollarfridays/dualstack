@@ -51,4 +51,19 @@ describe('DevAuthProvider', () => {
     );
     spy.mockRestore();
   });
+
+  it('throws an error in production environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    try {
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', configurable: true });
+      expect(() => {
+        const wrapper = ({ children }: { children: React.ReactNode }) => (
+          <DevAuthProvider>{children}</DevAuthProvider>
+        );
+        renderHook(() => useAppAuth(), { wrapper });
+      }).toThrow('DevAuthProvider must not be used in production');
+    } finally {
+      Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
+    }
+  });
 });

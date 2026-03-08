@@ -15,9 +15,12 @@ but has gaps in monitoring, incident response, and backup strategy.
 | Audit Logging | Done | `log_audit_event` on auth failures, webhooks, CRUD |
 | Rate Limiting | Done | SlowAPI per-endpoint limits |
 | Input Validation | Done | Pydantic schemas, Content-Length limits |
-| Security Headers | Done | HSTS, CSP, X-Frame-Options, etc. |
+| Security Headers | Done | HSTS, nonce-based CSP, X-Frame-Options, etc. |
 | Secrets Management | Done | Environment variables, no hardcoded secrets |
 | Webhook Verification | Done | Stripe signature validation, empty-secret guard |
+| Metrics Auth | Done | Bearer token auth on /metrics endpoint (production) |
+| Database Access Control | Done | Frontend uses read-only scoped token, validated at startup |
+| Monitoring Auth | Done | Prometheus UI basic-auth, Grafana-Prometheus auth configured |
 
 ## Gaps and Remediation
 

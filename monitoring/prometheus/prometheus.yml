@@ -20,6 +20,8 @@ alerting:
 # Scrape configurations
 scrape_configs:
   # Backend API metrics
+  # NOTE: No scrape auth in development — metrics endpoint is open on localhost.
+  # For production, use prometheus.prod.yml which includes bearer token auth.
   - job_name: 'dualstack-api'
     static_configs:
       - targets: ['backend:8000']  # Docker service name

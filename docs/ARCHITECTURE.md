@@ -30,6 +30,20 @@ or SSR data fetching). It must NOT be used for writes.
 | Read (client-side) | Backend API via `fetch` / React Query |
 | Write (any) | Backend API only |
 
+### Token Security
+
+The frontend database token (`TURSO_AUTH_TOKEN`) should be scoped to **read-only**
+operations. Turso supports read-only tokens via the CLI:
+
+```bash
+turso db tokens create <db-name> --read-only
+```
+
+This provides a technical enforcement layer in addition to the code-level convention.
+The `validateDbEnv()` function in `frontend/src/db/validate-env.ts` enforces that
+remote database URLs have a non-empty token, while local `file:` URLs (development)
+are allowed without one.
+
 ### Recommended Future Action
 
 If the frontend DB layer is not actively used for SSR reads, consider removing

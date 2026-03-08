@@ -21,6 +21,8 @@ def validate_redirect_url(url: str) -> str:
         raise ValueError("Only http and https URLs are allowed")
     if not parsed.netloc:
         raise ValueError("URL must have a valid host")
+    if parsed.username or parsed.password:
+        raise ValueError("URLs with embedded credentials are not allowed")
     origin = f"{parsed.scheme}://{parsed.netloc}"
     if origin not in allowed:
         raise ValueError("URL origin is not allowed")

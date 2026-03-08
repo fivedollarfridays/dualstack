@@ -1,4 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { buildCspHeader, generateNonce } from '@/lib/csp';
 
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
@@ -13,6 +15,18 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+
+  // Generate per-request CSP nonce
+  const nonce = generateNonce();
+  const csp = buildCspHeader(nonce);
+
+  // Pass nonce on request headers so Server Components can read it via headers()
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-nonce', nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set('Content-Security-Policy', csp);
+  return response;
 });
 
 export const config = {
