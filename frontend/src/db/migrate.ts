@@ -2,18 +2,16 @@ import { config } from 'dotenv';
 import { migrate } from 'drizzle-orm/libsql/migrator';
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
+import { validateDbEnv } from './validate-env';
 
 // Load environment variables from .env.local
 config({ path: '.env.local' });
 
 async function runMigrations() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-
-  if (!url) {
-    console.error('TURSO_DATABASE_URL is required');
-    process.exit(1);
-  }
+  const { url, authToken } = validateDbEnv(
+    process.env.TURSO_DATABASE_URL,
+    process.env.TURSO_AUTH_TOKEN,
+  );
 
   console.log('Connecting to Turso database...');
 

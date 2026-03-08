@@ -27,7 +27,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 Access services:
 - **Prometheus UI**: http://localhost:9090
-- **Grafana**: http://localhost:3001 (default credentials: admin/admin)
+- **Grafana**: http://localhost:3001 (set `GRAFANA_ADMIN_PASSWORD` before starting)
 
 ### Production
 
@@ -65,15 +65,33 @@ docker-compose down -v  # Removes volumes
 
 ### Grafana Password
 
-The default Grafana admin password is `admin`. Override it by setting the `GRAFANA_ADMIN_PASSWORD` environment variable before starting the stack:
+Set the `GRAFANA_ADMIN_PASSWORD` environment variable before starting the stack. Do not use default or trivial passwords, even in development:
 
 ```bash
-GRAFANA_ADMIN_PASSWORD=your-secure-password docker-compose up -d
+GRAFANA_ADMIN_PASSWORD=<your-secure-password> docker-compose up -d
 ```
 
 ### Metrics API Key
 
-If the backend has `METRICS_API_KEY` set, Prometheus needs the same key to scrape metrics. Edit `prometheus/prometheus.prod.yml` and uncomment the `authorization` section with your key.
+In production, the backend requires `METRICS_API_KEY` to access `/metrics`. Prometheus must send the same value as a Bearer token. Since Prometheus does not support environment variable interpolation natively, process the config with `envsubst` before deploying:
+
+```bash
+export PROMETHEUS_BEARER_TOKEN=<same-value-as-METRICS_API_KEY>
+envsubst < prometheus/prometheus.prod.yml > prometheus/prometheus.resolved.yml
+```
+
+Mount `prometheus.resolved.yml` instead of `prometheus.prod.yml` in your Docker Compose override.
+
+### Prometheus UI Authentication (web.yml)
+
+The `web.yml` file enables basic-auth on the Prometheus UI. It also requires `envsubst` processing:
+
+```bash
+export PROMETHEUS_BASIC_AUTH_PASSWORD=$(htpasswd -nBC 10 "" | tr -d ':\n')
+envsubst < prometheus/web.yml > prometheus/web.resolved.yml
+```
+
+Mount `web.resolved.yml` as `/etc/prometheus/web.yml` in your production compose.
 
 ### Files
 
@@ -114,11 +132,9 @@ The backend exposes the following metric categories:
 
 Open http://localhost:3001 in your browser.
 
-**Default Credentials:**
+**Credentials:**
 - Username: `admin`
-- Password: `admin` (change via `GRAFANA_ADMIN_PASSWORD` env var)
-
-You will be prompted to change the password on first login.
+- Password: set via `GRAFANA_ADMIN_PASSWORD` env var (required)
 
 ### Available Dashboards
 
@@ -344,20 +360,41 @@ cd monitoring
 2. Docker and Docker Compose installed
 3. Persistent volume storage configured
 
+### Pre-Deploy Secrets Checklist
+
+Before deploying the monitoring stack to production, ensure all secrets are configured:
+
+| Secret | Where | Purpose |
+|--------|-------|---------|
+| `METRICS_API_KEY` | Backend env | Protects `/metrics` endpoint |
+| `PROMETHEUS_BEARER_TOKEN` | `prometheus.prod.yml` (via envsubst) | Prometheus scrape auth (same value as `METRICS_API_KEY`) |
+| `PROMETHEUS_BASIC_AUTH_PASSWORD` | `web.yml` (via envsubst) | Prometheus UI basic-auth (bcrypt hash) |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana env | Grafana admin login |
+| `GF_DATASOURCE_PROM_USER` | Grafana env | Grafana-to-Prometheus basic-auth user |
+| `GF_DATASOURCE_PROM_PASSWORD` | Grafana env | Grafana-to-Prometheus basic-auth password |
+
 ### Deployment Steps
 
-1. **Configure backend network:**
+1. **Process config templates:**
+   ```bash
+   cd monitoring
+   export PROMETHEUS_BEARER_TOKEN=<your-metrics-api-key>
+   envsubst < prometheus/prometheus.prod.yml > prometheus/prometheus.resolved.yml
+   export PROMETHEUS_BASIC_AUTH_PASSWORD=$(htpasswd -nBC 10 "" | tr -d ':\n')
+   envsubst < prometheus/web.yml > prometheus/web.resolved.yml
+   ```
+
+2. **Configure backend network:**
    ```bash
    docker network create dualstack-backend-network
    ```
 
-2. **Deploy monitoring stack:**
+3. **Deploy monitoring stack:**
    ```bash
-   cd monitoring
    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
    ```
 
-3. **Verify deployment:**
+4. **Verify deployment:**
    ```bash
    ./scripts/smoke-test.sh
    ```

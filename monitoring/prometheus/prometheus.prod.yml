@@ -13,11 +13,13 @@ scrape_configs:
       - targets: ['backend:8000']  # Docker service name in production
     metrics_path: '/metrics'
     scrape_interval: 30s
-    # Set METRICS_API_KEY on the backend and PROMETHEUS_BEARER_TOKEN here to
-    # require authentication for the /metrics endpoint.
-    # authorization:
-    #   type: Bearer
-    #   credentials: '<PROMETHEUS_BEARER_TOKEN>'
+    # Authentication for /metrics endpoint.
+    # Set METRICS_API_KEY on the backend and use the same value here.
+    # Prometheus does not support env var interpolation — use envsubst:
+    #   envsubst < prometheus.prod.yml > prometheus.resolved.yml
+    authorization:
+      type: Bearer
+      credentials: '${PROMETHEUS_BEARER_TOKEN}'
 
   - job_name: 'prometheus'
     static_configs:

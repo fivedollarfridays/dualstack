@@ -11,9 +11,10 @@ import { DevAuthProvider } from '@/components/auth/dev-auth-provider';
 
 interface ProvidersProps {
   children: ReactNode;
+  nonce?: string;
 }
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, nonce }: ProvidersProps) {
   // Create QueryClient with caching defaults for performance
   const [queryClient] = useState(
     () =>
@@ -34,7 +35,7 @@ export function Providers({ children }: ProvidersProps) {
     return (
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <ClerkProvider appearance={clerkAppearance}>
+          <ClerkProvider appearance={clerkAppearance} nonce={nonce}>
             <ClerkAuthBridge>
               {children}
             </ClerkAuthBridge>
