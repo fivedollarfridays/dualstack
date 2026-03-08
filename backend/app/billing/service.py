@@ -40,9 +40,27 @@ async def create_portal_session(customer_id: str, return_url: str) -> str:
     return session.url
 
 
+def _audit_webhook(action: str, resource_id: str, outcome: str = "success") -> None:
+    """Log an audit event for a webhook operation."""
+    log_audit_event(
+        user_id="stripe", action=action,
+        resource_type="webhook", resource_id=resource_id, outcome=outcome,
+    )
+
+
+_WEBHOOK_ACTIONS = {
+    "checkout.session.completed": "webhook.checkout_completed",
+    "customer.subscription.updated": "webhook.subscription_updated",
+}
+
+
 async def handle_webhook(payload: bytes, sig_header: str) -> dict:
-    """Process a Stripe webhook event."""
+    """Process a Stripe webhook event.
+
+    Caller must verify stripe_webhook_secret is set before calling.
+    """
     settings = get_settings()
+
     try:
         event = await asyncio.to_thread(
             stripe.Webhook.construct_event,
@@ -51,20 +69,17 @@ async def handle_webhook(payload: bytes, sig_header: str) -> dict:
             settings.stripe_webhook_secret,
         )
     except stripe.error.SignatureVerificationError:
-        log_audit_event(
-            user_id="stripe",
-            action="webhook.signature_failure",
-            resource_type="webhook",
-            resource_id="unknown",
-            outcome="failure",
-        )
+        _audit_webhook("webhook.signature_failure", "unknown", outcome="failure")
         raise AuthenticationError(message="Invalid webhook signature")
     except ValueError:
         raise ValidationError(message="Invalid webhook payload")
 
-    if event["type"] == "checkout.session.completed":
-        return {"handled": True, "type": event["type"]}
-    elif event["type"] == "customer.subscription.updated":
-        return {"handled": True, "type": event["type"]}
+    event_type = event["type"]
+    resource_id = event.get("data", {}).get("object", {}).get("id", "unknown")
+    action = _WEBHOOK_ACTIONS.get(event_type)
 
-    return {"handled": False, "type": event["type"]}
+    if action:
+        _audit_webhook(action, resource_id)
+        return {"handled": True, "type": event_type}
+
+    return {"handled": False, "type": event_type}

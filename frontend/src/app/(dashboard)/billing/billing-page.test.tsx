@@ -113,6 +113,20 @@ describe('BillingPage', () => {
     });
   });
 
+  it('shows error when checkout returns invalid redirect URL', async () => {
+    const user = userEvent.setup();
+    mockCreateCheckout.mockResolvedValueOnce('https://evil.com/steal-data');
+
+    render(<BillingPage />);
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Invalid checkout URL received. Please try again.')
+      ).toBeInTheDocument();
+    });
+  });
+
   it('clears previous error on new subscribe attempt', async () => {
     const user = userEvent.setup();
     mockCreateCheckout.mockRejectedValueOnce(new Error('Checkout failed'));

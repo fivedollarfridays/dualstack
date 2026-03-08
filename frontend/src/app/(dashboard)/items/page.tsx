@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ItemList } from '@/components/items/item-list';
 import { useItems, useDeleteItem } from '@/hooks/use-items';
 
@@ -11,6 +12,7 @@ const PAGE_SIZE = 20;
 export default function ItemsPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const { data, isLoading, error } = useItems(page, PAGE_SIZE);
   const deleteItem = useDeleteItem();
 
@@ -27,14 +29,17 @@ export default function ItemsPage() {
     router.push(`/items/${id}`);
   }
 
-  async function handleDelete(id: string) {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        await deleteItem.mutateAsync(id);
-      } catch {
-        // React Query tracks error via deleteItem.error
-      }
+  function handleDelete(id: string) {
+    setDeleteTarget(id);
+  }
+
+  async function confirmDelete() {
+    try {
+      await deleteItem.mutateAsync(deleteTarget!);
+    } catch {
+      // React Query tracks error via deleteItem.error
     }
+    setDeleteTarget(null);
   }
 
   return (
@@ -83,6 +88,15 @@ export default function ItemsPage() {
           Next
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -13,10 +13,11 @@ scrape_configs:
       - targets: ['backend:8000']  # Docker service name in production
     metrics_path: '/metrics'
     scrape_interval: 30s
-    # If METRICS_API_KEY is set on the backend, uncomment and set the token:
+    # Set METRICS_API_KEY on the backend and PROMETHEUS_BEARER_TOKEN here to
+    # require authentication for the /metrics endpoint.
     # authorization:
     #   type: Bearer
-    #   credentials: '<your-metrics-api-key>'
+    #   credentials: '<PROMETHEUS_BEARER_TOKEN>'
 
   - job_name: 'prometheus'
     static_configs:

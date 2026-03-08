@@ -79,8 +79,8 @@ class TestAuthAuditEvents:
                 "app.core.auth.get_settings",
                 return_value=_mock_settings(PROD_JWKS),
             ),
-            patch("fastapi_clerk_auth.ClerkConfig"),
-            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
             patch("app.core.auth.log_audit_event") as mock_audit,
         ):
             await client.get(
@@ -102,8 +102,8 @@ class TestAuthAuditEvents:
                 "app.core.auth.get_settings",
                 return_value=_mock_settings(PROD_JWKS),
             ),
-            patch("fastapi_clerk_auth.ClerkConfig"),
-            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
             patch("app.core.auth.log_audit_event") as mock_audit,
         ):
             await client.get(
@@ -204,6 +204,58 @@ class TestDevMode:
         assert response.json() == {"user_id": "user-42"}
 
 
+class TestAuthCacheBounds:
+    """AUDIT-011: _clerk_auth_cache must have a max size."""
+
+    @pytest.fixture(autouse=True)
+    def _clear_clerk_cache(self):
+        _clerk_auth_cache.clear()
+        yield
+        _clerk_auth_cache.clear()
+
+    @pytest.fixture
+    def app(self):
+        return _create_test_app()
+
+    @pytest.fixture
+    def client(self, app):
+        transport = ASGITransport(app=app)
+        return AsyncClient(transport=transport, base_url="http://test")
+
+    async def test_cache_evicts_oldest_when_max_size_exceeded(self, client):
+        """Cache should evict oldest entries when exceeding MAX_CACHE_SIZE."""
+        from app.core.auth import MAX_CACHE_SIZE
+
+        # Pre-fill the cache to max capacity
+        for i in range(MAX_CACHE_SIZE):
+            _clerk_auth_cache[f"https://jwks-{i}.example.com"] = f"auth-{i}"
+
+        assert len(_clerk_auth_cache) == MAX_CACHE_SIZE
+        first_key = f"https://jwks-0.example.com"
+        assert first_key in _clerk_auth_cache
+
+        # Make a request with a new JWKS URL to trigger eviction
+        new_jwks = "https://new-jwks.example.com/.well-known/jwks.json"
+        mock_verified = MagicMock()
+        mock_verified.decoded = {"sub": "user-evict"}
+        mock_clerk_auth = AsyncMock(return_value=mock_verified)
+
+        with (
+            patch("app.core.auth.get_settings", return_value=_mock_settings(new_jwks)),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+        ):
+            r = await client.get("/me", headers={"Authorization": "Bearer jwt"})
+
+        assert r.status_code == 200
+        # Cache should still be at max, not above
+        assert len(_clerk_auth_cache) == MAX_CACHE_SIZE
+        # Oldest entry should have been evicted
+        assert first_key not in _clerk_auth_cache
+        # New entry should be present
+        assert new_jwks in _clerk_auth_cache
+
+
 class TestProdMode:
     """Auth in prod mode (clerk_jwks_url is set)."""
 
@@ -240,8 +292,8 @@ class TestProdMode:
 
         with (
             patch("app.core.auth.get_settings", return_value=_mock_settings(PROD_JWKS)),
-            patch("fastapi_clerk_auth.ClerkConfig"),
-            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
         ):
             response = await client.get(
                 "/me", headers={"Authorization": "Bearer valid-jwt"}
@@ -257,8 +309,8 @@ class TestProdMode:
 
         with (
             patch("app.core.auth.get_settings", return_value=_mock_settings(PROD_JWKS)),
-            patch("fastapi_clerk_auth.ClerkConfig"),
-            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth) as mock_bearer_cls,
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth) as mock_bearer_cls,
         ):
             # First request populates the cache
             r1 = await client.get(
@@ -281,8 +333,8 @@ class TestProdMode:
 
         with (
             patch("app.core.auth.get_settings", return_value=_mock_settings(PROD_JWKS)),
-            patch("fastapi_clerk_auth.ClerkConfig"),
-            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
         ):
             response = await client.get(
                 "/me", headers={"Authorization": "Bearer no-sub-jwt"}
@@ -295,8 +347,8 @@ class TestProdMode:
 
         with (
             patch("app.core.auth.get_settings", return_value=_mock_settings(PROD_JWKS)),
-            patch("fastapi_clerk_auth.ClerkConfig"),
-            patch("fastapi_clerk_auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
         ):
             response = await client.get(
                 "/me", headers={"Authorization": "Bearer bad-jwt"}

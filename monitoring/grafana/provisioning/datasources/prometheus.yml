@@ -7,5 +7,13 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: false
+    # basicAuth credentials must match monitoring/prometheus/web.yml.
+    # Set these env vars in your deployment environment:
+    #   GF_DATASOURCE_PROM_USER=admin
+    #   GF_DATASOURCE_PROM_PASSWORD=<plaintext password>
+    basicAuth: true
+    basicAuthUser: "${GF_DATASOURCE_PROM_USER:-admin}"
+    secureJsonData:
+      basicAuthPassword: "${GF_DATASOURCE_PROM_PASSWORD}"
     jsonData:
       timeInterval: "15s"

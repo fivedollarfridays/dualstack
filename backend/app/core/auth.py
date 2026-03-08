@@ -1,5 +1,6 @@
 """Authentication dependency for FastAPI routes."""
 
+from collections import OrderedDict
 from typing import Any
 
 from fastapi import Depends, Header, Request
@@ -9,12 +10,19 @@ from app.core.audit import log_audit_event
 from app.core.config import get_settings
 from app.core.errors import AuthenticationError
 
+try:
+    from fastapi_clerk_auth import ClerkConfig, ClerkHTTPBearer
+except ImportError:  # pragma: no cover
+    ClerkConfig = None  # type: ignore[assignment,misc]
+    ClerkHTTPBearer = None  # type: ignore[assignment,misc]
+
 # Optional bearer token - we handle missing token ourselves
 _bearer_scheme = HTTPBearer(auto_error=False)
 
+MAX_CACHE_SIZE = 10
 
-# Bounded by unique JWKS URLs (typically 1 per deployment)
-_clerk_auth_cache: dict[str, Any] = {}
+# Bounded cache for Clerk auth instances (keyed by JWKS URL)
+_clerk_auth_cache: OrderedDict[str, Any] = OrderedDict()
 
 
 def _audit_auth_failure(action: str, user_id: str = "unknown") -> None:
@@ -34,11 +42,12 @@ async def _verify_clerk_token(
         AuthenticationError: If token is invalid or missing user identity.
     """
     try:
-        from fastapi_clerk_auth import ClerkConfig, ClerkHTTPBearer
-
         if jwks_url not in _clerk_auth_cache:
+            if len(_clerk_auth_cache) >= MAX_CACHE_SIZE:
+                _clerk_auth_cache.popitem(last=False)
             config = ClerkConfig(jwks_url=jwks_url)
             _clerk_auth_cache[jwks_url] = ClerkHTTPBearer(config=config)
+        _clerk_auth_cache.move_to_end(jwks_url)
         clerk_auth = _clerk_auth_cache[jwks_url]
         verified = await clerk_auth(request)
         user_id = verified.decoded.get("sub")

@@ -151,3 +151,20 @@ class StorageError(AppError):
             error_code: Unique error code
         """
         super().__init__(message=message, error_code=error_code, status_code=500)
+
+
+class ServiceUnavailableError(AppError):
+    """Raised when a required service is not configured or available."""
+
+    def __init__(
+        self,
+        message: str = "Service unavailable",
+        error_code: str = "SERVICE_UNAVAILABLE",
+    ):
+        """Initialize ServiceUnavailableError.
+
+        Args:
+            message: Human-readable error message
+            error_code: Unique error code
+        """
+        super().__init__(message=message, error_code=error_code, status_code=503)

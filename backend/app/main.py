@@ -40,6 +40,11 @@ async def lifespan(app: FastAPI):
             "WARNING: Running without Clerk JWT validation. All X-User-ID headers "
             "are trusted. Do NOT deploy to production without setting CLERK_JWKS_URL."
         )
+    if not settings.stripe_secret_key:
+        logger.warning(
+            "WARNING: STRIPE_SECRET_KEY is not set. Billing features will not work. "
+            "Set this before deploying to production."
+        )
     # Turso libsql:// guard
     if settings.turso_database_url.startswith("libsql://"):
         if settings.environment == "production":
@@ -117,7 +122,7 @@ def create_app() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.get_cors_origins(),
-        allow_credentials=True,
+        allow_credentials=bool(settings.clerk_jwks_url),
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=cors_headers,
     )

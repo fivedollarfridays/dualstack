@@ -1,3 +1,8 @@
+/**
+ * Server-side read-only database connection for SSR / Server Components.
+ * All writes MUST go through the backend API to preserve validation,
+ * authorization, and audit logging. See docs/ARCHITECTURE.md.
+ */
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from './schema';
