@@ -34,9 +34,8 @@ export default function ItemsPage() {
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
     try {
-      await deleteItem.mutateAsync(deleteTarget);
+      await deleteItem.mutateAsync(deleteTarget!);
     } catch {
       // React Query tracks error via deleteItem.error
     }

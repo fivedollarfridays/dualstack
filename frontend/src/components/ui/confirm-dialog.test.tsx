@@ -107,4 +107,20 @@ describe('ConfirmDialog', () => {
     await user.keyboard('{Escape}');
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
+
+  it('does not call onCancel for non-Escape keys', async () => {
+    const user = userEvent.setup();
+    const onCancel = jest.fn();
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Delete?"
+        message="Are you sure?"
+        onConfirm={jest.fn()}
+        onCancel={onCancel}
+      />
+    );
+    await user.keyboard('a');
+    expect(onCancel).not.toHaveBeenCalled();
+  });
 });
