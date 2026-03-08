@@ -1,46 +1,79 @@
 # Current State
 
 Project: DualStack
-Status: v1.0.0 — Security hardening round 3 complete
+Status: v1.0.0 — Full remediation backlog planned (S11-S17)
 
 ## Active Plans
 
+### Completed
 - **plan-2026-03-launch-prep** — Complete
 - **plan-2026-03-release-hardening** — Complete (T5.1-T5.8)
 - **plan-2026-03-market-readiness** — Complete (T6.1-T6.6)
 - **plan-2026-03-security-remediation** — Complete (T7.1-T7.6)
 - **plan-2026-03-security-hardening-r2** — Complete (T8.1-T8.6)
 - **plan-2026-03-security-hardening-r3** — Complete (T9.1-T9.7)
-  - T9.1 (P0, complexity 30): Webhook security hardening [AUDIT-001, AUDIT-008] ✓
-  - T9.2 (P0, complexity 25): Proxy + monitoring auth [AUDIT-002, AUDIT-004, AUDIT-014] ✓
-  - T9.3 (P1, complexity 15): Secrets cleanup + startup warnings [AUDIT-003, AUDIT-009, AUDIT-016] ✓
-  - T9.4 (P1, complexity 35): Frontend security headers + redirect validation [AUDIT-005, AUDIT-007] ✓
-  - T9.5 (P1, complexity 25): Backend response + middleware hardening [AUDIT-006, AUDIT-012, AUDIT-013] ✓
-  - T9.6 (P2, complexity 20): Auth cache bounds + frontend UX [AUDIT-011, AUDIT-015] ✓
-  - T9.7 (P2, complexity 20): Documentation + CI gaps [AUDIT-010, AUDIT-017, AUDIT-018] ✓
+- **plan-2026-03-security-hardening-r4** — Complete (T10.1-T10.4)
+
+### Planned (Pending)
+- **plan-2026-03-security-hardening-r5** — S11: Security R5 Remediation (T11.1-T11.4, 105 complexity)
+  - T11.1 (P1, 45): Streaming body size enforcement for chunked transfer encoding
+  - T11.2 (P1, 25): Backend URL validation — reject embedded credentials
+  - T11.3 (P2, 20): DevAuthProvider production build guard
+  - T11.4 (P2, 15): Config cleanup — Stripe key prefix + Prometheus dev auth docs
+- **plan-2026-03-database-architecture** — S12: Database Architecture (T12.1-T12.4, 170 complexity)
+  - T12.1 (P1, 80): Evaluate sqlalchemy-libsql or PostgreSQL migration
+  - T12.2 (P1, 25): Remove or justify frontend DB layer
+  - T12.3 (P2, 35): Consolidate to single migration system [depends: T12.2]
+  - T12.4 (P2, 30): Create database seed script
+- **plan-2026-03-billing-subscriptions** — S13: Billing & Subscriptions (T13.1-T13.5, 205 complexity)
+  - T13.1 (P0, 55): Users/customers table with Stripe mapping
+  - T13.2 (P0, 50): Webhook handler — store subscription state [depends: T13.1]
+  - T13.3 (P1, 35): Billing portal endpoint [depends: T13.1]
+  - T13.4 (P1, 45): Feature gating middleware [depends: T13.1, T13.2]
+  - T13.5 (P2, 20): Dashboard — real subscription display [depends: T13.1]
+- **plan-2026-03-soc2-cicd** — S14: SOC2 P1 + CI/CD (T14.1-T14.7, 235 complexity)
+  - T14.1 (P1, 40): Grafana alert rules
+  - T14.2 (P1, 30): Incident response runbook
+  - T14.3 (P1, 50): Automated database backups + RPO/RTO
+  - T14.4 (P1, 35): Playwright E2E in CI
+  - T14.5 (P1, 45): Staging/production deployment stages
+  - T14.6 (P2, 20): Frontend Docker build in CI
+  - T14.7 (P2, 15): CHANGELOG.md
+- **plan-2026-03-dx-soc2-p2** — S15: DX + SOC2 P2 (T15.1-T15.7, 225 complexity)
+  - T15.1 (P1, 30): Makefile for single-command dev setup
+  - T15.2 (P2, 20): Central configuration reference
+  - T15.3 (P1, 50): Log aggregation with Fluent Bit
+  - T15.4 (P2, 35): Uptime monitoring + PagerDuty
+  - T15.5 (P2, 25): On-call rotation + PIR process
+  - T15.6 (P2, 35): Tested restore process + backup monitoring [depends: T14.3]
+  - T15.7 (P3, 30): Monorepo workspace config
+- **plan-2026-03-saas-features-p1** — S16: SaaS Features Phase 1 (T16.1-T16.5, 270 complexity)
+  - T16.1 (P1, 65): Email/notification system
+  - T16.2 (P1, 70): RBAC — roles and permissions
+  - T16.3 (P1, 60): Admin dashboard [depends: T16.2]
+  - T16.4 (P2, 40): User profile management
+  - T16.5 (P2, 35): Search, sort, filter on list endpoints
+- **plan-2026-03-saas-features-p2** — S17: SaaS Features Phase 2 (T17.1-T17.6, 225 complexity)
+  - T17.1 (P2, 50): File upload with S3/R2
+  - T17.2 (P2, 55): Real-time WebSocket/SSE
+  - T17.3 (P2, 35): Onboarding flow
+  - T17.4 (P3, 40): Marketing pages + blog
+  - T17.5 (P3, 20): SEO (sitemap, robots.txt)
+  - T17.6 (P3, 25): Analytics integration
 
 ## Current Focus
 
-All security hardening round 3 tasks complete. All 18 AUDIT findings addressed.
+Sprint 11 (Security R5 Remediation) — COMPLETE. All R5 findings resolved.
 
 ## What Was Just Done
 
-- **T9.7 done** (auto-updated by hook)
+- **T11.4 done** (auto-updated by hook)
 
-- **T9.7 complete** — Documentation + CI gaps
-  - Created `docs/ARCHITECTURE.md` documenting dual write path concern and SSR-only guidance (AUDIT-010)
-  - Created `docs/CI-SECRETS.md` with GitHub Actions secrets setup for E2E tests (AUDIT-017)
-  - Created `docs/COMPLIANCE.md` with SOC2 CC7.1/CC7.2 gap analysis and remediation roadmap (AUDIT-018)
-  - Added clarifying header comment to `frontend/src/db/index.ts`
-  - No code behavior changes, 301 backend + 307 frontend tests passing
-
-- **T9.6 complete** — Auth cache bounds + frontend UX
-- **T9.5 complete** — Backend response + middleware hardening
-- **T9.4 complete** — Frontend security headers + redirect validation
-- **T9.3 complete** — Secrets cleanup + startup warnings
-- **T9.2 complete** — Proxy + monitoring auth
-- **T9.1 complete** — Webhook security hardening
+- **T11.1 complete** — Streaming body size enforcement for chunked transfer encoding (R5 NEW-007)
+- **T11.2 complete** — Backend URL validation rejects embedded credentials (R5 NEW-008)
+- **T11.3 complete** — DevAuthProvider production build guard (R5 NEW-011)
+- **T11.4 complete** — Removed dead STRIPE_PUBLISHABLE_KEY from .env.example/.env.local, added dev auth docs to Prometheus config (R5 NEW-009, NEW-010)
 
 ## What's Next
 
-Security hardening round 3 is complete. All 18 AUDIT findings (AUDIT-001 through AUDIT-018) have been addressed across 7 tasks.
+Sprint 11 complete. Next: Sprint 12 (Database Architecture) — `/start-task T12.1`

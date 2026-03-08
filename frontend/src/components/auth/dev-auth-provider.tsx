@@ -15,6 +15,13 @@ const DEV_AUTH_VALUE: AuthContextValue = {
  * Provides mock auth values for dev mode (no Clerk keys configured).
  */
 export function DevAuthProvider({ children }: { children: ReactNode }) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'DevAuthProvider must not be used in production. ' +
+      'Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY to enable real auth.'
+    );
+  }
+
   useEffect(() => {
     console.warn(
       '[DevAuthProvider] Dev auth mode is active. ' +
