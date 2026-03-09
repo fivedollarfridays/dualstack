@@ -2,7 +2,9 @@
 
 import uuid
 
-from sqlalchemy import func, select
+from typing import Literal
+
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import NotFoundError
@@ -10,6 +12,10 @@ from app.items.models import Item
 from app.items.schemas import ItemCreate, ItemUpdate
 
 UPDATABLE_FIELDS: frozenset[str] = frozenset({"title", "description", "status"})
+
+SORTABLE_FIELDS = {"title": Item.title, "created_at": Item.created_at, "updated_at": Item.updated_at}
+SortField = Literal["title", "created_at", "updated_at"]
+SortDir = Literal["asc", "desc"]
 
 
 async def create_item(db: AsyncSession, user_id: str, data: ItemCreate) -> Item:
@@ -37,32 +43,36 @@ async def create_item(db: AsyncSession, user_id: str, data: ItemCreate) -> Item:
 
 
 async def list_items(
-    db: AsyncSession, user_id: str, skip: int = 0, limit: int = 20
+    db: AsyncSession,
+    user_id: str,
+    skip: int = 0,
+    limit: int = 20,
+    search: str | None = None,
+    sort_by: SortField = "created_at",
+    sort_dir: SortDir = "desc",
+    status: str | None = None,
 ) -> tuple[list[Item], int]:
-    """List items for a user with pagination.
+    """List items with search, sort, filter, and pagination."""
+    base = select(Item).where(Item.user_id == user_id)
+    count_base = select(func.count()).select_from(Item).where(Item.user_id == user_id)
 
-    Args:
-        db: Async database session.
-        user_id: ID of the owning user.
-        skip: Number of items to skip.
-        limit: Maximum number of items to return.
+    if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        search_cond = or_(Item.title.ilike(pattern), Item.description.ilike(pattern))
+        base = base.where(search_cond)
+        count_base = count_base.where(search_cond)
 
-    Returns:
-        Tuple of (items list, total count).
-    """
-    count_stmt = select(func.count()).select_from(Item).where(Item.user_id == user_id)
-    total_result = await db.execute(count_stmt)
-    total = total_result.scalar_one()
+    if status:
+        base = base.where(Item.status == status)
+        count_base = count_base.where(Item.status == status)
 
-    stmt = (
-        select(Item)
-        .where(Item.user_id == user_id)
-        .order_by(Item.created_at.desc(), Item.id.desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    result = await db.execute(stmt)
-    items = list(result.scalars().all())
+    total = (await db.execute(count_base)).scalar_one()
+
+    column = SORTABLE_FIELDS[sort_by]
+    order = column.asc() if sort_dir == "asc" else column.desc()
+    stmt = base.order_by(order, Item.id.desc()).offset(skip).limit(limit)
+    items = list((await db.execute(stmt)).scalars().all())
 
     return items, total
 

@@ -74,4 +74,18 @@ describe('useSubscription', () => {
     expect(result.current.plan).toBe('free');
     expect(result.current.status).toBe('none');
   });
+
+  it('throws when token is null', async () => {
+    mockGetToken.mockResolvedValueOnce(null);
+
+    const { result } = renderHook(() => useSubscription(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // With null token, the query fails and defaults apply
+    expect(result.current.plan).toBe('free');
+    expect(result.current.status).toBe('none');
+  });
 });

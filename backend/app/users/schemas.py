@@ -26,6 +26,27 @@ class SubscriptionInfoResponse(BaseModel):
     subscription_status: str = "none"
 
 
+class UserProfileResponse(BaseModel):
+    """Profile data returned by /users/me/profile."""
+
+    model_config = {"from_attributes": True}
+
+    clerk_user_id: str
+    display_name: str | None = None
+    avatar_url: str | None = None
+    role: str = "member"
+    subscription_plan: str | None = "free"
+    subscription_status: str | None = "none"
+    created_at: datetime
+
+
+class UserProfileUpdate(BaseModel):
+    """Partial update for profile fields."""
+
+    display_name: str | None = Field(None, min_length=1, max_length=255)
+    avatar_url: str | None = Field(None, min_length=1, max_length=2000)
+
+
 class UserResponse(BaseModel):
     """Schema for returning a user in API responses."""
 

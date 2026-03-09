@@ -1,6 +1,6 @@
 """Tests for items API routes."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -227,7 +227,7 @@ class TestReadAuditEvents:
 
     async def test_list_items_emits_audit(self, client):
         """GET /items should emit audit event with action='list'."""
-        with patch("app.items.routes.log_audit_event") as mock_audit:
+        with patch("app.items.routes.persist_audit_event", new_callable=AsyncMock) as mock_audit:
             await client.get("/api/v1/items", headers=USER_HEADERS)
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
@@ -244,7 +244,7 @@ class TestReadAuditEvents:
         )
         item_id = create_resp.json()["id"]
 
-        with patch("app.items.routes.log_audit_event") as mock_audit:
+        with patch("app.items.routes.persist_audit_event", new_callable=AsyncMock) as mock_audit:
             await client.get(
                 f"/api/v1/items/{item_id}", headers=USER_HEADERS
             )

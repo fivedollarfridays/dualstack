@@ -83,6 +83,13 @@ def _register_routers(application: FastAPI) -> None:
     except ImportError as e:
         logger.info("Billing module not available: %s", e)
 
+    try:
+        from app.admin.routes import router as admin_router
+
+        application.include_router(admin_router, prefix="/api/v1")
+    except ImportError as e:
+        logger.info("Admin module not available: %s", e)
+
     @application.get("/")
     async def root():
         return {"message": "DualStack API", "status": "running"}

@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     # Metrics
     metrics_api_key: str = ""
 
+    # Email (Resend)
+    resend_api_key: str = ""
+    email_from_address: str = "no-reply@dualstack.app"
+    email_from_name: str = "DualStack"
+
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
 

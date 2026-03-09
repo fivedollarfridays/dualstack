@@ -2,14 +2,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppAuth } from '@/contexts/auth-context';
 import * as api from '@/lib/api/items';
 
-export function useItems(page = 1, limit = 20) {
+export function useItems(
+  page = 1,
+  limit = 20,
+  params?: Omit<api.ListItemsParams, 'page' | 'limit'>
+) {
   const { getToken } = useAppAuth();
   return useQuery({
-    queryKey: ['items', page, limit],
+    queryKey: ['items', page, limit, params],
     queryFn: async () => {
       const token = await getToken();
       if (!token) throw new Error('Authentication required');
-      return api.listItems(token, page, limit);
+      return api.listItems(token, page, limit, params);
     },
   });
 }
