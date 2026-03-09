@@ -13,6 +13,7 @@ Status: v1.0.0 — Full remediation backlog planned (S11-S17)
 - **plan-2026-03-security-hardening-r2** — Complete (T8.1-T8.6)
 - **plan-2026-03-security-hardening-r3** — Complete (T9.1-T9.7)
 - **plan-2026-03-security-hardening-r4** — Complete (T10.1-T10.4)
+- **plan-2026-03-billing-subscriptions** — Complete (T13.1-T13.5)
 
 ### Planned (Pending)
 - **plan-2026-03-security-hardening-r5** — S11: Security R5 Remediation (T11.1-T11.4, 105 complexity)
@@ -25,12 +26,6 @@ Status: v1.0.0 — Full remediation backlog planned (S11-S17)
   - T12.2 (P1, 25): Remove or justify frontend DB layer
   - T12.3 (P2, 35): Consolidate to single migration system [depends: T12.2]
   - T12.4 (P2, 30): Create database seed script
-- **plan-2026-03-billing-subscriptions** — S13: Billing & Subscriptions (T13.1-T13.5, 205 complexity)
-  - T13.1 (P0, 55): Users/customers table with Stripe mapping
-  - T13.2 (P0, 50): Webhook handler — store subscription state [depends: T13.1]
-  - T13.3 (P1, 35): Billing portal endpoint [depends: T13.1]
-  - T13.4 (P1, 45): Feature gating middleware [depends: T13.1, T13.2]
-  - T13.5 (P2, 20): Dashboard — real subscription display [depends: T13.1]
 - **plan-2026-03-soc2-cicd** — S14: SOC2 P1 + CI/CD (T14.1-T14.7, 235 complexity)
   - T14.1 (P1, 40): Grafana alert rules
   - T14.2 (P1, 30): Incident response runbook
@@ -63,21 +58,16 @@ Status: v1.0.0 — Full remediation backlog planned (S11-S17)
 
 ## Current Focus
 
-Sprint 12 (Database Architecture) — COMPLETE. All T12.1-T12.4 done.
+Sprint 13 (Billing & Subscriptions) — Complete. All tasks T13.1-T13.5 done.
 
 ## What Was Just Done
 
-- **T12.4 done** (auto-updated by hook)
-
-- **T12.3 done** (auto-updated by hook)
-
-- **T12.2 done** (auto-updated by hook)
-
-- **T12.1 complete** — Database URL handling refactored: DATABASE_URL for production, file: URL conversion, sqlalchemy-libsql for Alembic, extracted db_metrics.py
-- **T12.2 complete** — Removed unused frontend DB layer (src/db/, drizzle/, drizzle.config.ts) + deps (drizzle-orm, drizzle-kit, @libsql/client, dotenv, tsx)
-- **T12.3 complete** — Consolidated to Alembic as sole migration system (Drizzle already removed in T12.2), documented in ARCHITECTURE.md
-- **T12.4 complete** — Created idempotent seed script (scripts/seed.py) with 7 sample items, 4 tests, documented in ARCHITECTURE.md
+- **T13.5 complete** — Dashboard shows real subscription data. Added `GET /api/v1/users/me` backend endpoint, `getSubscription` API client, `useSubscription` hook, and updated dashboard page. Free users see "Upgrade" link, subscribed users see "Manage Subscription". Graceful fallback to Free on error. 4 backend + 3 hook + 10 dashboard tests. 386 backend, 328 frontend passing.
+- **T13.4 complete** — Feature gating middleware. Created `billing/plans.py` with 3 plan tiers (free/pro/enterprise), features sets, and limits. Created `core/entitlements.py` with `check_feature_access()`, `require_feature()` dependency factory, and `get_user_entitlements()`.
+- **T13.3 complete** — Billing portal endpoint with real Stripe integration.
+- **T13.2 complete** — Webhook handlers for 3 Stripe events, persists subscription state.
+- **T13.1 complete** — Users module with model, schemas, service, Alembic migration.
 
 ## What's Next
 
-Sprint 12 complete. Next: Sprint 13 (Billing & Subscriptions) — `/start-task T13.1`
+Sprint 13 complete. Next sprint: S14 (SOC2 P1 + CI/CD) or S11 (Security R5 Remediation).

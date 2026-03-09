@@ -14,6 +14,10 @@ try:
     from app.items.models import Item  # noqa: F401
 except ImportError:
     pass
+try:
+    from app.users.models import User  # noqa: F401
+except ImportError:
+    pass
 
 # Alembic Config object
 config = context.config

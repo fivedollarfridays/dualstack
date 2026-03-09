@@ -1,12 +1,21 @@
 """Billing service - Stripe integration."""
 
 import asyncio
+import logging
 
 import stripe
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.billing.webhook_handlers import (
+    handle_checkout_completed,
+    handle_subscription_deleted,
+    handle_subscription_updated,
+)
 from app.core.audit import log_audit_event
 from app.core.config import get_settings
 from app.core.errors import AuthenticationError, ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 async def create_checkout_session(
@@ -26,12 +35,7 @@ async def create_checkout_session(
 
 
 async def create_portal_session(customer_id: str, return_url: str) -> str:
-    """Create a Stripe Billing Portal session.
-
-    NOTE: To use this in production, you need a user->customer mapping.
-    Store the Stripe customer ID from the checkout.session.completed webhook
-    in your database, then look it up here instead of accepting it as input.
-    """
+    """Create a Stripe Billing Portal session."""
     session = await asyncio.to_thread(
         stripe.billing_portal.Session.create,
         customer=customer_id,
@@ -51,10 +55,17 @@ def _audit_webhook(action: str, resource_id: str, outcome: str = "success") -> N
 _WEBHOOK_ACTIONS = {
     "checkout.session.completed": "webhook.checkout_completed",
     "customer.subscription.updated": "webhook.subscription_updated",
+    "customer.subscription.deleted": "webhook.subscription_deleted",
+}
+
+_WEBHOOK_HANDLERS = {
+    "checkout.session.completed": handle_checkout_completed,
+    "customer.subscription.updated": handle_subscription_updated,
+    "customer.subscription.deleted": handle_subscription_deleted,
 }
 
 
-async def handle_webhook(payload: bytes, sig_header: str) -> dict:
+async def handle_webhook(payload: bytes, sig_header: str, db: AsyncSession) -> dict:
     """Process a Stripe webhook event.
 
     Caller must verify stripe_webhook_secret is set before calling.
@@ -75,10 +86,19 @@ async def handle_webhook(payload: bytes, sig_header: str) -> dict:
         raise ValidationError(message="Invalid webhook payload")
 
     event_type = event["type"]
-    resource_id = event.get("data", {}).get("object", {}).get("id", "unknown")
+    event_data = event.get("data", {}).get("object", {})
+    resource_id = event_data.get("id", "unknown")
     action = _WEBHOOK_ACTIONS.get(event_type)
 
     if action:
+        handler = _WEBHOOK_HANDLERS.get(event_type)
+        if handler:
+            try:
+                await handler(db, event_data)
+            except Exception:
+                logger.exception("Webhook handler error for %s", event_type)
+                _audit_webhook(action, resource_id, outcome="failure")
+                return {"handled": True, "type": event_type, "error": True}
         _audit_webhook(action, resource_id)
         return {"handled": True, "type": event_type}
 

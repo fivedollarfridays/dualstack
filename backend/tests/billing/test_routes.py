@@ -55,18 +55,17 @@ class TestCheckoutRoute:
 
 
 class TestPortalRoute:
-    async def test_returns_501_not_implemented(self, client):
-        """Portal endpoint returns 501 until user->customer mapping is implemented."""
-        response = await client.post(
-            "/api/v1/billing/portal",
-            json={
-                "return_url": "https://example.com/dashboard",
-                "customer_id": "cus_abc123",
-            },
-        )
-        assert response.status_code == 501
-        body = response.json()
-        assert "user" in body["detail"].lower() or "customer" in body["detail"].lower()
+    @patch("app.core.url_validation.get_settings")
+    async def test_returns_404_when_no_billing_account(self, mock_gs: MagicMock, client):
+        """Portal returns 404 when user has no billing account."""
+        mock_gs.return_value = mock_settings_with_cors("https://example.com")
+        with patch("app.billing.routes.get_user_by_clerk_id", new_callable=AsyncMock, return_value=None):
+            response = await client.post(
+                "/api/v1/billing/portal",
+                json={"return_url": "https://example.com/dashboard"},
+            )
+        assert response.status_code == 404
+        assert "subscribe" in response.json()["detail"].lower()
 
     def test_portal_has_rate_limit_decorator(self):
         """NEW-011: /billing/portal should have a rate limit decorator."""

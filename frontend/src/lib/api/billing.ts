@@ -19,5 +19,14 @@ export async function createCheckout(
   return data.url;
 }
 
-// TODO: Add openPortal() function once you have a user->customer mapping.
-// See backend/app/billing/service.py for the portal endpoint.
+export interface SubscriptionInfo {
+  subscription_plan: string;
+  subscription_status: string;
+}
+
+export async function getSubscription(token: string): Promise<SubscriptionInfo> {
+  const res = await fetch(`${API_URL}/api/v1/users/me`, {
+    headers: authHeaders(token),
+  });
+  return handleResponse<SubscriptionInfo>(res);
+}
