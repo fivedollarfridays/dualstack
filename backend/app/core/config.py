@@ -32,6 +32,20 @@ class Settings(BaseSettings):
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
 
+    @field_validator("stripe_secret_key")
+    @classmethod
+    def validate_stripe_secret_key(cls, v: str) -> str:
+        if v and not v.startswith(("sk_test_", "sk_live_")):
+            raise ValueError("stripe_secret_key must start with sk_test_ or sk_live_")
+        return v
+
+    @field_validator("stripe_webhook_secret")
+    @classmethod
+    def validate_stripe_webhook_secret(cls, v: str) -> str:
+        if v and not v.startswith("whsec_"):
+            raise ValueError("stripe_webhook_secret must start with whsec_")
+        return v
+
     @field_validator("metrics_api_key")
     @classmethod
     def validate_metrics_api_key(cls, v: str) -> str:

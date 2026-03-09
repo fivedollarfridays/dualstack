@@ -113,3 +113,39 @@ class TestMetricsApiKeyValidation:
         key = "a" * 64
         settings = Settings(metrics_api_key=key)
         assert settings.metrics_api_key == key
+
+
+class TestStripeKeyPrefixValidation:
+    """T11.4: Stripe keys must have valid prefixes when set."""
+
+    def test_accepts_empty_stripe_secret_key(self):
+        settings = Settings(stripe_secret_key="")
+        assert settings.stripe_secret_key == ""
+
+    def test_accepts_test_mode_key(self):
+        settings = Settings(stripe_secret_key="sk_test_abc123")
+        assert settings.stripe_secret_key == "sk_test_abc123"
+
+    def test_accepts_live_mode_key(self):
+        settings = Settings(stripe_secret_key="sk_live_abc123")
+        assert settings.stripe_secret_key == "sk_live_abc123"
+
+    def test_rejects_invalid_prefix(self):
+        with pytest.raises(ValidationError, match="stripe_secret_key"):
+            Settings(stripe_secret_key="invalid_key_value")
+
+    def test_rejects_publishable_key_in_secret_field(self):
+        with pytest.raises(ValidationError, match="stripe_secret_key"):
+            Settings(stripe_secret_key="pk_test_abc123")
+
+    def test_accepts_empty_webhook_secret(self):
+        settings = Settings(stripe_webhook_secret="")
+        assert settings.stripe_webhook_secret == ""
+
+    def test_accepts_valid_webhook_secret(self):
+        settings = Settings(stripe_webhook_secret="whsec_abc123")
+        assert settings.stripe_webhook_secret == "whsec_abc123"
+
+    def test_rejects_invalid_webhook_prefix(self):
+        with pytest.raises(ValidationError, match="stripe_webhook_secret"):
+            Settings(stripe_webhook_secret="not_a_webhook_secret")
