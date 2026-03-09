@@ -1,0 +1,32 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: default-alerts
+    receivers:
+      # Slack webhook — replace the placeholder URL before deploying.
+      - uid: dualstack-slack
+        type: slack
+        settings:
+          url: "${GF_ALERTING_SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/PLACEHOLDER}"
+          recipient: "#alerts"
+          title: |
+            {{ template "default.title" . }}
+          text: |
+            {{ template "default.message" . }}
+        disableResolveMessage: false
+
+      # Uncomment for email:
+      # - uid: dualstack-email
+      #   type: email
+      #   settings:
+      #     addresses: "alerts@example.com"
+      #   disableResolveMessage: false
+
+      # Uncomment for PagerDuty:
+      # - uid: dualstack-pagerduty
+      #   type: pagerduty
+      #   settings:
+      #     integrationKey: "${GF_ALERTING_PAGERDUTY_KEY}"
+      #     severity: "critical"
+      #   disableResolveMessage: false

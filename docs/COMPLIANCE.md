@@ -27,59 +27,60 @@ but has gaps in monitoring, incident response, and backup strategy.
 ### CC7.1 — Monitoring and Detection
 
 **Current state:** Prometheus metrics collection with Grafana dashboards.
-Structured logging via structlog.
+Structured logging via structlog. Automated alerting configured.
 
-**Gaps:**
-- No automated alerting rules for anomalous patterns (e.g., auth failure
-  spikes, error rate thresholds)
+**Status:** Partially addressed (P1 complete, P2 remaining)
+
+**Addressed:**
+- Grafana alert rules provisioned for error rate > 5%, auth failure
+  spike > 10/min, and P99 latency > 2s
+  (`monitoring/grafana/provisioning/alerting/`)
+- Prometheus alert rules for API down, pool exhaustion, slow queries
+  (`monitoring/prometheus/alerts/`)
+- Contact point and notification policies configured
+
+**Remaining gaps (P2):**
 - No centralized log aggregation for production (logs are container-local)
 - No uptime monitoring or health check alerting
 
-**Remediation:**
-1. **P1:** Configure Grafana alert rules for error rate > 5%, auth failure
-   spike > 10/min, and response latency P99 > 2s
-2. **P2:** Add a log shipping sidecar (e.g., Fluent Bit) to forward logs to a
-   centralized service (e.g., Datadog, Loki, CloudWatch)
-3. **P2:** Set up uptime monitoring on the `/health` endpoint with PagerDuty
-   or Opsgenie integration
-
 ### CC7.2 — Incident Response
 
-**Current state:** No formal incident response plan.
+**Current state:** Incident response runbook documented.
+See [`docs/INCIDENT-RESPONSE.md`](INCIDENT-RESPONSE.md).
 
-**Gaps:**
-- No documented incident response runbook
-- No on-call rotation or escalation path
-- No post-incident review process
+**Status:** Partially addressed (P1 complete, P2 remaining)
 
-**Remediation:**
-1. **P1:** Create an incident response runbook covering: detection, triage,
-   containment, resolution, and communication
-2. **P2:** Define on-call rotation and escalation policies
-3. **P2:** Establish a post-incident review template and cadence
+**Addressed:**
+- Incident response runbook with severity levels, detection, triage,
+  communication templates, resolution steps, and specific runbooks
+- Post-incident review template with timeline, root cause, impact, action items
+
+**Remaining gaps (P2):**
+- On-call rotation and escalation policies (placeholder in runbook)
+- Post-incident review cadence not yet enforced
 
 ### CC6.1 — Backup and Recovery
 
-**Current state:** SQLite database with no automated backup strategy.
+**Current state:** Automated backup script with documented RPO/RTO targets.
+See [`docs/BACKUP-RECOVERY.md`](BACKUP-RECOVERY.md).
 
-**Gaps:**
-- No automated database backups
-- No documented recovery procedure
-- No tested restore process
-- No defined RPO/RTO targets
+**Status:** Partially addressed (P1 complete, P2 remaining)
 
-**Remediation:**
-1. **P1:** Define RPO (Recovery Point Objective) and RTO (Recovery Time
-   Objective) targets
-2. **P1:** Implement automated database backups (Turso handles this if using
-   their hosted service; for self-hosted SQLite, use Litestream or cron-based
-   snapshots)
-3. **P2:** Document and test the restore procedure
-4. **P2:** Set up backup monitoring alerts (backup age, backup size anomalies)
+**Addressed:**
+- RPO < 1 hour, RTO < 4 hours targets defined and documented
+- Automated backup script (`scripts/backup.sh`) using `sqlite3 .backup`
+  for consistent snapshots with retention policy
+- Step-by-step restore procedure documented and tested
+- PostgreSQL backup path documented for production deployments
+
+**Remaining gaps (P2):**
+- Backup monitoring alerts (backup age, size anomaly)
+- Quarterly restore-to-staging testing not yet scheduled
+- Litestream continuous replication for near-zero RPO (enhancement)
 
 ## Priority Summary
 
 | Priority | Items | Target |
 |----------|-------|--------|
-| P1 | Alerting rules, incident runbook, backup strategy, RPO/RTO | Pre-launch |
-| P2 | Log aggregation, uptime monitoring, on-call, restore testing | Post-launch |
+| P1 | ~~Alerting rules~~, ~~incident runbook~~, ~~backup strategy~~, ~~RPO/RTO~~ | Done |
+| P2 | Log aggregation, uptime monitoring, on-call, restore testing, backup alerts | Post-launch |
