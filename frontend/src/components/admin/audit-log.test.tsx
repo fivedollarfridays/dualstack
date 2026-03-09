@@ -59,6 +59,30 @@ describe('AuditLog', () => {
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
+  it('navigates to previous page', async () => {
+    const user = userEvent.setup();
+    const onPageChange = jest.fn();
+    render(
+      <AuditLog entries={mockEntries} total={100} page={2} limit={50} onPageChange={onPageChange} />
+    );
+    await user.click(screen.getByText('Previous'));
+    expect(onPageChange).toHaveBeenCalledWith(1);
+  });
+
+  it('disables Previous on first page', () => {
+    render(
+      <AuditLog entries={mockEntries} total={100} page={1} limit={50} onPageChange={jest.fn()} />
+    );
+    expect(screen.getByText('Previous')).toBeDisabled();
+  });
+
+  it('disables Next on last page', () => {
+    render(
+      <AuditLog entries={mockEntries} total={100} page={2} limit={50} onPageChange={jest.fn()} />
+    );
+    expect(screen.getByText('Next')).toBeDisabled();
+  });
+
   it('does not show pagination when total is within limit', () => {
     render(<AuditLog entries={mockEntries} total={2} page={1} onPageChange={jest.fn()} />);
     expect(screen.queryByText('Previous')).not.toBeInTheDocument();

@@ -27,4 +27,10 @@ describe('AvatarDisplay', () => {
     render(<AvatarDisplay avatarUrl={null} displayName="Alice" />);
     expect(screen.getByText('A')).toBeInTheDocument();
   });
+
+  it('uses fallback alt text when avatarUrl is set but displayName is null', () => {
+    render(<AvatarDisplay avatarUrl="https://img.example.com/a.png" displayName={null} />);
+    const img = screen.getByRole('img');
+    expect(img).toHaveAttribute('alt', 'User avatar');
+  });
 });

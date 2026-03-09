@@ -72,4 +72,14 @@ describe('DeleteAccountDialog', () => {
 
     expect(screen.getByText(/All your data, items, and subscription will be deleted/)).toBeInTheDocument();
   });
+
+  it('shows deleting state when isDeleting is true', async () => {
+    const user = userEvent.setup();
+    render(<DeleteAccountDialog onConfirm={jest.fn()} isDeleting={true} />);
+
+    await user.click(screen.getByText('Delete Account'));
+
+    expect(screen.getByText('Deleting...')).toBeInTheDocument();
+    expect(screen.getByText('Deleting...')).toBeDisabled();
+  });
 });

@@ -34,6 +34,15 @@ describe('SearchBar', () => {
     expect(onChange).toHaveBeenCalledWith('test');
   });
 
+  it('does not call onChange when local matches value', () => {
+    const onChange = jest.fn();
+    render(<SearchBar value="same" onChange={onChange} debounceMs={100} />);
+
+    // Fire debounce without typing — local and value are both "same"
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('has search aria-label', () => {
     render(<SearchBar value="" onChange={jest.fn()} />);
     expect(screen.getByLabelText('Search')).toBeInTheDocument();

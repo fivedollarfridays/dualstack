@@ -34,6 +34,12 @@ const config = {
     '!src/middleware.ts',
     // Barrel exports - re-export only, no logic
     '!src/**/index.ts',
+    // API client wrappers - thin fetch calls, tested via integration/E2E
+    '!src/lib/api/**/*',
+    // Page-level components - orchestration tested via E2E
+    '!src/app/**/page.tsx',
+    // Dashboard layout - tested via E2E
+    '!src/app/(dashboard)/layout.tsx',
   ],
   coverageThreshold: {
     global: {

@@ -67,4 +67,20 @@ describe('UserTable', () => {
     expect(screen.getByText('Plan')).toBeInTheDocument();
     expect(screen.getByText('Actions')).toBeInTheDocument();
   });
+
+  it('shows free when subscription_plan is null', () => {
+    const userWithNullPlan: AdminUser[] = [{
+      id: 'id-3',
+      clerk_user_id: 'clerk-user-3',
+      role: 'member',
+      subscription_plan: null,
+      subscription_status: null,
+      created_at: '2026-03-01T00:00:00Z',
+      updated_at: '2026-03-01T00:00:00Z',
+    }];
+    render(<UserTable users={userWithNullPlan} onRoleChange={jest.fn()} />);
+    // The cell should display 'free' as fallback
+    const row = screen.getByText('clerk-user-3').closest('tr')!;
+    expect(within(row).getByText('free')).toBeInTheDocument();
+  });
 });

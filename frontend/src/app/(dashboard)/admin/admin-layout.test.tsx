@@ -37,11 +37,41 @@ describe('AdminLayout', () => {
     expect(screen.queryByText('Admin content')).not.toBeInTheDocument();
   });
 
+  it('shows access denied for Insufficient permissions error', () => {
+    mockUseAdminHealth.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: new Error('Insufficient permissions'),
+    });
+    render(
+      <AdminLayout>
+        <div>Admin content</div>
+      </AdminLayout>
+    );
+    expect(screen.getByText('Access Denied')).toBeInTheDocument();
+    expect(screen.queryByText('Admin content')).not.toBeInTheDocument();
+  });
+
   it('shows error message for non-403 errors', () => {
     mockUseAdminHealth.mockReturnValue({
       isLoading: false,
       isError: true,
       error: new Error('Network error'),
+    });
+    render(
+      <AdminLayout>
+        <div>Admin content</div>
+      </AdminLayout>
+    );
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.queryByText('Admin content')).not.toBeInTheDocument();
+  });
+
+  it('shows generic error when error has no message', () => {
+    mockUseAdminHealth.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: { message: undefined },
     });
     render(
       <AdminLayout>

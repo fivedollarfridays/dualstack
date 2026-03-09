@@ -18,11 +18,11 @@ describe('HealthOverview', () => {
   it('renders unhealthy status in red', () => {
     render(
       <HealthOverview
-        health={{ status: 'unhealthy', database: 'error: timeout', user_count: 0, error: 'timeout' }}
+        health={{ status: 'unhealthy', database: 'error', user_count: 0 }}
       />
     );
     expect(screen.getByText('unhealthy')).toBeInTheDocument();
-    expect(screen.getByText('timeout')).toBeInTheDocument();
+    expect(screen.getByText('error')).toBeInTheDocument();
   });
 
   it('shows user count', () => {

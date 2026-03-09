@@ -35,6 +35,16 @@ describe('SortControls', () => {
     expect(onSortChange).toHaveBeenCalledWith('created_at', 'asc');
   });
 
+  it('toggles direction from asc to desc on button click', async () => {
+    const user = userEvent.setup();
+    const onSortChange = jest.fn();
+    render(<SortControls sortBy="created_at" sortDir="asc" onSortChange={onSortChange} />);
+
+    await user.click(screen.getByLabelText('Sort descending'));
+
+    expect(onSortChange).toHaveBeenCalledWith('created_at', 'desc');
+  });
+
   it('shows ascending arrow when asc', () => {
     render(<SortControls sortBy="title" sortDir="asc" onSortChange={jest.fn()} />);
     expect(screen.getByLabelText('Sort descending')).toBeInTheDocument();
