@@ -57,8 +57,6 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    # Skip when Clerk secrets are not configured (e.g. forks, initial setup)
-    if: ${{ secrets.CLERK_SECRET_KEY != '' }}
     timeout-minutes: 15
     defaults:
       run:
@@ -66,19 +64,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check for Clerk secrets
+        id: check-secrets
+        run: |
+          if [ -z "$CLERK_SECRET_KEY" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Clerk secrets not configured — skipping E2E tests"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+
       - uses: actions/setup-node@v4
+        if: steps.check-secrets.outputs.skip == 'false'
         with:
           node-version: "18"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        if: steps.check-secrets.outputs.skip == 'false'
         run: npm ci
 
       - name: Install Playwright browsers
+        if: steps.check-secrets.outputs.skip == 'false'
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
+        if: steps.check-secrets.outputs.skip == 'false'
         run: npx playwright test
         env:
           CI: "true"
@@ -89,7 +103,7 @@ jobs:
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: failure() && steps.check-secrets.outputs.skip == 'false'
         with:
           name: playwright-report
           path: |
