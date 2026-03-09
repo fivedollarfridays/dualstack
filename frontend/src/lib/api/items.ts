@@ -28,13 +28,31 @@ export interface UpdateItemData {
   status?: ItemStatus;
 }
 
+export type SortField = 'title' | 'created_at' | 'updated_at';
+export type SortDir = 'asc' | 'desc';
+
+export interface ListItemsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort_by?: SortField;
+  sort_dir?: SortDir;
+  status?: ItemStatus;
+}
+
 export async function listItems(
   token: string,
   page = 1,
-  limit = 20
+  limit = 20,
+  params?: Omit<ListItemsParams, 'page' | 'limit'>
 ): Promise<ItemListResponse> {
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (params?.search) qs.set('search', params.search);
+  if (params?.sort_by) qs.set('sort_by', params.sort_by);
+  if (params?.sort_dir) qs.set('sort_dir', params.sort_dir);
+  if (params?.status) qs.set('status', params.status);
   const response = await fetch(
-    `${API_URL}/api/v1/items?page=${page}&limit=${limit}`,
+    `${API_URL}/api/v1/items?${qs}`,
     { headers: authHeaders(token) }
   );
   return handleResponse<ItemListResponse>(response);

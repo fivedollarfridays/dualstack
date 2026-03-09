@@ -1,8 +1,10 @@
 """Tests for audit logging (SEC-013)."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from app.core.audit import log_audit_event
+import pytest
+
+from app.core.audit import log_audit_event, persist_audit_event
 
 
 class TestLogAuditEvent:
@@ -98,3 +100,31 @@ class TestLogAuditEvent:
             )
             kwargs = mock_logger.info.call_args[1]
             assert "detail" not in kwargs
+
+
+class TestPersistAuditEvent:
+    """Test database-persisted audit events."""
+
+    async def test_persists_audit_entry_to_db(self):
+        db = AsyncMock()
+        await persist_audit_event(
+            db,
+            user_id="user-1",
+            action="create",
+            resource_type="item",
+            resource_id="item-1",
+        )
+        db.add.assert_called_once()
+        db.flush.assert_awaited_once()
+
+    async def test_also_emits_structured_log(self):
+        db = AsyncMock()
+        with patch("app.core.audit.logger") as mock_logger:
+            await persist_audit_event(
+                db,
+                user_id="user-1",
+                action="create",
+                resource_type="item",
+                resource_id="item-1",
+            )
+            mock_logger.info.assert_called_once()

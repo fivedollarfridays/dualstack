@@ -52,7 +52,7 @@ describe('useItems', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockApi.listItems).toHaveBeenCalledWith('mock-token', 1, 20);
+    expect(mockApi.listItems).toHaveBeenCalledWith('mock-token', 1, 20, undefined);
     expect(result.current.data).toEqual({ items: [mockItem], total: 1 });
   });
 
@@ -63,7 +63,7 @@ describe('useItems', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockApi.listItems).toHaveBeenCalledWith('mock-token', 2, 10);
+    expect(mockApi.listItems).toHaveBeenCalledWith('mock-token', 2, 10, undefined);
   });
 });
 

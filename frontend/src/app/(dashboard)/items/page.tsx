@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ItemList } from '@/components/items/item-list';
+import { SearchBar } from '@/components/items/search-bar';
+import { SortControls } from '@/components/items/sort-controls';
+import type { SortField, SortDir } from '@/components/items/sort-controls';
 import { useItems, useDeleteItem } from '@/hooks/use-items';
 
 const PAGE_SIZE = 20;
@@ -12,9 +15,27 @@ const PAGE_SIZE = 20;
 export default function ItemsPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortField>('created_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const { data, isLoading, error } = useItems(page, PAGE_SIZE);
+  const { data, isLoading, error } = useItems(page, PAGE_SIZE, {
+    search: search || undefined,
+    sort_by: sortBy,
+    sort_dir: sortDir,
+  });
   const deleteItem = useDeleteItem();
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
+
+  const handleSortChange = useCallback((field: SortField, dir: SortDir) => {
+    setSortBy(field);
+    setSortDir(dir);
+    setPage(1);
+  }, []);
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
 
@@ -54,6 +75,11 @@ export default function ItemsPage() {
           <p className="text-red-400">Delete failed. Please try again.</p>
         </div>
       )}
+
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <SearchBar value={search} onChange={handleSearchChange} placeholder="Search items..." />
+        <SortControls sortBy={sortBy} sortDir={sortDir} onSortChange={handleSortChange} />
+      </div>
 
       <div className="mt-6">
         {error ? (
