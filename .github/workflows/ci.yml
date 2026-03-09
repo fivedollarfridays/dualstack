@@ -57,6 +57,8 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    # Skip when Clerk secrets are not configured (e.g. forks, initial setup)
+    if: ${{ secrets.CLERK_SECRET_KEY != '' }}
     timeout-minutes: 15
     defaults:
       run:
