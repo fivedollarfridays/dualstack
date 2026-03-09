@@ -35,19 +35,11 @@
 
 name: Deploy
 
+# Disabled — self-hosting with Docker Compose.
+# Re-enable when a managed deployment target (Render, Fly.io, etc.) is configured.
+# See: https://github.com/fivedollarfridays/dualstack/issues/TBD
 on:
-  # Staging: triggers after CI workflow completes on main
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [main]
-
-  # Production: triggers on release publish or version tag
-  release:
-    types: [published]
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:  # manual-only until deployment target is configured
 
 jobs:
   staging:
