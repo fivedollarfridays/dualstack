@@ -1,0 +1,17 @@
+{
+  "name": "dualstack",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names backend,frontend,monitoring \"cd backend && uvicorn app.main:app --reload --port 8000\" \"pnpm --filter frontend dev\" \"cd monitoring && docker compose up -d\"",
+    "test": "cd backend && python -m pytest && cd .. && pnpm --filter frontend test",
+    "test:backend": "cd backend && python -m pytest",
+    "test:frontend": "pnpm --filter frontend test",
+    "build": "pnpm --filter frontend build",
+    "lint": "pnpm --filter frontend lint",
+    "install:all": "cd backend && pip install -r requirements-dev.txt && cd .. && pnpm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   prometheus:
     command:
@@ -11,6 +9,10 @@ services:
       - host  # Access to host network for localhost:8000
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  fluent-bit:
+    environment:
+      - LOKI_HOST=loki
 
 networks:
   host:

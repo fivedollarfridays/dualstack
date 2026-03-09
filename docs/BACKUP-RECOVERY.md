@@ -88,7 +88,30 @@ export S3_BACKUP_BUCKET=s3://dualstack-backups/sqlite
 
 ---
 
-## Restore Procedure
+## Automated Restore (`scripts/restore.sh`)
+
+The restore script automates the full restore procedure with safety checks:
+
+```bash
+# Restore from a backup file
+./scripts/restore.sh --backup-file backups/dualstack-20260309T120000Z.db
+
+# Restore with custom database path
+./scripts/restore.sh --backup-file backups/latest.db --db-path /data/local.db
+```
+
+The script:
+1. Validates the backup file exists and is a valid SQLite database
+2. Creates a **safety backup** of the current database (timestamped `.pre-restore-*` file)
+3. Copies the backup to the target database path
+4. Runs `PRAGMA integrity_check` on the restored database
+5. Verifies the database has tables
+6. Reverts to the safety backup if validation fails
+7. Exits non-zero with descriptive error on any failure
+
+---
+
+## Restore Procedure (Manual)
 
 ### Step 1: Identify the Latest Backup
 
@@ -192,22 +215,57 @@ if [ "$AGE_SECONDS" -gt 7200 ]; then
 fi
 ```
 
-### Prometheus Metrics (Future)
+### Prometheus Backup Monitoring Alerts
 
-Add backup-specific metrics to enable Grafana alerting:
+Alert rules are defined in `monitoring/prometheus/alerts/backup.yml`. These
+require the backend to expose the following metrics (e.g., via a Pushgateway
+or custom exporter):
+
 - `dualstack_backup_last_success_timestamp` — when the last backup completed
 - `dualstack_backup_size_bytes` — size of the last backup
 - `dualstack_backup_duration_seconds` — how long the backup took
 
-### Alerts to Configure
-
-- Backup age > 2 hours (backup not running)
-- Backup size anomaly (>50% change from previous)
-- Backup integrity check failure
+| Alert | Severity | Threshold | Action |
+|-------|----------|-----------|--------|
+| **BackupTooOld** | Warning | Last backup >2 hours old | Check backup cron job logs, re-run manually |
+| **BackupTooOldCritical** | Critical | Last backup >6 hours old | Immediate: investigate storage access, run backup manually |
+| **BackupSizeAnomaly** | Warning | Size deviates >50% from 7-day average | Investigate data growth or potential corruption |
 
 ---
 
-## Testing Schedule
+## Restore Testing
+
+Regularly test the restore process to ensure backups are usable.
+
+### Test Procedure
+
+1. **Create a test backup:**
+   ```bash
+   ./scripts/backup.sh backend/local.db /tmp/restore-test
+   ```
+
+2. **Restore to a separate location:**
+   ```bash
+   ./scripts/restore.sh --backup-file /tmp/restore-test/dualstack-*.db --db-path /tmp/restored.db
+   ```
+
+3. **Validate data integrity:**
+   ```bash
+   sqlite3 /tmp/restored.db "PRAGMA integrity_check;"
+   sqlite3 /tmp/restored.db "SELECT COUNT(*) FROM sqlite_master WHERE type='table';"
+   sqlite3 /tmp/restored.db "SELECT version_num FROM alembic_version;"
+   ```
+
+4. **Record test outcome:**
+   - Date, tester name, backup file used, result (pass/fail)
+   - Note any issues encountered
+
+5. **Clean up:**
+   ```bash
+   rm -rf /tmp/restore-test /tmp/restored.db
+   ```
+
+### Testing Schedule
 
 | Test | Frequency | Owner |
 |------|-----------|-------|
@@ -215,3 +273,34 @@ Add backup-specific metrics to enable Grafana alerting:
 | Full restore to staging | Quarterly | Engineering lead |
 | Verify backup integrity | Weekly (automated) | Cron job |
 | Update this document | After any backup infrastructure changes | Author |
+
+---
+
+## Disaster Recovery Runbook
+
+Emergency step-by-step for restoring service when the database is lost or corrupt.
+
+1. **Assess the situation** — Confirm the database is the root cause (not network, app crash, etc.)
+2. **Identify the latest good backup:**
+   ```bash
+   ls -lt backups/*.db | head -5
+   ```
+3. **Run the restore script:**
+   ```bash
+   ./scripts/restore.sh --backup-file backups/<latest>.db
+   ```
+4. **Apply any pending migrations:**
+   ```bash
+   cd backend && alembic upgrade head
+   ```
+5. **Restart the application:**
+   ```bash
+   docker compose up -d backend
+   ```
+6. **Verify health:**
+   ```bash
+   ./scripts/healthcheck.sh
+   ```
+7. **Monitor** Grafana dashboards for 15 minutes
+8. **Communicate resolution** per incident response runbook
+9. **Schedule a PIR** if this was SEV1/SEV2

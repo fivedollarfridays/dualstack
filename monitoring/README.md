@@ -13,6 +13,8 @@ This monitoring stack includes:
 - **Persistent Storage** - Metrics retained for 15 days (configurable)
 - **Health Checks** - Automatic service monitoring
 - **Pre-built Dashboards** - 3 comprehensive dashboards for system observability
+- **Fluent Bit** - Centralized log collection from Docker containers
+- **Loki** - Log storage and indexing (Grafana-native)
 
 ## Quick Start
 
@@ -101,6 +103,45 @@ Mount `web.resolved.yml` as `/etc/prometheus/web.yml` in your production compose
 - `docker-compose.yml` - Base Docker Compose
 - `docker-compose.dev.yml` - Development overrides
 - `docker-compose.prod.yml` - Production overrides
+- `fluent-bit/fluent-bit.conf` - Fluent Bit pipeline configuration
+- `fluent-bit/parsers.conf` - Log parsers (JSON, syslog)
+
+## Log Aggregation (Fluent Bit + Loki)
+
+Container logs are collected by **Fluent Bit** and forwarded to **Loki** for centralized storage and querying via Grafana.
+
+### Architecture
+
+```
+Docker containers → Fluent Bit (forward input :24224) → Loki (:3100) → Grafana
+```
+
+### Configuration
+
+| File | Purpose |
+|------|---------|
+| `fluent-bit/fluent-bit.conf` | Input, filter, and output pipeline |
+| `fluent-bit/parsers.conf` | JSON and syslog parsers |
+
+Fluent Bit parses structlog JSON output from the FastAPI backend and forwards structured fields to Loki. The output host is configurable via `LOKI_HOST` (defaults to `loki` for Docker networking).
+
+### Querying Logs in Grafana (LogQL)
+
+Open Grafana → **Explore** → select **Loki** datasource.
+
+```logql
+# All logs from the backend container
+{job="dualstack", container="backend"}
+
+# Filter by log level
+{job="dualstack"} |= "error"
+
+# JSON-parsed structured fields
+{job="dualstack"} | json | level="error"
+
+# Rate of error logs over 5 minutes
+rate({job="dualstack"} |= "error" [5m])
+```
 
 ## Available Metrics
 

@@ -50,10 +50,11 @@ receivers:
     #     text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
     #     send_resolved: true
     #
-    # Uncomment for PagerDuty:
-    # pagerduty_configs:
-    #   - service_key: 'YOUR_PAGERDUTY_SERVICE_KEY'
-    #     severity: 'critical'
+    # PagerDuty — process with envsubst before deploying:
+    #   envsubst < alertmanager.yml > alertmanager.resolved.yml
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        severity: 'critical'
 
   # Warning alerts — notification with delay
   - name: 'warnings'
@@ -78,22 +79,29 @@ receivers:
 # Inhibition rules to reduce alert noise
 inhibit_rules:
   # Don't send warnings if critical alert is firing for same alert
-  - source_match:
-      severity: 'critical'
-    target_match:
-      severity: 'warning'
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
     equal: ['alertname', 'component']
 
   # Don't send info if warning is firing for same alert
-  - source_match:
-      severity: 'warning'
-    target_match:
-      severity: 'info'
+  - source_matchers:
+      - severity = warning
+    target_matchers:
+      - severity = info
     equal: ['alertname', 'component']
 
   # Don't send API warnings if API is down
-  - source_match:
-      alertname: 'APIDown'
-    target_match:
-      component: 'api'
+  - source_matchers:
+      - alertname = APIDown
+    target_matchers:
+      - component = api
+    equal: []
+
+  # Don't send HealthReadyEndpointDown if HealthLiveEndpointDown is firing
+  - source_matchers:
+      - alertname = HealthLiveEndpointDown
+    target_matchers:
+      - alertname = HealthReadyEndpointDown
     equal: []

@@ -1,0 +1,49 @@
+.DEFAULT_GOAL := help
+
+.PHONY: help setup dev test build clean
+
+help: ## Show available targets
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+
+setup: ## Install dependencies and create .env files from templates
+	@echo "==> Installing backend dependencies..."
+	cd backend && pip install -r requirements-dev.txt
+	@echo "==> Installing frontend dependencies..."
+	cd frontend && npm ci
+	@echo "==> Creating .env files (will not overwrite existing)..."
+	[ -f backend/.env ] || cp -n backend/.env.example backend/.env
+	[ -f frontend/.env.local ] || cp -n frontend/.env.example frontend/.env.local
+	@echo "==> Running database migrations..."
+	cd backend && alembic upgrade head
+	@echo "==> Setup complete"
+
+dev: ## Start backend, frontend, and monitoring stack
+	@echo "Starting all services..."
+	@echo "  Backend:    http://localhost:8000"
+	@echo "  Frontend:   http://localhost:3000"
+	@echo "  Grafana:    http://localhost:3001"
+	@trap 'kill 0' EXIT; \
+		cd backend && uvicorn app.main:app --reload --port 8000 & \
+		cd frontend && npm run dev & \
+		cd monitoring && docker compose up -d && \
+		wait
+
+test: ## Run backend and frontend test suites
+	@echo "==> Running backend tests..."
+	cd backend && pytest --cov=app --cov-report=term-missing tests/
+	@echo "==> Running frontend tests..."
+	cd frontend && npm test
+
+build: ## Build Docker images via docker-compose
+	docker compose build
+
+clean: ## Stop services and remove build artifacts
+	@echo "==> Stopping monitoring stack..."
+	-cd monitoring && docker compose down
+	@echo "==> Stopping root docker-compose..."
+	-docker compose down
+	@echo "==> Removing build artifacts..."
+	find backend -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	rm -rf frontend/node_modules/.cache frontend/.next
+	@echo "==> Clean complete"
