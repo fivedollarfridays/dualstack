@@ -22,7 +22,6 @@ export function HealthOverview({ health }: HealthOverviewProps) {
       <Card>
         <h3 className="text-sm font-medium text-gray-400">Database</h3>
         <p className="mt-2 text-2xl font-bold text-white">{health.database}</p>
-        {health.error && <p className="mt-1 text-sm text-red-400">{health.error}</p>}
       </Card>
 
       <Card>
