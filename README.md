@@ -64,65 +64,68 @@ dualstack/
 
 - Python 3.13+
 - Node.js 18+
-- npm or pnpm
+- pnpm (`npm install -g pnpm` or `corepack enable`)
+- Docker (for monitoring stack)
 
-### 1. Extract and install
+### Quick Start (Makefile)
 
 ```bash
-# Extract the downloaded archive
-unzip dualstack-v1.0.0.zip
-cd dualstack
-
-# Backend
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Frontend
-cd ../frontend
-npm install
+make setup   # Install deps, create .env files, run migrations
+make dev     # Start backend, frontend, and monitoring
 ```
 
-### 2. Configure environment
+Edit `backend/.env` and `frontend/.env.local` with your Clerk, Stripe, and database keys.
+
+### Available Make Targets
+
+| Command | Description |
+|---------|-------------|
+| `make setup` | Install dependencies and create `.env` files from templates |
+| `make dev` | Start backend, frontend, and monitoring stack |
+| `make test` | Run backend and frontend test suites |
+| `make build` | Build Docker images via docker-compose |
+| `make clean` | Stop services and remove build artifacts |
+| `make help` | Show available targets |
+
+### Manual Setup
+
+<details>
+<summary>Step-by-step without Make</summary>
 
 ```bash
 # Backend
-cp backend/.env.example backend/.env
-# Edit backend/.env with your Turso, Clerk, Stripe keys
-
-# Frontend
-cp frontend/.env.example frontend/.env.local
-# Edit frontend/.env.local with your Clerk, Stripe keys
-```
-
-### 3. Set up database
-
-```bash
-# Backend migrations
 cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env
 alembic upgrade head
 
-# Frontend migrations
+# Frontend
 cd ../frontend
-npm run db:migrate
+npm ci
+cp .env.example .env.local
+
+# Start services (separate terminals)
+cd backend && uvicorn app.main:app --reload --port 8000
+cd frontend && npm run dev
+cd monitoring && docker compose up -d
 ```
 
-### 4. Start development
+</details>
+
+### pnpm Workspace
+
+DualStack uses a **pnpm workspace** for coordinated dependency management and cross-stack operations from the project root.
 
 ```bash
-# Terminal 1: Backend
-cd backend
-uvicorn app.main:app --reload --port 8000
-
-# Terminal 2: Frontend
-cd frontend
-npm run dev
-
-# Terminal 3: Monitoring (optional)
-cd monitoring
-docker compose up -d
+pnpm install       # Install frontend dependencies (workspace-aware)
+pnpm dev           # Start backend, frontend, and monitoring concurrently
+pnpm test          # Run backend (pytest) and frontend (jest) test suites
+pnpm build         # Build frontend for production
+pnpm run install:all  # Install both backend (pip) and frontend (pnpm) deps
 ```
+
+The backend (Python/pip) is not a pnpm workspace package. Python dependencies are managed separately via `pip install -r requirements-dev.txt`.
 
 ### Alternative: Docker Compose (full stack)
 
@@ -130,9 +133,7 @@ docker compose up -d
 docker compose up --build
 ```
 
-This starts both backend (port 8000) and frontend (port 3000) with health checks. Requires `backend/.env` and `frontend/.env.local` to be configured first.
-
-### 5. Open your browser
+### Open your browser
 
 - Frontend: http://localhost:3000
 - API: http://localhost:8000

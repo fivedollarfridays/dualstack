@@ -1,0 +1,38 @@
+groups:
+  - name: uptime_alerts
+    interval: 30s
+    rules:
+      - alert: HealthLiveEndpointDown
+        expr: |
+          probe_success{job="blackbox", instance=~".*health/live.*"} == 0
+          or
+          up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: health
+        annotations:
+          summary: "Health liveness endpoint is down"
+          description: "/health/live returning non-200 or target unreachable for >1 minute"
+
+      - alert: HealthReadyEndpointDown
+        expr: |
+          probe_success{job="blackbox", instance=~".*health/ready.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: health
+        annotations:
+          summary: "Health readiness endpoint is down"
+          description: "/health/ready returning non-200 for >2 minutes — app cannot serve traffic"
+
+      - alert: HealthEndpointSlow
+        expr: |
+          probe_duration_seconds{job="blackbox", instance=~".*health.*"} > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: health
+        annotations:
+          summary: "Health endpoint response time is high"
+          description: "Health check response time >5s for >3 minutes ({{ $value }}s)"

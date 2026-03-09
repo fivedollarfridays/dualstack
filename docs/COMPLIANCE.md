@@ -40,8 +40,13 @@ Structured logging via structlog. Automated alerting configured.
 - Contact point and notification policies configured
 
 **Remaining gaps (P2):**
-- No centralized log aggregation for production (logs are container-local)
-- No uptime monitoring or health check alerting
+- ~~No centralized log aggregation for production~~ — Addressed: Fluent Bit
+  collects Docker container logs and forwards to Loki for centralized storage
+  and querying via Grafana (`monitoring/fluent-bit/`, Loki datasource provisioned)
+- ~~No uptime monitoring or health check alerting~~ — Addressed: Prometheus
+  uptime alert rules (`monitoring/prometheus/alerts/uptime.yml`), PagerDuty
+  integration in Alertmanager, managed uptime service guide in
+  `docs/MONITORING.md`, health check script (`scripts/healthcheck.sh`)
 
 ### CC7.2 — Incident Response
 
@@ -56,8 +61,13 @@ See [`docs/INCIDENT-RESPONSE.md`](INCIDENT-RESPONSE.md).
 - Post-incident review template with timeline, root cause, impact, action items
 
 **Remaining gaps (P2):**
-- On-call rotation and escalation policies (placeholder in runbook)
-- Post-incident review cadence not yet enforced
+- ~~On-call rotation and escalation policies~~ — Addressed: weekly rotation
+  schedule, SEV1-SEV4 response SLAs, escalation matrix, handoff procedure
+  defined in [`docs/ON-CALL.md`](ON-CALL.md)
+- ~~Post-incident review cadence not yet enforced~~ — Addressed: PIR template
+  with metadata, timeline, root cause analysis (5 Whys), action items, and
+  lessons learned. Mandatory for SEV1/SEV2 within 3 business days, monthly
+  action item review. See [`docs/PIR-TEMPLATE.md`](PIR-TEMPLATE.md)
 
 ### CC6.1 — Backup and Recovery
 
@@ -74,8 +84,14 @@ See [`docs/BACKUP-RECOVERY.md`](BACKUP-RECOVERY.md).
 - PostgreSQL backup path documented for production deployments
 
 **Remaining gaps (P2):**
-- Backup monitoring alerts (backup age, size anomaly)
-- Quarterly restore-to-staging testing not yet scheduled
+- ~~Backup monitoring alerts (backup age, size anomaly)~~ — Addressed:
+  Prometheus alert rules in `monitoring/prometheus/alerts/backup.yml`
+  (BackupTooOld warning at 2h / critical at 6h, BackupSizeAnomaly at 50%
+  deviation). Response procedures in `docs/BACKUP-RECOVERY.md`.
+- ~~Quarterly restore-to-staging testing not yet scheduled~~ — Addressed:
+  `scripts/restore.sh` with safety backup, integrity validation, and
+  documented test procedure in `docs/BACKUP-RECOVERY.md`. Testing schedule
+  defined (monthly manual, quarterly full restore, weekly integrity).
 - Litestream continuous replication for near-zero RPO (enhancement)
 
 ## Priority Summary
@@ -83,4 +99,4 @@ See [`docs/BACKUP-RECOVERY.md`](BACKUP-RECOVERY.md).
 | Priority | Items | Target |
 |----------|-------|--------|
 | P1 | ~~Alerting rules~~, ~~incident runbook~~, ~~backup strategy~~, ~~RPO/RTO~~ | Done |
-| P2 | Log aggregation, uptime monitoring, on-call, restore testing, backup alerts | Post-launch |
+| P2 | ~~Log aggregation~~, ~~uptime monitoring~~, ~~on-call~~, ~~restore testing~~, ~~backup alerts~~ | Post-launch |

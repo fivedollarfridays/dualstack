@@ -45,7 +45,7 @@ services:
     image: grafana/grafana:11.1.0
     container_name: dualstack-grafana
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -66,6 +66,39 @@ services:
       retries: 3
       start_period: 10s
 
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: dualstack-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - loki-data:/loki
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  fluent-bit:
+    image: fluent/fluent-bit:3.1
+    container_name: dualstack-fluent-bit
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+    ports:
+      - "127.0.0.1:24224:24224"
+    networks:
+      - monitoring
+    depends_on:
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+
 networks:
   monitoring:
     driver: bridge
@@ -74,3 +107,4 @@ volumes:
   prometheus-data:
   alertmanager-data:
   grafana-data:
+  loki-data:

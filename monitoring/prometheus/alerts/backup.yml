@@ -1,0 +1,40 @@
+groups:
+  - name: backup_alerts
+    interval: 120s
+    rules:
+      # Warning: last backup is more than 2 hours old
+      - alert: BackupTooOld
+        expr: |
+          (time() - dualstack_backup_last_success_timestamp) > 7200
+        for: 5m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Database backup is stale"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago (threshold: 2 hours)"
+
+      # Critical: last backup is more than 6 hours old
+      - alert: BackupTooOldCritical
+        expr: |
+          (time() - dualstack_backup_last_success_timestamp) > 21600
+        for: 5m
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "Database backup critically stale"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago (threshold: 6 hours). Immediate action required."
+
+      # Warning: backup size deviates >50% from 7-day average
+      - alert: BackupSizeAnomaly
+        expr: |
+          abs(dualstack_backup_size_bytes - avg_over_time(dualstack_backup_size_bytes[7d]))
+            / avg_over_time(dualstack_backup_size_bytes[7d]) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Backup size anomaly detected"
+          description: "Backup size ({{ $value | humanize1024 }}B) deviates >50% from 7-day average. Investigate data growth or potential corruption."
