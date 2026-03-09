@@ -1,0 +1,123 @@
+"""Tests for feature gating entitlements."""
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.users.service import get_or_create_user, update_user
+from app.users.schemas import UserUpdate
+
+
+class TestRequireFeature:
+    """Test require_feature dependency."""
+
+    @pytest.mark.asyncio
+    async def test_allows_access_for_entitled_user(self, db_session: AsyncSession):
+        """Active pro user can access billing.portal feature."""
+        from app.core.entitlements import check_feature_access
+
+        await get_or_create_user(db_session, "clerk_pro")
+        await update_user(
+            db_session, "clerk_pro",
+            UserUpdate(subscription_plan="pro", subscription_status="active"),
+        )
+
+        result = await check_feature_access(db_session, "clerk_pro", "billing.portal")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_denies_access_for_missing_feature(self, db_session: AsyncSession):
+        """Free user cannot access billing.portal feature."""
+        from app.core.entitlements import check_feature_access
+
+        await get_or_create_user(db_session, "clerk_free")
+
+        result = await check_feature_access(db_session, "clerk_free", "billing.portal")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_denies_access_for_canceled_subscription(self, db_session: AsyncSession):
+        """Canceled pro user cannot access pro features."""
+        from app.core.entitlements import check_feature_access
+
+        await get_or_create_user(db_session, "clerk_canceled")
+        await update_user(
+            db_session, "clerk_canceled",
+            UserUpdate(subscription_plan="pro", subscription_status="canceled"),
+        )
+
+        result = await check_feature_access(db_session, "clerk_canceled", "billing.portal")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_allows_free_features_for_canceled_user(self, db_session: AsyncSession):
+        """Canceled user still gets free-tier features."""
+        from app.core.entitlements import check_feature_access
+
+        await get_or_create_user(db_session, "clerk_can_free")
+        await update_user(
+            db_session, "clerk_can_free",
+            UserUpdate(subscription_plan="pro", subscription_status="canceled"),
+        )
+
+        result = await check_feature_access(db_session, "clerk_can_free", "items.read")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_enterprise_wildcard_grants_any_feature(self, db_session: AsyncSession):
+        """Enterprise user with wildcard has access to everything."""
+        from app.core.entitlements import check_feature_access
+
+        await get_or_create_user(db_session, "clerk_ent")
+        await update_user(
+            db_session, "clerk_ent",
+            UserUpdate(subscription_plan="enterprise", subscription_status="active"),
+        )
+
+        result = await check_feature_access(db_session, "clerk_ent", "some.random.feature")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_unknown_user_defaults_to_free(self, db_session: AsyncSession):
+        """User not in database gets free plan features."""
+        from app.core.entitlements import check_feature_access
+
+        result = await check_feature_access(db_session, "clerk_ghost", "items.read")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_unknown_user_denied_pro_features(self, db_session: AsyncSession):
+        """User not in database cannot access pro features."""
+        from app.core.entitlements import check_feature_access
+
+        result = await check_feature_access(db_session, "clerk_ghost", "billing.portal")
+        assert result is False
+
+
+class TestGetUserEntitlements:
+    """Test get_user_entitlements helper."""
+
+    @pytest.mark.asyncio
+    async def test_returns_plan_and_features(self, db_session: AsyncSession):
+        """Returns dict with plan, status, features, limits."""
+        from app.core.entitlements import get_user_entitlements
+
+        await get_or_create_user(db_session, "clerk_ent_check")
+        await update_user(
+            db_session, "clerk_ent_check",
+            UserUpdate(subscription_plan="pro", subscription_status="active"),
+        )
+
+        ent = await get_user_entitlements(db_session, "clerk_ent_check")
+        assert ent["plan"] == "pro"
+        assert ent["status"] == "active"
+        assert "billing.portal" in ent["features"]
+        assert "max_items" in ent["limits"]
+
+    @pytest.mark.asyncio
+    async def test_unknown_user_returns_free(self, db_session: AsyncSession):
+        """Unknown user gets free plan entitlements."""
+        from app.core.entitlements import get_user_entitlements
+
+        ent = await get_user_entitlements(db_session, "clerk_nobody")
+        assert ent["plan"] == "free"
+        assert ent["status"] == "none"

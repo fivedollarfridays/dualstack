@@ -68,6 +68,13 @@ def _register_routers(application: FastAPI) -> None:
         logger.info("Items module not available: %s", e)
 
     try:
+        from app.users.routes import router as users_router
+
+        application.include_router(users_router, prefix="/api/v1")
+    except ImportError as e:
+        logger.info("Users module not available: %s", e)
+
+    try:
         from app.billing.routes import router as billing_router
         from app.billing.routes import webhook_router
 
