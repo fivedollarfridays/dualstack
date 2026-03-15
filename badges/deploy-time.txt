@@ -1,0 +1,24 @@
+==========================================
+DualStack Deploy Time Test — 2026-03-15
+==========================================
+
+Test: Clean install + production build
+Steps:
+  1. cp -r repo to /tmp
+  2. rm -rf node_modules, frontend/node_modules, frontend/.next, __pycache__, .venv
+  3. pnpm install (frontend only, workspace)
+  4. cd frontend && npx next build --no-lint
+
+Results:
+  real    1m 24.489s
+  user    1m 57.909s
+  sys     0m 26.239s
+
+Total wall-clock time: 84 seconds (~1.4 minutes)
+
+Note: Python venv setup (pip install) not included.
+Full deploy with backend deps would add ~30-60s depending on network.
+
+==========================================
+Deploy time (JS only): ~84s
+==========================================

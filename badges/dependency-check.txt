@@ -1,0 +1,38 @@
+==========================================
+DualStack Dependency Freshness — 2026-03-15
+==========================================
+
+--- Root package.json ---
+concurrently  ^9.1.2  ->  ^9.2.1
+
+--- Frontend package.json ---
+@clerk/nextjs            ^6.36.8  ->    ^7.0.4    (MAJOR)
+@clerk/testing            ^2.0.0  ->    ^2.0.4
+@playwright/test         ^1.57.0  ->   ^1.58.2
+@tanstack/react-query   ^5.90.19  ->  ^5.90.21
+@types/node                  ^20  ->       ^25    (MAJOR)
+@types/react                 ^18  ->       ^19    (MAJOR)
+@types/react-dom             ^18  ->       ^19    (MAJOR)
+eslint                        ^8  ->       ^10    (MAJOR)
+eslint-config-next       ^15.5.9  ->   ^16.1.6    (MAJOR)
+jest                     ^30.2.0  ->   ^30.3.0
+jest-environment-jsdom   ^30.2.0  ->   ^30.3.0
+lucide-react            ^0.562.0  ->  ^0.577.0
+next                     ^15.5.9  ->   ^16.1.6    (MAJOR)
+react                        ^18  ->       ^19    (MAJOR)
+react-dom                    ^18  ->       ^19    (MAJOR)
+stripe                   ^20.2.0  ->   ^20.4.1
+tailwind-merge            ^3.4.0  ->    ^3.5.0
+tailwindcss               ^3.4.1  ->    ^4.2.1    (MAJOR)
+zustand                  ^5.0.10  ->   ^5.0.11
+
+--- Python (pip list --outdated, system-wide) ---
+Note: Shows system-wide outdated packages, not project-specific.
+Key project-relevant packages may include: gunicorn, pydantic_core, etc.
+
+==========================================
+Summary:
+  Root: 1 minor update available
+  Frontend: 19 updates (9 major, 10 minor/patch)
+  Major upgrades needed: React 19, Next.js 16, Clerk 7, Tailwind 4, ESLint 10
+==========================================
