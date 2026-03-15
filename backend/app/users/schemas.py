@@ -48,6 +48,14 @@ class UserProfileUpdate(BaseModel):
     display_name: str | None = Field(None, min_length=1, max_length=255)
     avatar_url: str | None = Field(None, min_length=1, max_length=2000)
 
+    @field_validator("display_name")
+    @classmethod
+    def sanitize_display_name(cls, v: str | None) -> str | None:
+        """Strip < and > characters to prevent stored XSS."""
+        if not v:
+            return v
+        return v.replace("<", "").replace(">", "")
+
     @field_validator("avatar_url")
     @classmethod
     def validate_avatar_url(cls, v: str | None) -> str | None:

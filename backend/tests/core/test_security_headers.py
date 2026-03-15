@@ -98,6 +98,25 @@ class TestSecurityHeadersMiddleware:
             r = await c.get("/html")
             assert "content-security-policy" in r.headers
 
+    async def test_csp_contains_script_src_none(self):
+        """T19.5: CSP must block inline scripts with script-src 'none'."""
+        from starlette.responses import HTMLResponse
+
+        app = FastAPI()
+        app.add_middleware(SecurityHeadersMiddleware)
+
+        @app.get("/page")
+        async def page_route():
+            return HTMLResponse("<html></html>")
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as c:
+            r = await c.get("/page")
+            csp = r.headers["content-security-policy"]
+            assert "script-src 'none'" in csp
+            assert "frame-ancestors 'none'" in csp
+            assert "form-action 'none'" in csp
+
 
 @pytest.fixture
 def app_with_size_limit():

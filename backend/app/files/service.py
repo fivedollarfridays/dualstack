@@ -43,7 +43,7 @@ async def request_upload_url(
     db.add(record)
     await db.commit()
 
-    return {"file_id": file_id, "upload_url": upload_url, "storage_key": storage_key}
+    return {"file_id": file_id, "upload_url": upload_url}
 
 
 async def list_files(

@@ -115,6 +115,89 @@ class TestVerifyToken:
             with pytest.raises(AuthenticationError, match="Token missing user identity"):
                 await _verify_token(token, "https://clerk.example.com/.well-known/jwks.json")
 
+    async def test_wrong_audience_rejected(self):
+        """A JWT with wrong audience must be rejected when clerk_audience is set."""
+        from app.core.ws_auth import _verify_token
+
+        key = _generate_rsa_keypair()
+        token = _make_jwt(key, {
+            "sub": "user-123",
+            "aud": "wrong-app",
+            "exp": int(time.time()) + 300,
+        })
+
+        mock_jwk = MagicMock()
+        mock_jwk.key = key.public_key()
+
+        with patch("app.core.ws_auth.PyJWKClient") as MockClient:
+            client_instance = MagicMock()
+            client_instance.get_signing_key_from_jwt.return_value = mock_jwk
+            MockClient.return_value = client_instance
+
+            with patch("app.core.ws_auth.get_settings") as mock_settings:
+                settings = MagicMock()
+                settings.clerk_audience = "my-app"
+                mock_settings.return_value = settings
+
+                with pytest.raises(AuthenticationError, match="Invalid or expired token"):
+                    await _verify_token(token, "https://clerk.example.com/.well-known/jwks.json")
+
+    async def test_correct_audience_accepted(self):
+        """A JWT with matching audience must be accepted when clerk_audience is set."""
+        from app.core.ws_auth import _verify_token
+
+        key = _generate_rsa_keypair()
+        token = _make_jwt(key, {
+            "sub": "user-123",
+            "aud": "my-app",
+            "exp": int(time.time()) + 300,
+        })
+
+        mock_jwk = MagicMock()
+        mock_jwk.key = key.public_key()
+
+        with patch("app.core.ws_auth.PyJWKClient") as MockClient:
+            client_instance = MagicMock()
+            client_instance.get_signing_key_from_jwt.return_value = mock_jwk
+            MockClient.return_value = client_instance
+
+            with patch("app.core.ws_auth.get_settings") as mock_settings:
+                settings = MagicMock()
+                settings.clerk_audience = "my-app"
+                mock_settings.return_value = settings
+
+                result = await _verify_token(token, "https://clerk.example.com/.well-known/jwks.json")
+
+        assert result == "user-123"
+
+    async def test_audience_not_checked_when_empty(self):
+        """When clerk_audience is empty, audience claim is not validated (dev compat)."""
+        from app.core.ws_auth import _verify_token
+
+        key = _generate_rsa_keypair()
+        token = _make_jwt(key, {
+            "sub": "user-456",
+            "aud": "any-app",
+            "exp": int(time.time()) + 300,
+        })
+
+        mock_jwk = MagicMock()
+        mock_jwk.key = key.public_key()
+
+        with patch("app.core.ws_auth.PyJWKClient") as MockClient:
+            client_instance = MagicMock()
+            client_instance.get_signing_key_from_jwt.return_value = mock_jwk
+            MockClient.return_value = client_instance
+
+            with patch("app.core.ws_auth.get_settings") as mock_settings:
+                settings = MagicMock()
+                settings.clerk_audience = ""
+                mock_settings.return_value = settings
+
+                result = await _verify_token(token, "https://clerk.example.com/.well-known/jwks.json")
+
+        assert result == "user-456"
+
     async def test_jwk_client_cached_per_url(self):
         """PyJWKClient instances should be cached by JWKS URL."""
         from app.core.ws_auth import _verify_token

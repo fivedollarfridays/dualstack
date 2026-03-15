@@ -36,10 +36,16 @@ async def _verify_token(token: str, jwks_url: str) -> str:
     then decodes and validates the JWT with full signature verification.
     """
     try:
+        settings = get_settings()
         client = _get_jwk_client(jwks_url)
         signing_key = client.get_signing_key_from_jwt(token)
+        decode_kwargs: dict[str, Any] = {}
+        if settings.clerk_audience:
+            decode_kwargs["audience"] = settings.clerk_audience
+        else:
+            decode_kwargs["options"] = {"verify_aud": False}
         decoded = pyjwt.decode(
-            token, signing_key.key, algorithms=["RS256"]
+            token, signing_key.key, algorithms=["RS256"], **decode_kwargs
         )
         user_id = decoded.get("sub")
         if not user_id:

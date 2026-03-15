@@ -46,7 +46,7 @@ class TestRequestUploadUrl:
 
         assert result["upload_url"] == "https://s3.example.com/signed"
         assert "file_id" in result
-        assert "storage_key" in result
+        assert "storage_key" not in result
         db.add.assert_called_once()
         db.commit.assert_awaited_once()
 
@@ -155,17 +155,18 @@ class TestFilenameSanitization:
         storage = MagicMock()
         storage.generate_upload_url.return_value = "https://s3.example.com/signed"
 
-        result = await request_upload_url(
+        await request_upload_url(
             db=db,
             storage=storage,
             user_id="user-1",
             filename="../../etc/passwd",
-            content_type="application/octet-stream",
+            content_type="text/plain",
             size=100,
         )
 
-        assert result["storage_key"].endswith("/passwd")
-        assert "../" not in result["storage_key"]
+        called_key = storage.generate_upload_url.call_args[0][0]
+        assert called_key.endswith("/passwd")
+        assert "../" not in called_key
 
     async def test_deep_traversal_stripped(self):
         from app.files.service import request_upload_url
@@ -174,17 +175,18 @@ class TestFilenameSanitization:
         storage = MagicMock()
         storage.generate_upload_url.return_value = "https://s3.example.com/signed"
 
-        result = await request_upload_url(
+        await request_upload_url(
             db=db,
             storage=storage,
             user_id="user-1",
             filename="../../../root/.ssh/id_rsa",
-            content_type="application/octet-stream",
+            content_type="text/plain",
             size=100,
         )
 
-        assert result["storage_key"].endswith("/id_rsa")
-        assert "../" not in result["storage_key"]
+        called_key = storage.generate_upload_url.call_args[0][0]
+        assert called_key.endswith("/id_rsa")
+        assert "../" not in called_key
 
     async def test_normal_filename_unchanged(self):
         from app.files.service import request_upload_url
@@ -193,7 +195,7 @@ class TestFilenameSanitization:
         storage = MagicMock()
         storage.generate_upload_url.return_value = "https://s3.example.com/signed"
 
-        result = await request_upload_url(
+        await request_upload_url(
             db=db,
             storage=storage,
             user_id="user-1",
@@ -202,7 +204,8 @@ class TestFilenameSanitization:
             size=2048,
         )
 
-        assert result["storage_key"].endswith("/normal.pdf")
+        called_key = storage.generate_upload_url.call_args[0][0]
+        assert called_key.endswith("/normal.pdf")
 
     async def test_empty_basename_after_sanitization_raises(self):
         from app.files.service import request_upload_url
@@ -216,7 +219,7 @@ class TestFilenameSanitization:
                 storage=storage,
                 user_id="user-1",
                 filename="../../",
-                content_type="application/octet-stream",
+                content_type="text/plain",
                 size=100,
             )
 

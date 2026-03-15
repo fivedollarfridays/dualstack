@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.users.models import User
 from app.users.schemas import UserUpdate
+from app.core.errors import NotFoundError
 from app.users.service import (
     get_or_create_user,
     get_user_by_clerk_id,
@@ -96,9 +97,9 @@ class TestLinkStripeCustomer:
         assert user.stripe_customer_id == "cus_linked"
 
     @pytest.mark.asyncio
-    async def test_raises_for_unknown_user(self, db_session: AsyncSession):
-        """Raises ValueError when clerk_user_id not found."""
-        with pytest.raises(ValueError, match="not found"):
+    async def test_raises_not_found_for_unknown_user(self, db_session: AsyncSession):
+        """Raises NotFoundError when clerk_user_id not found."""
+        with pytest.raises(NotFoundError, match="User not found"):
             await link_stripe_customer(db_session, "clerk_ghost", "cus_nope")
 
 
@@ -124,8 +125,8 @@ class TestUpdateUser:
         assert user.subscription_status == "none"  # unchanged default
 
     @pytest.mark.asyncio
-    async def test_raises_for_unknown_user(self, db_session: AsyncSession):
-        """Raises ValueError when clerk_user_id not found."""
+    async def test_raises_not_found_for_unknown_user(self, db_session: AsyncSession):
+        """Raises NotFoundError when clerk_user_id not found."""
         data = UserUpdate(subscription_plan="pro")
-        with pytest.raises(ValueError, match="not found"):
+        with pytest.raises(NotFoundError, match="User not found"):
             await update_user(db_session, "clerk_nope", data)

@@ -51,6 +51,11 @@ async def lifespan(app: FastAPI):
             "WARNING: Object storage is not configured. File upload features will not work. "
             "Set STORAGE_BUCKET, STORAGE_ACCESS_KEY, and STORAGE_SECRET_KEY before deploying."
         )
+    if settings.environment == "production" and settings.forwarded_allow_ips == "127.0.0.1":
+        logger.warning(
+            "WARNING: FORWARDED_ALLOW_IPS is set to default '127.0.0.1'. "
+            "Set this to your reverse proxy's IP range in production."
+        )
     if settings.environment == "production" and not settings.metrics_api_key:
         raise RuntimeError(
             "METRICS_API_KEY is required in production to protect the /metrics endpoint."

@@ -61,6 +61,10 @@ async def list_files_route(
     """List the authenticated user's uploaded files."""
     skip = (page - 1) * limit
     files, total = await list_files(db, user_id=user_id, skip=skip, limit=limit)
+    await persist_audit_event(
+        db, user_id=user_id, action="list",
+        resource_type="file", resource_id="",
+    )
     return FileListResponse(
         files=[FileResponse.model_validate(f) for f in files],
         total=total,
@@ -78,6 +82,10 @@ async def get_download_url_route(
 ) -> DownloadUrlResponse:
     """Generate a presigned download URL for a file."""
     url = await get_download_url(db, storage, file_id=file_id, user_id=user_id)
+    await persist_audit_event(
+        db, user_id=user_id, action="download_request",
+        resource_type="file", resource_id=file_id,
+    )
     return DownloadUrlResponse(download_url=url)
 
 
