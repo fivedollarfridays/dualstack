@@ -2,13 +2,13 @@
 
 import { ReactNode, useEffect } from 'react';
 import { AuthContext, AuthContextValue } from '@/contexts/auth-context';
-import { DEV_USER_ID, DEV_TOKEN } from '@/lib/auth-config';
+import { DEV_USER_ID, getDevToken } from '@/lib/auth-config';
 
 const DEV_AUTH_VALUE: AuthContextValue = {
   userId: DEV_USER_ID,
   isLoaded: true,
   isSignedIn: true,
-  getToken: async () => DEV_TOKEN,
+  getToken: async () => getDevToken() ?? '',
 };
 
 /**

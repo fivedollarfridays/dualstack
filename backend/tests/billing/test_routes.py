@@ -2,11 +2,14 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.billing.routes import router, webhook_router
 from app.core.auth import get_current_user_id
+from app.core.database import get_db
 from app.core.exception_handlers import register_exception_handlers
 from fastapi import FastAPI
 from tests.helpers import mock_settings_with_cors
@@ -21,7 +24,12 @@ async def _override_auth() -> str:
     return "user-1"
 
 
+async def _override_db():
+    yield MagicMock(spec=AsyncSession)
+
+
 app.dependency_overrides[get_current_user_id] = _override_auth
+app.dependency_overrides[get_db] = _override_db
 
 
 @pytest.fixture
@@ -65,7 +73,9 @@ class TestPortalRoute:
                 json={"return_url": "https://example.com/dashboard"},
             )
         assert response.status_code == 404
-        assert "subscribe" in response.json()["detail"].lower()
+        body = response.json()
+        assert body["error"]["code"] == "NOT_FOUND"
+        assert "subscribe" in body["error"]["message"].lower()
 
     def test_portal_has_rate_limit_decorator(self):
         """NEW-011: /billing/portal should have a rate limit decorator."""
@@ -76,7 +86,7 @@ class TestPortalRoute:
 
 
 class TestCheckoutAuditEvent:
-    """NEW-006: Checkout should emit audit event."""
+    """NEW-006: Checkout should emit audit event (persisted to DB)."""
 
     @patch("app.core.url_validation.get_settings")
     async def test_checkout_emits_audit(self, mock_gs: MagicMock, client):
@@ -87,7 +97,7 @@ class TestCheckoutAuditEvent:
                 new_callable=AsyncMock,
                 return_value="https://checkout.stripe.com/session_123",
             ),
-            patch("app.billing.routes.log_audit_event") as mock_audit,
+            patch("app.billing.routes.persist_audit_event", new_callable=AsyncMock) as mock_audit,
         ):
             await client.post(
                 "/api/v1/billing/checkout",

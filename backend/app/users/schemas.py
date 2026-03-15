@@ -2,7 +2,9 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserCreate(BaseModel):
@@ -45,6 +47,19 @@ class UserProfileUpdate(BaseModel):
 
     display_name: str | None = Field(None, min_length=1, max_length=255)
     avatar_url: str | None = Field(None, min_length=1, max_length=2000)
+
+    @field_validator("avatar_url")
+    @classmethod
+    def validate_avatar_url(cls, v: str | None) -> str | None:
+        """Only allow HTTPS avatar URLs to prevent XSS via javascript:/data: schemes."""
+        if not v:
+            return v
+        parsed = urlparse(v)
+        if parsed.scheme != "https":
+            raise ValueError("Avatar URL must use HTTPS")
+        if not parsed.netloc:
+            raise ValueError("Avatar URL must have a valid host")
+        return v
 
 
 class UserResponse(BaseModel):

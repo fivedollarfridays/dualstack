@@ -1,0 +1,76 @@
+"""WebSocket authentication — verify token from query param or dev header."""
+
+import logging
+from collections import OrderedDict
+from typing import Any
+
+import jwt as pyjwt
+from fastapi import WebSocket
+from jwt import PyJWKClient
+
+from app.core.config import get_settings
+from app.core.errors import AuthenticationError
+
+logger = logging.getLogger(__name__)
+
+MAX_JWK_CACHE_SIZE = 10
+
+# Bounded LRU cache for PyJWKClient instances (keyed by JWKS URL)
+_jwk_client_cache: OrderedDict[str, Any] = OrderedDict()
+
+
+def _get_jwk_client(jwks_url: str) -> PyJWKClient:
+    """Return a cached PyJWKClient for the given JWKS URL."""
+    if jwks_url not in _jwk_client_cache:
+        if len(_jwk_client_cache) >= MAX_JWK_CACHE_SIZE:
+            _jwk_client_cache.popitem(last=False)
+        _jwk_client_cache[jwks_url] = PyJWKClient(jwks_url)
+    _jwk_client_cache.move_to_end(jwks_url)
+    return _jwk_client_cache[jwks_url]
+
+
+async def _verify_token(token: str, jwks_url: str) -> str:
+    """Verify a JWT token signature via JWKS and return the user ID.
+
+    Uses PyJWKClient to fetch the signing key from the Clerk JWKS endpoint,
+    then decodes and validates the JWT with full signature verification.
+    """
+    try:
+        client = _get_jwk_client(jwks_url)
+        signing_key = client.get_signing_key_from_jwt(token)
+        decoded = pyjwt.decode(
+            token, signing_key.key, algorithms=["RS256"]
+        )
+        user_id = decoded.get("sub")
+        if not user_id:
+            raise AuthenticationError(message="Token missing user identity")
+        return user_id
+    except AuthenticationError:
+        raise
+    except Exception as exc:
+        raise AuthenticationError(message="Invalid or expired token") from exc
+
+
+async def authenticate_ws(websocket: WebSocket) -> str:
+    """Authenticate a WebSocket connection.
+
+    In dev mode (no clerk_jwks_url): trusts user_id query param.
+    In production: validates token query param.
+    """
+    settings = get_settings()
+
+    if not settings.clerk_jwks_url:
+        if settings.environment == "production":
+            raise AuthenticationError(
+                message="Dev-mode auth is disabled in production"
+            )
+        user_id = websocket.query_params.get("user_id")
+        if not user_id:
+            raise AuthenticationError(message="Missing user_id query param")
+        return user_id
+
+    token = websocket.query_params.get("token")
+    if not token:
+        raise AuthenticationError(message="Missing token query param")
+
+    return await _verify_token(token, settings.clerk_jwks_url)

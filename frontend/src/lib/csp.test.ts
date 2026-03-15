@@ -70,4 +70,13 @@ describe('buildCspHeader', () => {
     const csp = buildCspHeader('nonce123');
     expect(csp).toContain('https://js.stripe.com');
   });
+
+  it('includes nonce in style-src instead of unsafe-inline', () => {
+    const csp = buildCspHeader('test-nonce-456');
+    const styleSrc = csp
+      .split(';')
+      .find((d) => d.trim().startsWith('style-src'));
+    expect(styleSrc).toContain("'nonce-test-nonce-456'");
+    expect(styleSrc).not.toContain("'unsafe-inline'");
+  });
 });

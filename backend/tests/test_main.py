@@ -470,3 +470,99 @@ class TestLifespan:
                     if "STRIPE_SECRET_KEY" in str(call)
                 ]
                 assert len(stripe_warnings) == 0
+
+
+class TestRouterRegistration:
+    """Test that all routers are registered on the application."""
+
+    @pytest.mark.asyncio
+    async def test_files_router_mounted(self):
+        """Files router should be mounted at /api/v1/files."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # GET /api/v1/files should not return 404 (may return 401/403)
+            response = await client.get("/api/v1/files")
+            assert response.status_code != 404, (
+                "Files router not mounted — GET /api/v1/files returned 404"
+            )
+
+    @pytest.mark.asyncio
+    async def test_ws_router_mounted(self):
+        """WebSocket router should be mounted at /ws."""
+        # Verify the route exists in the app's routes
+        ws_paths = [
+            route.path for route in app.routes
+            if hasattr(route, "path") and route.path == "/ws"
+        ]
+        assert len(ws_paths) == 1, "WebSocket route /ws not found in app routes"
+
+
+class TestStorageConfig:
+    """Test storage configuration fields in Settings."""
+
+    def test_storage_fields_exist_with_defaults(self):
+        """Settings should have 5 storage fields with empty/default values."""
+        from app.core.config import Settings
+
+        settings = Settings(
+            _env_file=None,
+            stripe_secret_key="",
+            stripe_webhook_secret="",
+        )
+        assert settings.storage_bucket == ""
+        assert settings.storage_access_key == ""
+        assert settings.storage_secret_key == ""
+        assert settings.storage_endpoint == ""
+        assert settings.storage_region == "us-east-1"
+
+
+class TestStorageWarning:
+    """Test production startup warning when storage is not configured."""
+
+    @pytest.mark.asyncio
+    async def test_logs_warning_when_storage_not_configured(self):
+        """Lifespan logs warning in dev when storage_bucket is empty."""
+        from fastapi import FastAPI
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.stripe_webhook_secret = ""
+        mock_settings.stripe_secret_key = "sk_test_fake"
+        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+        mock_settings.turso_database_url = ""
+        mock_settings.storage_bucket = ""
+
+        test_app = FastAPI()
+        with patch("app.main.get_settings", return_value=mock_settings):
+            with patch("app.main.logger") as mock_logger:
+                async with lifespan(test_app):
+                    pass
+                storage_warnings = [
+                    call for call in mock_logger.warning.call_args_list
+                    if "storage" in str(call).lower()
+                ]
+                assert len(storage_warnings) >= 1
+
+    @pytest.mark.asyncio
+    async def test_no_storage_warning_when_configured(self):
+        """Lifespan does not warn about storage when bucket is configured."""
+        from fastapi import FastAPI
+
+        mock_settings = MagicMock()
+        mock_settings.environment = "development"
+        mock_settings.stripe_webhook_secret = ""
+        mock_settings.stripe_secret_key = "sk_test_fake"
+        mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+        mock_settings.turso_database_url = ""
+        mock_settings.storage_bucket = "my-bucket"
+
+        test_app = FastAPI()
+        with patch("app.main.get_settings", return_value=mock_settings):
+            with patch("app.main.logger") as mock_logger:
+                async with lifespan(test_app):
+                    pass
+                storage_warnings = [
+                    call for call in mock_logger.warning.call_args_list
+                    if "storage" in str(call).lower()
+                ]
+                assert len(storage_warnings) == 0

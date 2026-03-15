@@ -1,8 +1,18 @@
 """Tests for feature gating entitlements."""
 
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import FastAPI
+
+from fastapi import Depends
+
+from app.core.auth import get_current_user_id
+from app.core.database import get_db
+from app.core.entitlements import require_feature
+from app.core.exception_handlers import register_exception_handlers
 from app.users.service import get_or_create_user, update_user
 from app.users.schemas import UserUpdate
 
@@ -91,6 +101,40 @@ class TestRequireFeature:
 
         result = await check_feature_access(db_session, "clerk_ghost", "billing.portal")
         assert result is False
+
+
+class TestRequireFeatureErrorEnvelope:
+    """Test that require_feature returns standard error envelope on denial."""
+
+    @pytest.mark.asyncio
+    async def test_returns_403_with_error_envelope(self, db_session: AsyncSession):
+        """Denied feature access returns {"error": {"code", "message"}} envelope."""
+        await get_or_create_user(db_session, "clerk_free_envelope")
+
+        app = FastAPI()
+        register_exception_handlers(app)
+
+        @app.get("/test-gated", dependencies=[Depends(require_feature("billing.portal"))])
+        async def gated_route():
+            return {"ok": True}
+
+        async def _override_auth() -> str:
+            return "clerk_free_envelope"
+
+        async def _override_db():
+            yield db_session
+
+        app.dependency_overrides[get_current_user_id] = _override_auth
+        app.dependency_overrides[get_db] = _override_db
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/test-gated")
+
+        assert response.status_code == 403
+        body = response.json()
+        assert body["error"]["code"] == "AUTHORIZATION_ERROR"
+        assert "requires" in body["error"]["message"].lower()
 
 
 class TestGetUserEntitlements:

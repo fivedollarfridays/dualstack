@@ -1,11 +1,12 @@
 """Feature gating — check subscription entitlements."""
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.billing.plans import ACTIVE_STATUSES, DEFAULT_PLAN, get_plan_features, PLAN_TIERS
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
+from app.core.errors import AuthorizationError
 from app.users.service import get_user_by_clerk_id, resolve_plan_status
 
 
@@ -44,9 +45,8 @@ def require_feature(feature: str):
     ):
         allowed = await check_feature_access(db, user_id, feature)
         if not allowed:
-            raise HTTPException(
-                status_code=403,
-                detail="This feature requires an upgraded plan.",
+            raise AuthorizationError(
+                message="This feature requires an upgraded plan.",
             )
 
     return _check

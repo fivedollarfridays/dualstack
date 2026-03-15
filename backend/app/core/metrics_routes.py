@@ -7,10 +7,11 @@ Protected by optional API key via X-Metrics-Key header.
 
 import hmac
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, Depends, Header, Response
 from prometheus_client import REGISTRY, generate_latest
 
 from app.core.config import get_settings
+from app.core.errors import AuthorizationError
 
 
 async def verify_metrics_key(x_metrics_key: str | None = Header(None)) -> None:
@@ -24,7 +25,7 @@ async def verify_metrics_key(x_metrics_key: str | None = Header(None)) -> None:
     if settings.metrics_api_key and not hmac.compare_digest(
         x_metrics_key or "", settings.metrics_api_key
     ):
-        raise HTTPException(status_code=403, detail="Invalid metrics API key")
+        raise AuthorizationError(message="Invalid metrics API key")
 
 
 router = APIRouter()
