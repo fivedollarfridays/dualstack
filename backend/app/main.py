@@ -46,6 +46,11 @@ async def lifespan(app: FastAPI):
             "WARNING: STRIPE_SECRET_KEY is not set. Billing features will not work. "
             "Set this before deploying to production."
         )
+    if not settings.storage_bucket:
+        logger.warning(
+            "WARNING: Object storage is not configured. File upload features will not work. "
+            "Set STORAGE_BUCKET, STORAGE_ACCESS_KEY, and STORAGE_SECRET_KEY before deploying."
+        )
     if settings.environment == "production" and not settings.metrics_api_key:
         raise RuntimeError(
             "METRICS_API_KEY is required in production to protect the /metrics endpoint."
@@ -89,6 +94,20 @@ def _register_routers(application: FastAPI) -> None:
         application.include_router(admin_router, prefix="/api/v1")
     except ImportError as e:
         logger.info("Admin module not available: %s", e)
+
+    try:
+        from app.files.routes import router as files_router
+
+        application.include_router(files_router, prefix="/api/v1")
+    except ImportError as e:
+        logger.info("Files module not available: %s", e)
+
+    try:
+        from app.core.ws_routes import router as ws_router
+
+        application.include_router(ws_router)
+    except ImportError as e:
+        logger.info("WebSocket module not available: %s", e)
 
     @application.get("/")
     async def root():

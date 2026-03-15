@@ -3,8 +3,17 @@
  */
 import React from 'react';
 import { renderHook } from '@testing-library/react';
-import { DevAuthProvider } from './dev-auth-provider';
 import { useAppAuth } from '@/contexts/auth-context';
+
+// Keep a reference to allow overriding getDevToken per test
+let mockDevToken: string | null = 'dev-token';
+jest.mock('@/lib/auth-config', () => ({
+  ...jest.requireActual('@/lib/auth-config'),
+  getDevToken: () => mockDevToken,
+}));
+
+// Import after mock setup
+import { DevAuthProvider } from './dev-auth-provider';
 
 describe('DevAuthProvider', () => {
   it('provides dev user ID', () => {
@@ -50,6 +59,17 @@ describe('DevAuthProvider', () => {
       expect.stringContaining('[DevAuthProvider]')
     );
     spy.mockRestore();
+  });
+
+  it('returns empty string from getToken when getDevToken returns null', async () => {
+    mockDevToken = null;
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <DevAuthProvider>{children}</DevAuthProvider>
+    );
+    const { result } = renderHook(() => useAppAuth(), { wrapper });
+    const token = await result.current.getToken();
+    expect(token).toBe('');
+    mockDevToken = 'dev-token'; // restore
   });
 
   it('throws an error in production environment', () => {

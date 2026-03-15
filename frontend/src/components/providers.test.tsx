@@ -13,6 +13,8 @@ jest.mock('@/lib/auth-config', () => ({
   isClerkEnabled: jest.fn(),
   DEV_USER_ID: 'dev-user-001',
   DEV_TOKEN: 'dev-token',
+  getDevToken: jest.fn(() => 'dev-token'),
+  isLocalDev: jest.fn(() => true),
 }));
 
 jest.mock('@/components/auth/clerk-auth-bridge', () => ({

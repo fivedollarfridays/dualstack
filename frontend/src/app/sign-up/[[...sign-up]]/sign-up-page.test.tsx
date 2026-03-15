@@ -10,7 +10,7 @@ jest.mock('@clerk/nextjs', () => ({
   useClerk: () => ({ signOut: jest.fn() }),
   ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
   SignedIn: ({ children }: { children: React.ReactNode }) => children,
-  SignedOut: ({ children }: { children: React.ReactNode }) => null,
+  SignedOut: () => null,
   UserButton: () => null,
   SignUp: () => React.createElement('div', { 'data-testid': 'clerk-sign-up' }, 'Sign Up Form'),
 }));
@@ -19,6 +19,8 @@ jest.mock('@/lib/auth-config', () => ({
   isClerkEnabled: jest.fn(),
   DEV_USER_ID: 'dev-user-001',
   DEV_TOKEN: 'dev-token',
+  getDevToken: jest.fn(() => 'dev-token'),
+  isLocalDev: jest.fn(() => true),
 }));
 
 import { isClerkEnabled } from '@/lib/auth-config';

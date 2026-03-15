@@ -82,6 +82,20 @@ describe('AdminLayout', () => {
     expect(screen.queryByText('Admin content')).not.toBeInTheDocument();
   });
 
+  it('shows generic error when error object is null', () => {
+    mockUseAdminHealth.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: null,
+    });
+    render(
+      <AdminLayout>
+        <div>Admin content</div>
+      </AdminLayout>
+    );
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+  });
+
   it('renders children for admin users', () => {
     mockUseAdminHealth.mockReturnValue({
       isLoading: false,

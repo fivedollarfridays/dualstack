@@ -5,12 +5,14 @@ from fastapi import FastAPI
 from unittest.mock import patch
 
 from app.core.config import Settings
+from app.core.exception_handlers import register_exception_handlers
 from app.core.metrics_routes import router
 
 
 def _create_metrics_app() -> FastAPI:
     """Create a minimal FastAPI app with the metrics router."""
     app = FastAPI()
+    register_exception_handlers(app)
     app.include_router(router)
     return app
 
@@ -39,6 +41,9 @@ class TestMetricsAuth:
                     "/metrics", headers={"X-Metrics-Key": "wrong-key"}
                 )
                 assert response.status_code == 403
+                body = response.json()
+                assert body["error"]["code"] == "AUTHORIZATION_ERROR"
+                assert "metrics" in body["error"]["message"].lower()
 
     async def test_blocked_with_no_key_header(self):
         """When metrics_api_key is set, missing header should return 403."""
@@ -49,6 +54,8 @@ class TestMetricsAuth:
             async with AsyncClient(transport=transport, base_url="http://test") as c:
                 response = await c.get("/metrics")
                 assert response.status_code == 403
+                body = response.json()
+                assert body["error"]["code"] == "AUTHORIZATION_ERROR"
 
     async def test_accessible_with_correct_key(self):
         """When metrics_api_key is set, correct key should return 200."""

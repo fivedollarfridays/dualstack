@@ -1,5 +1,7 @@
 # DualStack
 
+![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1218_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-91%25-yellow) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Deps](https://img.shields.io/badge/deps-9_major_updates-orange)
+
 Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, and monitoring out of the box.
 
 ## What's Included

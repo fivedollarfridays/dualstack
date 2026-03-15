@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     email_from_address: str = "no-reply@dualstack.app"
     email_from_name: str = "DualStack"
 
+    # Object storage (S3/R2)
+    storage_bucket: str = ""
+    storage_access_key: str = ""
+    storage_secret_key: str = ""
+    storage_endpoint: str = ""
+    storage_region: str = "us-east-1"
+
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
 

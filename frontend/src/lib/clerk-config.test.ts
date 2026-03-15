@@ -32,7 +32,7 @@ describe('clerkAppearance', () => {
     });
 
     it('all variable values are non-empty strings', () => {
-      for (const [key, value] of Object.entries(clerkAppearance.variables)) {
+      for (const value of Object.values(clerkAppearance.variables)) {
         expect(typeof value).toBe('string');
         expect((value as string).length).toBeGreaterThan(0);
       }
@@ -57,7 +57,7 @@ describe('clerkAppearance', () => {
     });
 
     it('all element values are non-empty strings', () => {
-      for (const [key, value] of Object.entries(clerkAppearance.elements)) {
+      for (const value of Object.values(clerkAppearance.elements)) {
         expect(typeof value).toBe('string');
         expect((value as string).length).toBeGreaterThan(0);
       }

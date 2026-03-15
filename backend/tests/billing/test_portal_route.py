@@ -91,7 +91,9 @@ class TestPortalRoute:
             )
 
         assert response.status_code == 404
-        assert "subscribe" in response.json()["detail"].lower()
+        body = response.json()
+        assert body["error"]["code"] == "NOT_FOUND"
+        assert "subscribe" in body["error"]["message"].lower()
 
     @pytest.mark.asyncio
     @patch("app.core.url_validation.get_settings")
@@ -110,6 +112,7 @@ class TestPortalRoute:
             )
 
         assert response.status_code == 404
+        assert response.json()["error"]["code"] == "NOT_FOUND"
 
     @pytest.mark.asyncio
     @patch("app.core.url_validation.get_settings")
@@ -128,7 +131,7 @@ class TestPortalRoute:
                 "app.billing.service.create_portal_session",
                 new_callable=AsyncMock,
                 return_value="https://billing.stripe.com/portal_abc",
-            ), patch("app.billing.routes.log_audit_event") as mock_audit:
+            ), patch("app.billing.routes.persist_audit_event", new_callable=AsyncMock) as mock_audit:
                 response = await client.post(
                     "/api/v1/billing/portal",
                     json={"return_url": "https://example.com/dashboard"},

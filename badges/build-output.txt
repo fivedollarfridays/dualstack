@@ -1,0 +1,39 @@
+==========================================
+DualStack Build Output — 2026-03-15
+==========================================
+
+Next.js 15.5.12 — Production Build (--no-lint)
+Compiled successfully in 5.3s
+
+Route (app)                                 Size  First Load JS
+/ ........................................  165 B         106 kB
+/_not-found ...............................  996 B         103 kB
+/admin ..................................  1.77 kB         125 kB
+/admin/audit ............................  1.96 kB         114 kB
+/admin/health ...........................  1.74 kB         122 kB
+/admin/users ............................  2.31 kB         114 kB
+/billing ................................  1.80 kB         112 kB
+/dashboard ..............................  2.08 kB         125 kB
+/items ..................................  3.98 kB         124 kB
+/items/[id] .............................  3.72 kB         124 kB
+/items/new ..............................  3.01 kB         123 kB
+/onboarding .............................  2.66 kB         113 kB
+/settings ...............................   165 B         106 kB
+/settings/profile .......................  2.31 kB         114 kB
+/sign-in/[[...sign-in]] .................  2.80 kB         143 kB
+/sign-up/[[...sign-up]] .................  2.80 kB         143 kB
+
+First Load JS shared by all:              102 kB
+Middleware:                               87.7 kB
+
+All routes: Dynamic (server-rendered on demand)
+
+Note: `next build` (with lint) fails due to 1 ESLint error:
+  src/hooks/use-websocket.test.ts:42 — @typescript-eslint/no-explicit-any
+  This is a test file only; production code compiles cleanly.
+
+==========================================
+First Load JS (shared): 102 kB
+Largest page First Load: 143 kB (sign-in/sign-up)
+Typical page First Load: 112-125 kB
+==========================================

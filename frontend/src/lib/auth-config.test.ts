@@ -1,7 +1,9 @@
 /**
  * Tests for lib/auth-config.ts -- Auth configuration and Clerk detection
  */
-import { isClerkEnabled, DEV_USER_ID, DEV_TOKEN } from './auth-config';
+import * as authConfig from './auth-config';
+
+const { isClerkEnabled, DEV_USER_ID, DEV_TOKEN, getDevToken, isLocalDev } = authConfig;
 
 const originalEnv = process.env;
 
@@ -57,5 +59,48 @@ describe('constants', () => {
 
   it('exports DEV_TOKEN', () => {
     expect(DEV_TOKEN).toBe('dev-token');
+  });
+});
+
+describe('isLocalDev', () => {
+  it('returns true for localhost', () => {
+    expect(isLocalDev('localhost')).toBe(true);
+  });
+
+  it('returns true for 127.0.0.1', () => {
+    expect(isLocalDev('127.0.0.1')).toBe(true);
+  });
+
+  it('returns false for production hostname', () => {
+    expect(isLocalDev('app.example.com')).toBe(false);
+  });
+
+  it('returns false for staging hostname', () => {
+    expect(isLocalDev('staging.example.com')).toBe(false);
+  });
+
+  it('returns false when no hostname in production (SSR)', () => {
+    const origEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    expect(isLocalDev('')).toBe(false);
+    process.env.NODE_ENV = origEnv;
+  });
+
+  it('returns true when no hostname in development (SSR)', () => {
+    const origEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    expect(isLocalDev('')).toBe(true);
+    process.env.NODE_ENV = origEnv;
+  });
+
+  it('returns true when called without args in jsdom (localhost)', () => {
+    expect(window.location.hostname).toBe('localhost');
+    expect(isLocalDev()).toBe(true);
+  });
+});
+
+describe('getDevToken', () => {
+  it('returns dev token on localhost (jsdom default)', () => {
+    expect(getDevToken()).toBe('dev-token');
   });
 });

@@ -1,0 +1,44 @@
+==========================================
+DualStack Test Suite Report — 2026-03-15
+==========================================
+
+--- Backend (pytest) ---
+Python 3.13.1, pytest-9.0.2
+Total: 782 tests collected
+  775 passed
+  7 failed (tests/files/test_file_routes.py — file upload routes returning 404)
+  14 warnings
+
+Failed tests:
+  - tests/files/test_file_routes.py::TestUploadUrl::test_returns_presigned_url_and_file_id
+  - tests/files/test_file_routes.py::TestUploadUrl::test_rejects_missing_filename
+  - tests/files/test_file_routes.py::TestUploadUrl::test_rejects_oversized_file
+  - tests/files/test_file_routes.py::TestListFiles::test_returns_empty_list_initially
+  - tests/files/test_file_routes.py::TestListFiles::test_returns_uploaded_files
+  - tests/files/test_file_routes.py::TestDownloadUrl::test_returns_download_url
+  - tests/files/test_file_routes.py::TestDeleteFile::test_deletes_file
+
+Note: All failures are in the file upload routes module (routes returning 404).
+The file service unit tests pass. Likely the file router is not registered in app.main.
+
+--- Frontend (Jest) ---
+Test Suites: 64 passed, 64 total
+Tests:       443 passed, 443 total
+Time:        10.583 s
+
+Coverage Summary:
+  Statements: 90.96% (threshold: 99%)
+  Branches:   88.77% (threshold: 99%)
+  Lines:      92.10% (threshold: 99%)
+  Functions:  90.11% (threshold: 99%)
+
+Note: Coverage below 99% thresholds due to:
+  - hooks/use-file-upload.ts: 0% (untested)
+  - components/upload/file-upload.tsx: ~69%
+  - hooks/use-websocket.ts: ~83%
+
+==========================================
+Totals: 1225 tests (1218 passing, 7 failing)
+Backend pass rate: 99.1%
+Frontend pass rate: 100%
+==========================================
