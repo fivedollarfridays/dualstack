@@ -66,4 +66,14 @@ describe('useRealtimeItems', () => {
 
     expect(mockInvalidateQueries).not.toHaveBeenCalled();
   });
+
+  it('ignores events with no type field', () => {
+    renderHook(() => useRealtimeItems());
+
+    act(() => {
+      capturedOnMessage?.({ data: JSON.stringify({ data: { id: '1' } }) });
+    });
+
+    expect(mockInvalidateQueries).not.toHaveBeenCalled();
+  });
 });

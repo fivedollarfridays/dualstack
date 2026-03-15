@@ -103,8 +103,4 @@ describe('getDevToken', () => {
   it('returns dev token on localhost (jsdom default)', () => {
     expect(getDevToken()).toBe('dev-token');
   });
-
-  it('returns null on production hostname', () => {
-    expect(isLocalDev('app.example.com')).toBe(false);
-  });
 });

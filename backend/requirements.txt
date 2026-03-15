@@ -38,5 +38,8 @@ alembic==1.13.1
 # Email
 resend==2.23.0
 
+# Object storage
+boto3==1.42.31
+
 # Background jobs
 APScheduler==3.11.2

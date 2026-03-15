@@ -71,4 +71,30 @@ describe('useOnboarding', () => {
 
     expect(result.current.isComplete).toBe(true);
   });
+
+  it('does not exceed last step', () => {
+    const { result } = renderHook(() => useOnboarding());
+
+    // Advance to step 3 (last valid step, 0-indexed with 4 total)
+    act(() => result.current.nextStep());
+    act(() => result.current.nextStep());
+    act(() => result.current.nextStep());
+    expect(result.current.currentStep).toBe(3);
+
+    // Should stay at step 3
+    act(() => result.current.nextStep());
+    expect(result.current.currentStep).toBe(3);
+  });
+
+  it('defaults isComplete to false when window is undefined', () => {
+    const origWindow = globalThis.window;
+    // @ts-expect-error -- simulate SSR by removing window
+    delete (globalThis as Record<string, unknown>).window;
+
+    const { result } = renderHook(() => useOnboarding());
+
+    expect(result.current.isComplete).toBe(false);
+
+    globalThis.window = origWindow;
+  });
 });
