@@ -183,11 +183,10 @@ class TestDeleteFile:
 class TestFileRouteAuditEvents:
     """Audit events are persisted for file read routes."""
 
-    async def test_list_files_persists_audit_event(self, client):
-        """GET /files emits a 'list' audit event."""
+    async def test_list_files_logs_audit_event(self, client):
+        """GET /files emits a log-only 'list' audit event."""
         with patch(
-            "app.files.routes.persist_audit_event",
-            new_callable=AsyncMock,
+            "app.files.routes.log_audit_event",
         ) as mock_audit:
             await client.get("/api/v1/files")
             mock_audit.assert_called_once()

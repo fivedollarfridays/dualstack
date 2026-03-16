@@ -106,7 +106,7 @@ async def handle_webhook(payload: bytes, sig_header: str, db: AsyncSession) -> d
                     "Webhook handler error for %s: %s", event_type, safe_data
                 )
                 _audit_webhook(action, resource_id, outcome="failure")
-                return {"handled": True, "type": event_type, "error": True}
+                raise
         _audit_webhook(action, resource_id)
         return {"handled": True, "type": event_type}
 

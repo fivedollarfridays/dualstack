@@ -3,6 +3,8 @@
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from app.billing import service
 from app.billing.pii import scrub_pii
 
@@ -209,7 +211,10 @@ class TestScrubPiiIntegration:
             patch("app.billing.service.logger") as mock_logger,
             patch.dict("app.billing.service._WEBHOOK_HANDLERS", error_handlers),
         ):
-            await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
+            with pytest.raises(RuntimeError, match="db error"):
+                await service.handle_webhook(
+                    b"payload", "sig_header", db=MagicMock()
+                )
             mock_logger.exception.assert_called_once()
             logged_data = mock_logger.exception.call_args[0][2]
             assert "customer_email" not in logged_data

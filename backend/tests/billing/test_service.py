@@ -299,10 +299,10 @@ class TestHandleWebhook:
             mock_audit.assert_not_called()
 
     @patch("app.billing.service.get_settings")
-    async def test_handler_error_returns_200_with_failure_audit(
+    async def test_handler_error_reraises_with_failure_audit(
         self, mock_get_settings: MagicMock
     ) -> None:
-        """Handler exceptions are caught — webhook returns 200 with failure audit."""
+        """Handler exceptions re-raise so Stripe retries, with failure audit."""
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
         mock_get_settings.return_value = settings
@@ -322,11 +322,10 @@ class TestHandleWebhook:
             patch("app.billing.service.log_audit_event") as mock_audit,
             patch.dict("app.billing.service._WEBHOOK_HANDLERS", error_handlers),
         ):
-            result = await service.handle_webhook(
-                b"payload", "sig_header", db=MagicMock()
-            )
-            assert result["handled"] is True
-            assert result["error"] is True
+            with pytest.raises(RuntimeError, match="db error"):
+                await service.handle_webhook(
+                    b"payload", "sig_header", db=MagicMock()
+                )
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
             assert kwargs["outcome"] == "failure"

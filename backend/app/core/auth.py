@@ -42,6 +42,10 @@ async def _verify_clerk_token(request: Request, jwks_url: str) -> str:
     Raises:
         AuthenticationError: If token is invalid or missing user identity.
     """
+    if ClerkConfig is None:
+        raise AuthenticationError(
+            message="Clerk auth library not installed. Run: pip install fastapi-clerk-auth"
+        )
     try:
         if jwks_url not in _clerk_auth_cache:
             if len(_clerk_auth_cache) >= MAX_CACHE_SIZE:

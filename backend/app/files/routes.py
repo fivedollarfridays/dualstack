@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.audit import persist_audit_event
+from app.core.audit import log_audit_event, persist_audit_event
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.core.rate_limit import limiter
@@ -69,12 +69,8 @@ async def list_files_route(
     """List the authenticated user's uploaded files."""
     skip = (page - 1) * limit
     files, total = await list_files(db, user_id=user_id, skip=skip, limit=limit)
-    await persist_audit_event(
-        db,
-        user_id=user_id,
-        action="list",
-        resource_type="file",
-        resource_id="",
+    log_audit_event(
+        user_id=user_id, action="list", resource_type="file", resource_id=""
     )
     return FileListResponse(
         files=[FileResponse.model_validate(f) for f in files],

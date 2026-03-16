@@ -1,5 +1,6 @@
 """WebSocket authentication — verify token from query param or dev header."""
 
+import asyncio
 import logging
 from collections import OrderedDict
 from typing import Any
@@ -38,7 +39,7 @@ async def _verify_token(token: str, jwks_url: str) -> str:
     try:
         settings = get_settings()
         client = _get_jwk_client(jwks_url)
-        signing_key = client.get_signing_key_from_jwt(token)
+        signing_key = await asyncio.to_thread(client.get_signing_key_from_jwt, token)
         decode_kwargs: dict[str, Any] = {}
         if settings.clerk_audience:
             decode_kwargs["audience"] = settings.clerk_audience

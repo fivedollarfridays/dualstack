@@ -218,9 +218,9 @@ class TestReadAuditEvents:
     """NEW-006: Read operations should emit audit events."""
 
     async def test_list_items_emits_audit(self, client):
-        """GET /items should emit audit event with action='list'."""
+        """GET /items should emit log-only audit event with action='list'."""
         with patch(
-            "app.items.routes.persist_audit_event", new_callable=AsyncMock
+            "app.items.routes.log_audit_event"
         ) as mock_audit:
             await client.get("/api/v1/items", headers=USER_HEADERS)
             mock_audit.assert_called_once()

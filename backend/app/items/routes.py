@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.audit import persist_audit_event
+from app.core.audit import log_audit_event, persist_audit_event
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.core.rate_limit import limiter
@@ -54,8 +54,8 @@ async def list_items_route(
         sort_dir=sort_dir,
         status=status,
     )
-    await persist_audit_event(
-        db, user_id=user_id, action="list", resource_type="item", resource_id="*"
+    log_audit_event(
+        user_id=user_id, action="list", resource_type="item", resource_id="*"
     )
     return ItemListResponse(
         items=[ItemResponse.model_validate(item) for item in items],
