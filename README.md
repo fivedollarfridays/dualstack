@@ -1,6 +1,6 @@
 # DualStack
 
-![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1327_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen)
+![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1327_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
 
 Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, file uploads, real-time WebSocket, and monitoring out of the box.
 
