@@ -53,7 +53,9 @@ class TestValidateRedirectUrl:
 
     @patch("app.core.url_validation.get_settings")
     def test_allows_localhost_in_dev(self, mock_get_settings: MagicMock) -> None:
-        mock_get_settings.return_value = mock_settings_with_cors("http://localhost:3000")
+        mock_get_settings.return_value = mock_settings_with_cors(
+            "http://localhost:3000"
+        )
         result = validate_redirect_url("http://localhost:3000/dashboard")
         assert result == "http://localhost:3000/dashboard"
 
@@ -61,19 +63,27 @@ class TestValidateRedirectUrl:
     def test_rejects_url_with_username(self, mock_get_settings: MagicMock) -> None:
         """NEW-008: Reject URLs with embedded credentials (username)."""
         mock_get_settings.return_value = mock_settings_with_cors("https://example.com")
-        with pytest.raises(ValueError, match="URLs with embedded credentials are not allowed"):
+        with pytest.raises(
+            ValueError, match="URLs with embedded credentials are not allowed"
+        ):
             validate_redirect_url("https://attacker@example.com/path")
 
     @patch("app.core.url_validation.get_settings")
     def test_rejects_url_with_password(self, mock_get_settings: MagicMock) -> None:
         """NEW-008: Reject URLs with embedded credentials (password)."""
         mock_get_settings.return_value = mock_settings_with_cors("https://example.com")
-        with pytest.raises(ValueError, match="URLs with embedded credentials are not allowed"):
+        with pytest.raises(
+            ValueError, match="URLs with embedded credentials are not allowed"
+        ):
             validate_redirect_url("https://:password@example.com/path")
 
     @patch("app.core.url_validation.get_settings")
-    def test_rejects_url_with_username_and_password(self, mock_get_settings: MagicMock) -> None:
+    def test_rejects_url_with_username_and_password(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """NEW-008: Reject URLs with both username and password."""
         mock_get_settings.return_value = mock_settings_with_cors("https://example.com")
-        with pytest.raises(ValueError, match="URLs with embedded credentials are not allowed"):
+        with pytest.raises(
+            ValueError, match="URLs with embedded credentials are not allowed"
+        ):
             validate_redirect_url("https://user:pass@example.com/path")

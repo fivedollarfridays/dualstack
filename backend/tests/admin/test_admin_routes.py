@@ -2,12 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from app.admin.routes import router as admin_router
-from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.core.exception_handlers import register_exception_handlers
 
@@ -74,9 +72,7 @@ class TestRBACProtection:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/users",
                     headers={"x-user-id": "user-member"},
@@ -88,9 +84,7 @@ class TestRBACProtection:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/health",
                     headers={"x-user-id": "user-member"},
@@ -102,9 +96,7 @@ class TestRBACProtection:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/audit",
                     headers={"x-user-id": "user-member"},
@@ -116,9 +108,7 @@ class TestRBACProtection:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.patch(
                     "/api/v1/admin/users/some-id/role",
                     json={"role": "admin"},
@@ -131,9 +121,7 @@ class TestRBACProtection:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get("/api/v1/admin/users")
         assert r.status_code == 401
 
@@ -171,9 +159,7 @@ class TestAdminUsersEndpoint:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/users",
                     headers={"x-user-id": "clerk-admin"},
@@ -206,9 +192,7 @@ class TestAdminUsersEndpoint:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/users?search=nobody",
                     headers={"x-user-id": "clerk-admin"},
@@ -241,9 +225,7 @@ class TestAdminRoleUpdate:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.patch(
                     "/api/v1/admin/users/id-target/role",
                     json={"role": "admin"},
@@ -276,9 +258,7 @@ class TestAdminHealthEndpoint:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/health",
                     headers={"x-user-id": "clerk-admin"},
@@ -315,9 +295,7 @@ class TestAdminAuditEndpoint:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/api/v1/admin/audit",
                     headers={"x-user-id": "clerk-admin"},

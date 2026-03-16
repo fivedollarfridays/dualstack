@@ -47,7 +47,10 @@ class TestSecurityHeadersMiddleware:
         transport = ASGITransport(app=app_with_headers)
         async with AsyncClient(transport=transport, base_url="http://test") as c:
             r = await c.get("/test")
-            assert r.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+            assert (
+                r.headers["permissions-policy"]
+                == "camera=(), microphone=(), geolocation=()"
+            )
 
     async def test_content_security_policy_on_non_json(self):
         """SEC-007: CSP header must be present on non-JSON responses."""
@@ -97,6 +100,25 @@ class TestSecurityHeadersMiddleware:
         async with AsyncClient(transport=transport, base_url="http://test") as c:
             r = await c.get("/html")
             assert "content-security-policy" in r.headers
+
+    async def test_csp_contains_script_src_none(self):
+        """T19.5: CSP must block inline scripts with script-src 'none'."""
+        from starlette.responses import HTMLResponse
+
+        app = FastAPI()
+        app.add_middleware(SecurityHeadersMiddleware)
+
+        @app.get("/page")
+        async def page_route():
+            return HTMLResponse("<html></html>")
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as c:
+            r = await c.get("/page")
+            csp = r.headers["content-security-policy"]
+            assert "script-src 'none'" in csp
+            assert "frame-ancestors 'none'" in csp
+            assert "form-action 'none'" in csp
 
 
 @pytest.fixture
@@ -157,7 +179,11 @@ class TestContentSizeLimitMiddleware:
         body_received = {}
 
         async def receive():
-            return {"type": "http.request", "body": b"small payload", "more_body": False}
+            return {
+                "type": "http.request",
+                "body": b"small payload",
+                "more_body": False,
+            }
 
         async def send(message):
             if message["type"] == "http.response.start":
@@ -247,8 +273,8 @@ class TestContentSizeLimitMiddleware:
             # Start response before reading body
             await send({"type": "http.response.start", "status": 200, "headers": []})
             # Now try to read body — this will trigger the size limit
-            msg = await receive()
-            msg = await receive()  # Second chunk exceeds limit
+            await receive()
+            _ = await receive()  # Second chunk exceeds limit
             await send({"type": "http.response.body", "body": b"ok"})
 
         middleware = ContentSizeLimitMiddleware(eager_app)
@@ -258,7 +284,11 @@ class TestContentSizeLimitMiddleware:
             if chunk_index < len(chunks):
                 chunk = chunks[chunk_index]
                 chunk_index += 1
-                return {"type": "http.request", "body": chunk, "more_body": chunk_index < len(chunks)}
+                return {
+                    "type": "http.request",
+                    "body": chunk,
+                    "more_body": chunk_index < len(chunks),
+                }
             return {"type": "http.disconnect"}
 
         async def send(message):

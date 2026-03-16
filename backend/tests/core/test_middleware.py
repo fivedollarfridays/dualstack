@@ -49,9 +49,7 @@ class TestLoggingMiddleware:
         valid_uuid = "550e8400-e29b-41d4-a716-446655440000"
         transport = ASGITransport(app=middleware_app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(
-                "/ok", headers={"X-Correlation-ID": valid_uuid}
-            )
+            response = await client.get("/ok", headers={"X-Correlation-ID": valid_uuid})
             assert response.headers["x-correlation-id"] == valid_uuid
 
     @pytest.mark.asyncio
@@ -71,12 +69,8 @@ class TestLoggingMiddleware:
         """Should log and re-raise exceptions from route handlers."""
         # Use raise_server_exceptions=False so httpx catches the 500 response
         # from Starlette's ServerErrorMiddleware instead of re-raising
-        transport = ASGITransport(
-            app=middleware_app, raise_app_exceptions=False
-        )
-        async with AsyncClient(
-            transport=transport, base_url="http://test"
-        ) as client:
+        transport = ASGITransport(app=middleware_app, raise_app_exceptions=False)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get("/error")
             # Starlette's ServerErrorMiddleware returns 500
             assert response.status_code == 500

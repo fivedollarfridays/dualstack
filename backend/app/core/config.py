@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     # Auth
     clerk_jwks_url: str = ""
+    clerk_audience: str = ""
 
     # Payments
     stripe_secret_key: str = ""
@@ -40,6 +41,9 @@ class Settings(BaseSettings):
     storage_secret_key: str = ""
     storage_endpoint: str = ""
     storage_region: str = "us-east-1"
+
+    # Proxy hardening — trusted reverse proxy IP range for X-Forwarded-For
+    forwarded_allow_ips: str = "127.0.0.1"
 
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"

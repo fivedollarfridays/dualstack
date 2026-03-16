@@ -10,7 +10,12 @@ _db_query_duration_seconds = None
 
 _metrics_listeners_registered = False
 
-_OP_TYPE_MAP = {"SELECT": "select", "INSERT": "insert", "UPDATE": "update", "DELETE": "delete"}
+_OP_TYPE_MAP = {
+    "SELECT": "select",
+    "INSERT": "insert",
+    "UPDATE": "update",
+    "DELETE": "delete",
+}
 
 
 def _get_operation_type(statement: str) -> str:
@@ -30,12 +35,15 @@ def _after_cursor_execute(conn, cursor, statement, parameters, context, executem
     global _db_query_duration_seconds
     if _db_query_duration_seconds is None:
         from app.core.metrics import db_query_duration_seconds
+
         _db_query_duration_seconds = db_query_duration_seconds
 
     start_time = conn.info.pop("query_start_time", None)
     if start_time is not None:
         duration = time.time() - start_time
-        _db_query_duration_seconds.labels(operation=_get_operation_type(statement)).observe(duration)
+        _db_query_duration_seconds.labels(
+            operation=_get_operation_type(statement)
+        ).observe(duration)
 
 
 def register_query_metrics_listeners(engine, force: bool = False):

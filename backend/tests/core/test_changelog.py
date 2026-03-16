@@ -46,4 +46,6 @@ class TestKeepAChangelogFormat:
     def test_has_changelog_process_documented(self) -> None:
         """AC: Changelog generation process documented."""
         content = _read()
-        assert re.search(r"keepachangelog|conventional|how to|process|format", content, re.IGNORECASE)
+        assert re.search(
+            r"keepachangelog|conventional|how to|process|format", content, re.IGNORECASE
+        )

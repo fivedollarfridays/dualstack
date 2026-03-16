@@ -3,11 +3,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.billing.routes import router, webhook_router
+from app.billing.routes import router
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.core.exception_handlers import register_exception_handlers
@@ -127,11 +126,16 @@ class TestPortalRoute:
         app = _create_test_app(db_session)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            with patch(
-                "app.billing.service.create_portal_session",
-                new_callable=AsyncMock,
-                return_value="https://billing.stripe.com/portal_abc",
-            ), patch("app.billing.routes.persist_audit_event", new_callable=AsyncMock) as mock_audit:
+            with (
+                patch(
+                    "app.billing.service.create_portal_session",
+                    new_callable=AsyncMock,
+                    return_value="https://billing.stripe.com/portal_abc",
+                ),
+                patch(
+                    "app.billing.routes.persist_audit_event", new_callable=AsyncMock
+                ) as mock_audit,
+            ):
                 response = await client.post(
                     "/api/v1/billing/portal",
                     json={"return_url": "https://example.com/dashboard"},

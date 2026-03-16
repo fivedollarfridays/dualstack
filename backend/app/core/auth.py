@@ -28,19 +28,24 @@ _clerk_auth_cache: OrderedDict[str, Any] = OrderedDict()
 def _audit_auth_failure(action: str, user_id: str = "unknown") -> None:
     """Log an auth failure audit event."""
     log_audit_event(
-        user_id=user_id, action=action,
-        resource_type="token", resource_id="unknown", outcome="failure",
+        user_id=user_id,
+        action=action,
+        resource_type="token",
+        resource_id="unknown",
+        outcome="failure",
     )
 
 
-async def _verify_clerk_token(
-    request: Request, jwks_url: str
-) -> str:
+async def _verify_clerk_token(request: Request, jwks_url: str) -> str:
     """Validate a Bearer JWT against Clerk JWKS and return the user ID.
 
     Raises:
         AuthenticationError: If token is invalid or missing user identity.
     """
+    if ClerkConfig is None:
+        raise AuthenticationError(
+            message="Clerk auth library not installed. Run: pip install fastapi-clerk-auth"
+        )
     try:
         if jwks_url not in _clerk_auth_cache:
             if len(_clerk_auth_cache) >= MAX_CACHE_SIZE:

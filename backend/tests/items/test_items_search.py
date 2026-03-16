@@ -3,7 +3,6 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
@@ -19,7 +18,9 @@ def _mock_settings():
     return s
 
 
-def _make_item(title: str, description: str | None = None, status: str = "draft") -> MagicMock:
+def _make_item(
+    title: str, description: str | None = None, status: str = "draft"
+) -> MagicMock:
     item = MagicMock()
     item.id = f"id-{title.lower().replace(' ', '-')}"
     item.user_id = "user-1"

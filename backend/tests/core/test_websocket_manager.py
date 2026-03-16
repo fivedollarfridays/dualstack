@@ -1,10 +1,6 @@
 """Tests for WebSocket connection manager."""
 
-import asyncio
-import logging
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
+from unittest.mock import AsyncMock, patch
 
 
 class TestConnect:
@@ -54,36 +50,16 @@ class TestDisconnect:
         assert mgr.active_count == 0
 
 
-class TestBroadcast:
-    async def test_sends_to_all_connections(self):
+class TestNoBroadcast:
+    """Confirm broadcast() method has been removed (security footgun)."""
+
+    def test_no_broadcast_method(self):
         from app.core.websocket import ConnectionManager
 
         mgr = ConnectionManager()
-        ws1 = AsyncMock()
-        ws2 = AsyncMock()
-
-        await mgr.connect(ws1, user_id="user-1")
-        await mgr.connect(ws2, user_id="user-2")
-
-        await mgr.broadcast({"type": "item.created", "data": {"id": "123"}})
-
-        ws1.send_json.assert_called_once_with({"type": "item.created", "data": {"id": "123"}})
-        ws2.send_json.assert_called_once_with({"type": "item.created", "data": {"id": "123"}})
-
-    async def test_removes_failed_connections_on_broadcast(self):
-        from app.core.websocket import ConnectionManager
-
-        mgr = ConnectionManager()
-        ws_ok = AsyncMock()
-        ws_broken = AsyncMock()
-        ws_broken.send_json.side_effect = Exception("connection closed")
-
-        await mgr.connect(ws_ok, user_id="user-1")
-        await mgr.connect(ws_broken, user_id="user-2")
-
-        await mgr.broadcast({"type": "ping"})
-
-        assert mgr.active_count == 1
+        assert not hasattr(mgr, "broadcast"), (
+            "broadcast() should be removed — use send_to_user() instead"
+        )
 
 
 class TestSendToUser:
@@ -146,7 +122,11 @@ class TestBroadcastEventHandler:
         with patch("app.core.ws_routes.manager", mgr):
             from app.core.ws_routes import _broadcast_event
 
-            payload = {"type": "item.updated", "user_id": "user-b", "data": {"id": "x2"}}
+            payload = {
+                "type": "item.updated",
+                "user_id": "user-b",
+                "data": {"id": "x2"},
+            }
             await _broadcast_event(payload)
 
         ws_b.send_json.assert_called_once_with(payload)

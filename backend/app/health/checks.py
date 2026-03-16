@@ -2,10 +2,11 @@
 
 import logging
 
-from fastapi import APIRouter, status, Response
+from fastapi import APIRouter, Request, status, Response
 from sqlalchemy import text
 
 from app.core.database import get_engine
+from app.core.rate_limit import limiter
 from app.health.models import (
     HealthStatus,
     ReadinessStatus,
@@ -27,11 +28,14 @@ async def check_database() -> ServiceCheck:
         return ServiceCheck(name="database", status="up")
     except Exception:
         logger.exception("Database health check failed")
-        return ServiceCheck(name="database", status="down", error="database unavailable")
+        return ServiceCheck(
+            name="database", status="down", error="database unavailable"
+        )
 
 
 @router.get("/live", response_model=LivenessStatus)
-async def liveness():
+@limiter.limit("120/minute")
+async def liveness(request: Request):
     """
     Liveness probe - is the application running?
 
@@ -42,7 +46,8 @@ async def liveness():
 
 
 @router.get("/ready", response_model=ReadinessStatus)
-async def readiness(response: Response):
+@limiter.limit("120/minute")
+async def readiness(request: Request, response: Response):
     """
     Readiness probe - can the application serve traffic?
 
@@ -68,7 +73,8 @@ async def readiness(response: Response):
 
 @router.get("", response_model=HealthStatus)
 @router.get("/", response_model=HealthStatus, include_in_schema=False)
-async def health():
+@limiter.limit("120/minute")
+async def health(request: Request):
     """
     General health check - status only.
 

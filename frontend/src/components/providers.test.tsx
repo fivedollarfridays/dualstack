@@ -8,6 +8,12 @@ import { Providers } from './providers';
 // Store original env
 const originalEnv = process.env;
 
+// Mock sonner Toaster
+jest.mock('sonner', () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+  Toaster: () => <div data-testid="sonner-toaster" />,
+}));
+
 // Mock the auth modules
 jest.mock('@/lib/auth-config', () => ({
   isClerkEnabled: jest.fn(),
@@ -90,6 +96,32 @@ describe('Providers', () => {
     );
 
     expect(screen.queryByTestId('clerk-auth-bridge')).not.toBeInTheDocument();
+  });
+
+  it('renders Toaster for toast notifications', () => {
+    mockIsClerkEnabled.mockReturnValue(false);
+
+    render(
+      <Providers>
+        <span>child content</span>
+      </Providers>
+    );
+
+    expect(screen.getByTestId('sonner-toaster')).toBeInTheDocument();
+  });
+
+  it('renders Toaster when Clerk is enabled', () => {
+    mockIsClerkEnabled.mockReturnValue(true);
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
+      'pk_test_Y2xlcmsuZXhhbXBsZS5jb20k';
+
+    render(
+      <Providers>
+        <span>child content</span>
+      </Providers>
+    );
+
+    expect(screen.getByTestId('sonner-toaster')).toBeInTheDocument();
   });
 
   it('does not render DevAuthProvider when Clerk is enabled', () => {

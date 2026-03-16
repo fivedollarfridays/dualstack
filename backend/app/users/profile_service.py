@@ -4,6 +4,7 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import NotFoundError
+from app.files.models import FileRecord
 from app.items.models import Item
 from app.users.models import User
 from app.users.service import get_user_by_clerk_id
@@ -36,6 +37,7 @@ async def delete_account(db: AsyncSession, clerk_user_id: str) -> None:
     if user is None:
         raise NotFoundError(message="User not found")
 
+    await db.execute(delete(FileRecord).where(FileRecord.user_id == user.clerk_user_id))
     await db.execute(delete(Item).where(Item.user_id == user.clerk_user_id))
     await db.delete(user)
     await db.commit()

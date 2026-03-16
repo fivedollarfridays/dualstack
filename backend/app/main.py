@@ -15,7 +15,10 @@ from app.core.logging import configure_logging
 from app.core.metrics_routes import router as metrics_router
 from app.core.middleware import LoggingMiddleware
 from app.core.rate_limit import limiter, rate_limit_handler
-from app.core.security_headers import ContentSizeLimitMiddleware, SecurityHeadersMiddleware
+from app.core.security_headers import (
+    ContentSizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.health import router as health_router
 
 logger = logging.getLogger(__name__)
@@ -29,13 +32,9 @@ async def lifespan(app: FastAPI):
     """Manage application lifespan."""
     settings = get_settings()
     if settings.environment == "production" and not settings.stripe_webhook_secret:
-        raise RuntimeError(
-            "STRIPE_WEBHOOK_SECRET must be set in production"
-        )
+        raise RuntimeError("STRIPE_WEBHOOK_SECRET must be set in production")
     if settings.environment == "production" and not settings.clerk_jwks_url:
-        raise RuntimeError(
-            "CLERK_JWKS_URL must be set in production"
-        )
+        raise RuntimeError("CLERK_JWKS_URL must be set in production")
     if not settings.clerk_jwks_url:
         logger.warning(
             "WARNING: Running without Clerk JWT validation. All X-User-ID headers "
@@ -50,6 +49,14 @@ async def lifespan(app: FastAPI):
         logger.warning(
             "WARNING: Object storage is not configured. File upload features will not work. "
             "Set STORAGE_BUCKET, STORAGE_ACCESS_KEY, and STORAGE_SECRET_KEY before deploying."
+        )
+    if (
+        settings.environment == "production"
+        and settings.forwarded_allow_ips == "127.0.0.1"
+    ):
+        logger.warning(
+            "WARNING: FORWARDED_ALLOW_IPS is set to default '127.0.0.1'. "
+            "Set this to your reverse proxy's IP range in production."
         )
     if settings.environment == "production" and not settings.metrics_api_key:
         raise RuntimeError(

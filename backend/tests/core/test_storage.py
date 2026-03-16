@@ -12,7 +12,9 @@ class TestGenerateUploadUrl:
         from app.core.storage import StorageService
 
         mock_client = MagicMock()
-        mock_client.generate_presigned_url.return_value = "https://bucket.s3.amazonaws.com/key?signed=1"
+        mock_client.generate_presigned_url.return_value = (
+            "https://bucket.s3.amazonaws.com/key?signed=1"
+        )
 
         svc = StorageService(client=mock_client, bucket="test-bucket")
         url = svc.generate_upload_url("uploads/file.png", "image/png")
@@ -20,7 +22,11 @@ class TestGenerateUploadUrl:
         assert url == "https://bucket.s3.amazonaws.com/key?signed=1"
         mock_client.generate_presigned_url.assert_called_once_with(
             "put_object",
-            Params={"Bucket": "test-bucket", "Key": "uploads/file.png", "ContentType": "image/png"},
+            Params={
+                "Bucket": "test-bucket",
+                "Key": "uploads/file.png",
+                "ContentType": "image/png",
+            },
             ExpiresIn=3600,
         )
 
@@ -55,7 +61,9 @@ class TestGenerateDownloadUrl:
         from app.core.storage import StorageService
 
         mock_client = MagicMock()
-        mock_client.generate_presigned_url.return_value = "https://bucket.s3.amazonaws.com/key?get=1"
+        mock_client.generate_presigned_url.return_value = (
+            "https://bucket.s3.amazonaws.com/key?get=1"
+        )
 
         svc = StorageService(client=mock_client, bucket="test-bucket")
         url = svc.generate_download_url("uploads/file.png")
@@ -87,7 +95,8 @@ class TestDeleteObject:
         svc.delete_object("uploads/file.png")
 
         mock_client.delete_object.assert_called_once_with(
-            Bucket="test-bucket", Key="uploads/file.png",
+            Bucket="test-bucket",
+            Key="uploads/file.png",
         )
 
     def test_raises_storage_error_on_failure(self):

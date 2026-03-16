@@ -95,7 +95,10 @@ class TestPortalRequest:
 
     def test_does_not_accept_customer_id(self) -> None:
         """NEW-007: PortalRequest must not accept customer_id from client input."""
-        assert not hasattr(PortalRequest.model_fields, "customer_id") or "customer_id" not in PortalRequest.model_fields
+        assert (
+            not hasattr(PortalRequest.model_fields, "customer_id")
+            or "customer_id" not in PortalRequest.model_fields
+        )
 
     @patch("app.core.url_validation.get_settings")
     def test_rejects_foreign_return_url(self, mock_gs: MagicMock) -> None:

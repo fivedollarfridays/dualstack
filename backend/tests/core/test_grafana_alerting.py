@@ -86,13 +86,17 @@ class TestAlertRules:
         for group in self.data["groups"]:
             for rule in group["rules"]:
                 labels = rule.get("labels", {})
-                assert "severity" in labels, f"Rule '{rule['title']}' missing severity label"
+                assert "severity" in labels, (
+                    f"Rule '{rule['title']}' missing severity label"
+                )
 
     def test_rules_have_annotations(self) -> None:
         for group in self.data["groups"]:
             for rule in group["rules"]:
                 annotations = rule.get("annotations", {})
-                assert "summary" in annotations, f"Rule '{rule['title']}' missing summary annotation"
+                assert "summary" in annotations, (
+                    f"Rule '{rule['title']}' missing summary annotation"
+                )
 
 
 class TestContactPoints:
@@ -154,8 +158,16 @@ class TestDatasourceUid:
     """Datasource provisioning must include a stable UID for alert rule references."""
 
     def test_prometheus_datasource_has_uid(self) -> None:
-        ds_path = MONITORING_DIR / "grafana" / "provisioning" / "datasources" / "prometheus.yml"
+        ds_path = (
+            MONITORING_DIR
+            / "grafana"
+            / "provisioning"
+            / "datasources"
+            / "prometheus.yml"
+        )
         data = yaml.safe_load(ds_path.read_text())
         ds = data["datasources"][0]
-        assert "uid" in ds, "Prometheus datasource must have a stable uid for alert rules"
+        assert "uid" in ds, (
+            "Prometheus datasource must have a stable uid for alert rules"
+        )
         assert ds["uid"] == "prometheus"

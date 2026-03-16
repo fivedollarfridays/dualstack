@@ -49,6 +49,19 @@ export default function Home() {
           ))}
         </div>
       </div>
+      <footer className="mt-16 border-t border-gray-700 pt-8 text-center text-sm text-gray-500">
+        <p>
+          Built and audited with{' '}
+          <a
+            href="https://github.com/bpsai-labs/paircoder"
+            className="text-blue-400 underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            PairCoder
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }

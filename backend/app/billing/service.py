@@ -6,6 +6,7 @@ import logging
 import stripe
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.billing.pii import scrub_pii
 from app.billing.webhook_handlers import (
     handle_checkout_completed,
     handle_subscription_deleted,
@@ -47,8 +48,11 @@ async def create_portal_session(customer_id: str, return_url: str) -> str:
 def _audit_webhook(action: str, resource_id: str, outcome: str = "success") -> None:
     """Log an audit event for a webhook operation."""
     log_audit_event(
-        user_id="stripe", action=action,
-        resource_type="webhook", resource_id=resource_id, outcome=outcome,
+        user_id="stripe",
+        action=action,
+        resource_type="webhook",
+        resource_id=resource_id,
+        outcome=outcome,
     )
 
 
@@ -91,14 +95,18 @@ async def handle_webhook(payload: bytes, sig_header: str, db: AsyncSession) -> d
     action = _WEBHOOK_ACTIONS.get(event_type)
 
     if action:
+        safe_data = scrub_pii(event_data)
+        logger.debug("Webhook %s received: %s", event_type, safe_data)
         handler = _WEBHOOK_HANDLERS.get(event_type)
         if handler:
             try:
                 await handler(db, event_data)
             except Exception:
-                logger.exception("Webhook handler error for %s", event_type)
+                logger.exception(
+                    "Webhook handler error for %s: %s", event_type, safe_data
+                )
                 _audit_webhook(action, resource_id, outcome="failure")
-                return {"handled": True, "type": event_type, "error": True}
+                raise
         _audit_webhook(action, resource_id)
         return {"handled": True, "type": event_type}
 

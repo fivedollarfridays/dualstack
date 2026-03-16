@@ -37,7 +37,9 @@ class StorageService:
                 ExpiresIn=expires_in,
             )
         except Exception as exc:
-            raise StorageError(message=f"Failed to generate download URL: {exc}") from exc
+            raise StorageError(
+                message=f"Failed to generate download URL: {exc}"
+            ) from exc
 
     def delete_object(self, key: str) -> None:
         try:

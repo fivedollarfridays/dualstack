@@ -14,7 +14,9 @@ class TestCreateCheckoutSession:
         mock_session = MagicMock()
         mock_session.url = "https://checkout.stripe.com/session_123"
 
-        with patch("stripe.checkout.Session.create", return_value=mock_session) as mock_create:
+        with patch(
+            "stripe.checkout.Session.create", return_value=mock_session
+        ) as mock_create:
             url = await service.create_checkout_session(
                 user_id="user_1",
                 price_id="price_abc",
@@ -67,7 +69,9 @@ def _mock_webhook_handlers():
 
 class TestHandleWebhook:
     @patch("app.billing.service.get_settings")
-    async def test_handles_checkout_completed(self, mock_get_settings: MagicMock) -> None:
+    async def test_handles_checkout_completed(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
         mock_get_settings.return_value = settings
@@ -77,15 +81,21 @@ class TestHandleWebhook:
             "data": {"object": {"id": "cs_123", "metadata": {"user_id": "user_1"}}},
         }
 
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             _mock_webhook_handlers():
-            result = await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            _mock_webhook_handlers(),
+        ):
+            result = await service.handle_webhook(
+                b"payload", "sig_header", db=MagicMock()
+            )
 
             assert result["handled"] is True
             assert result["type"] == "checkout.session.completed"
 
     @patch("app.billing.service.get_settings")
-    async def test_handles_subscription_updated(self, mock_get_settings: MagicMock) -> None:
+    async def test_handles_subscription_updated(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
         mock_get_settings.return_value = settings
@@ -95,15 +105,21 @@ class TestHandleWebhook:
             "data": {"object": {"id": "sub_123", "status": "active"}},
         }
 
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             _mock_webhook_handlers():
-            result = await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            _mock_webhook_handlers(),
+        ):
+            result = await service.handle_webhook(
+                b"payload", "sig_header", db=MagicMock()
+            )
 
             assert result["handled"] is True
             assert result["type"] == "customer.subscription.updated"
 
     @patch("app.billing.service.get_settings")
-    async def test_handles_subscription_deleted(self, mock_get_settings: MagicMock) -> None:
+    async def test_handles_subscription_deleted(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
         mock_get_settings.return_value = settings
@@ -113,9 +129,13 @@ class TestHandleWebhook:
             "data": {"object": {"id": "sub_del_123", "status": "canceled"}},
         }
 
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             _mock_webhook_handlers():
-            result = await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            _mock_webhook_handlers(),
+        ):
+            result = await service.handle_webhook(
+                b"payload", "sig_header", db=MagicMock()
+            )
 
             assert result["handled"] is True
             assert result["type"] == "customer.subscription.deleted"
@@ -132,13 +152,17 @@ class TestHandleWebhook:
         }
 
         with patch("stripe.Webhook.construct_event", return_value=event):
-            result = await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
+            result = await service.handle_webhook(
+                b"payload", "sig_header", db=MagicMock()
+            )
 
             assert result["handled"] is False
             assert result["type"] == "some.unknown.event"
 
     @patch("app.billing.service.get_settings")
-    async def test_raises_on_invalid_signature(self, mock_get_settings: MagicMock) -> None:
+    async def test_raises_on_invalid_signature(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """NEW-003: Invalid webhook signature should raise AuthenticationError."""
         from app.core.errors import AuthenticationError
 
@@ -148,13 +172,17 @@ class TestHandleWebhook:
 
         with patch(
             "stripe.Webhook.construct_event",
-            side_effect=stripe.error.SignatureVerificationError("bad sig", "sig_header"),
+            side_effect=stripe.error.SignatureVerificationError(
+                "bad sig", "sig_header"
+            ),
         ):
             with pytest.raises(AuthenticationError):
                 await service.handle_webhook(b"payload", "bad_sig", db=MagicMock())
 
     @patch("app.billing.service.get_settings")
-    async def test_raises_on_malformed_payload(self, mock_get_settings: MagicMock) -> None:
+    async def test_raises_on_malformed_payload(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """NEW-003: Malformed webhook payload should raise ValidationError."""
         from app.core.errors import ValidationError
 
@@ -167,10 +195,14 @@ class TestHandleWebhook:
             side_effect=ValueError("Invalid payload"),
         ):
             with pytest.raises(ValidationError):
-                await service.handle_webhook(b"bad payload", "sig_header", db=MagicMock())
+                await service.handle_webhook(
+                    b"bad payload", "sig_header", db=MagicMock()
+                )
 
     @patch("app.billing.service.get_settings")
-    async def test_audit_log_on_signature_failure(self, mock_get_settings: MagicMock) -> None:
+    async def test_audit_log_on_signature_failure(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """NEW-003: Signature failure should emit an audit event."""
         from app.core.errors import AuthenticationError
 
@@ -178,10 +210,15 @@ class TestHandleWebhook:
         settings.stripe_webhook_secret = "whsec_test_fake"
         mock_get_settings.return_value = settings
 
-        with patch(
-            "stripe.Webhook.construct_event",
-            side_effect=stripe.error.SignatureVerificationError("bad sig", "sig_header"),
-        ), patch("app.billing.service.log_audit_event") as mock_audit:
+        with (
+            patch(
+                "stripe.Webhook.construct_event",
+                side_effect=stripe.error.SignatureVerificationError(
+                    "bad sig", "sig_header"
+                ),
+            ),
+            patch("app.billing.service.log_audit_event") as mock_audit,
+        ):
             with pytest.raises(AuthenticationError):
                 await service.handle_webhook(b"payload", "bad_sig", db=MagicMock())
             mock_audit.assert_called_once()
@@ -189,7 +226,9 @@ class TestHandleWebhook:
             assert kwargs["action"] == "webhook.signature_failure"
 
     @patch("app.billing.service.get_settings")
-    async def test_audit_log_on_checkout_completed(self, mock_get_settings: MagicMock) -> None:
+    async def test_audit_log_on_checkout_completed(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """AUDIT-008: Successful checkout.session.completed should be audit-logged."""
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
@@ -200,9 +239,11 @@ class TestHandleWebhook:
             "data": {"object": {"id": "cs_123", "metadata": {"user_id": "user_1"}}},
         }
 
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             patch("app.billing.service.log_audit_event") as mock_audit, \
-             _mock_webhook_handlers():
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            patch("app.billing.service.log_audit_event") as mock_audit,
+            _mock_webhook_handlers(),
+        ):
             await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
@@ -211,7 +252,9 @@ class TestHandleWebhook:
             assert kwargs["resource_id"] == "cs_123"
 
     @patch("app.billing.service.get_settings")
-    async def test_audit_log_on_subscription_updated(self, mock_get_settings: MagicMock) -> None:
+    async def test_audit_log_on_subscription_updated(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """AUDIT-008: Successful subscription.updated should be audit-logged."""
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
@@ -222,9 +265,11 @@ class TestHandleWebhook:
             "data": {"object": {"id": "sub_456", "status": "active"}},
         }
 
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             patch("app.billing.service.log_audit_event") as mock_audit, \
-             _mock_webhook_handlers():
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            patch("app.billing.service.log_audit_event") as mock_audit,
+            _mock_webhook_handlers(),
+        ):
             await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
@@ -233,7 +278,9 @@ class TestHandleWebhook:
             assert kwargs["resource_id"] == "sub_456"
 
     @patch("app.billing.service.get_settings")
-    async def test_no_audit_log_on_unhandled_event(self, mock_get_settings: MagicMock) -> None:
+    async def test_no_audit_log_on_unhandled_event(
+        self, mock_get_settings: MagicMock
+    ) -> None:
         """AUDIT-008: Unhandled events should NOT be audit-logged."""
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
@@ -244,14 +291,18 @@ class TestHandleWebhook:
             "data": {"object": {}},
         }
 
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             patch("app.billing.service.log_audit_event") as mock_audit:
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            patch("app.billing.service.log_audit_event") as mock_audit,
+        ):
             await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
             mock_audit.assert_not_called()
 
     @patch("app.billing.service.get_settings")
-    async def test_handler_error_returns_200_with_failure_audit(self, mock_get_settings: MagicMock) -> None:
-        """Handler exceptions are caught — webhook returns 200 with failure audit."""
+    async def test_handler_error_reraises_with_failure_audit(
+        self, mock_get_settings: MagicMock
+    ) -> None:
+        """Handler exceptions re-raise so Stripe retries, with failure audit."""
         settings = MagicMock()
         settings.stripe_webhook_secret = "whsec_test_fake"
         mock_get_settings.return_value = settings
@@ -262,14 +313,19 @@ class TestHandleWebhook:
         }
 
         error_handlers = {
-            "checkout.session.completed": AsyncMock(side_effect=RuntimeError("db error")),
+            "checkout.session.completed": AsyncMock(
+                side_effect=RuntimeError("db error")
+            ),
         }
-        with patch("stripe.Webhook.construct_event", return_value=event), \
-             patch("app.billing.service.log_audit_event") as mock_audit, \
-             patch.dict("app.billing.service._WEBHOOK_HANDLERS", error_handlers):
-            result = await service.handle_webhook(b"payload", "sig_header", db=MagicMock())
-            assert result["handled"] is True
-            assert result["error"] is True
+        with (
+            patch("stripe.Webhook.construct_event", return_value=event),
+            patch("app.billing.service.log_audit_event") as mock_audit,
+            patch.dict("app.billing.service._WEBHOOK_HANDLERS", error_handlers),
+        ):
+            with pytest.raises(RuntimeError, match="db error"):
+                await service.handle_webhook(
+                    b"payload", "sig_header", db=MagicMock()
+                )
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
             assert kwargs["outcome"] == "failure"

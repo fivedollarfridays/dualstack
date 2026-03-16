@@ -2,11 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi import Depends, FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.core.exception_handlers import register_exception_handlers
 from app.core.rbac import Role, require_permission, require_role
@@ -79,12 +77,8 @@ class TestRequireRole:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
-                r = await client.get(
-                    "/admin-only", headers={"x-user-id": "user-admin"}
-                )
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
+                r = await client.get("/admin-only", headers={"x-user-id": "user-admin"})
         assert r.status_code == 200
         assert r.json()["user_id"] == "user-admin"
 
@@ -93,9 +87,7 @@ class TestRequireRole:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/admin-only", headers={"x-user-id": "user-member"}
                 )
@@ -106,12 +98,8 @@ class TestRequireRole:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
-                r = await client.get(
-                    "/member-ok", headers={"x-user-id": "user-admin"}
-                )
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
+                r = await client.get("/member-ok", headers={"x-user-id": "user-admin"})
         assert r.status_code == 200
 
     async def test_member_accesses_member_endpoint(self):
@@ -119,12 +107,8 @@ class TestRequireRole:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
-                r = await client.get(
-                    "/member-ok", headers={"x-user-id": "user-member"}
-                )
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
+                r = await client.get("/member-ok", headers={"x-user-id": "user-member"})
         assert r.status_code == 200
 
     async def test_unknown_user_returns_403(self):
@@ -132,12 +116,8 @@ class TestRequireRole:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
-                r = await client.get(
-                    "/admin-only", headers={"x-user-id": "ghost"}
-                )
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
+                r = await client.get("/admin-only", headers={"x-user-id": "ghost"})
         assert r.status_code == 403
 
     async def test_unauthenticated_returns_401(self):
@@ -146,9 +126,7 @@ class TestRequireRole:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get("/admin-only")
         assert r.status_code == 401
 
@@ -161,9 +139,7 @@ class TestRequirePermission:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/manage-users", headers={"x-user-id": "user-admin"}
                 )
@@ -174,9 +150,7 @@ class TestRequirePermission:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/manage-users", headers={"x-user-id": "user-member"}
                 )
@@ -187,9 +161,7 @@ class TestRequirePermission:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
                 r = await client.get(
                     "/read-profile", headers={"x-user-id": "user-member"}
                 )
@@ -200,10 +172,6 @@ class TestRequirePermission:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            with patch(
-                "app.core.auth.get_settings", return_value=_mock_settings()
-            ):
-                r = await client.get(
-                    "/read-profile", headers={"x-user-id": "ghost"}
-                )
+            with patch("app.core.auth.get_settings", return_value=_mock_settings()):
+                r = await client.get("/read-profile", headers={"x-user-id": "ghost"})
         assert r.status_code == 403

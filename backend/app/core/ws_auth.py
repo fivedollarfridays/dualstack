@@ -1,5 +1,6 @@
 """WebSocket authentication — verify token from query param or dev header."""
 
+import asyncio
 import logging
 from collections import OrderedDict
 from typing import Any
@@ -36,10 +37,16 @@ async def _verify_token(token: str, jwks_url: str) -> str:
     then decodes and validates the JWT with full signature verification.
     """
     try:
+        settings = get_settings()
         client = _get_jwk_client(jwks_url)
-        signing_key = client.get_signing_key_from_jwt(token)
+        signing_key = await asyncio.to_thread(client.get_signing_key_from_jwt, token)
+        decode_kwargs: dict[str, Any] = {}
+        if settings.clerk_audience:
+            decode_kwargs["audience"] = settings.clerk_audience
+        else:
+            decode_kwargs["options"] = {"verify_aud": False}
         decoded = pyjwt.decode(
-            token, signing_key.key, algorithms=["RS256"]
+            token, signing_key.key, algorithms=["RS256"], **decode_kwargs
         )
         user_id = decoded.get("sub")
         if not user_id:
@@ -61,9 +68,7 @@ async def authenticate_ws(websocket: WebSocket) -> str:
 
     if not settings.clerk_jwks_url:
         if settings.environment == "production":
-            raise AuthenticationError(
-                message="Dev-mode auth is disabled in production"
-            )
+            raise AuthenticationError(message="Dev-mode auth is disabled in production")
         user_id = websocket.query_params.get("user_id")
         if not user_id:
             raise AuthenticationError(message="Missing user_id query param")

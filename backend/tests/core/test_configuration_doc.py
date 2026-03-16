@@ -99,11 +99,19 @@ class TestCrossStackDependencies:
 
     def test_clerk_env_matching_noted(self) -> None:
         content = _read()
-        assert re.search(r"CLERK_JWKS_URL.*NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY|NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.*CLERK_JWKS_URL", content, re.DOTALL)
+        assert re.search(
+            r"CLERK_JWKS_URL.*NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY|NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.*CLERK_JWKS_URL",
+            content,
+            re.DOTALL,
+        )
 
     def test_metrics_key_matching_noted(self) -> None:
         content = _read()
-        assert re.search(r"METRICS_API_KEY.*PROMETHEUS_BEARER_TOKEN|PROMETHEUS_BEARER_TOKEN.*METRICS_API_KEY", content, re.DOTALL)
+        assert re.search(
+            r"METRICS_API_KEY.*PROMETHEUS_BEARER_TOKEN|PROMETHEUS_BEARER_TOKEN.*METRICS_API_KEY",
+            content,
+            re.DOTALL,
+        )
 
 
 class TestQuickStartTable:
@@ -111,4 +119,6 @@ class TestQuickStartTable:
 
     def test_has_quick_start_section(self) -> None:
         content = _read()
-        assert re.search(r"#+.*quick.start|#+.*local.dev|#+.*minimum", content, re.IGNORECASE)
+        assert re.search(
+            r"#+.*quick.start|#+.*local.dev|#+.*minimum", content, re.IGNORECASE
+        )

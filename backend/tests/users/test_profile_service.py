@@ -64,7 +64,9 @@ class TestUpdateProfile:
         user = _make_user("clerk-1")
         db = _mock_db_with_user(user)
 
-        updated = await update_profile(db, "clerk-1", avatar_url="https://img.example.com/a.png")
+        updated = await update_profile(
+            db, "clerk-1", avatar_url="https://img.example.com/a.png"
+        )
 
         assert updated.avatar_url == "https://img.example.com/a.png"
 

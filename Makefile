@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup dev test build clean
+.PHONY: help setup check-env dev test build clean seed lint format smoke
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -14,9 +14,14 @@ setup: ## Install dependencies and create .env files from templates
 	@echo "==> Creating .env files (will not overwrite existing)..."
 	[ -f backend/.env ] || cp -n backend/.env.example backend/.env
 	[ -f frontend/.env.local ] || cp -n frontend/.env.example frontend/.env.local
+	@echo "==> Checking environment variables..."
+	-@python3 scripts/check_env.py
 	@echo "==> Running database migrations..."
 	cd backend && alembic upgrade head
 	@echo "==> Setup complete"
+
+check-env: ## Validate environment variable configuration
+	@python3 scripts/check_env.py
 
 dev: ## Start backend, frontend, and monitoring stack
 	@echo "Starting all services..."
@@ -37,6 +42,24 @@ test: ## Run backend and frontend test suites
 
 build: ## Build Docker images via docker-compose
 	docker compose build
+
+seed: ## Seed demo data into the database
+	@echo "==> Seeding demo data..."
+	cd backend && python -m scripts.seed
+	@echo "==> Seed complete"
+
+lint: ## Run linters on backend and frontend
+	@echo "==> Running ruff on backend..."
+	cd backend && ruff check app/ tests/
+	@echo "==> Running ESLint on frontend..."
+	cd frontend && npm run lint
+
+format: ## Format code
+	@echo "==> Formatting backend..."
+	cd backend && ruff format app/ tests/
+
+smoke: ## Run smoke tests against a running API
+	@./scripts/smoke_test.sh
 
 clean: ## Stop services and remove build artifacts
 	@echo "==> Stopping monitoring stack..."

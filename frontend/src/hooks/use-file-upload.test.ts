@@ -79,7 +79,6 @@ describe('useFileUpload', () => {
     mockRequestUploadUrl.mockResolvedValue({
       file_id: 'f1',
       upload_url: 'https://storage/upload',
-      storage_key: 'key1',
     });
     mockUploadFileToStorage.mockResolvedValue(undefined);
 

@@ -1,5 +1,7 @@
 """Email template registry and renderer."""
 
+from typing import Callable
+
 from app.core.email_templates.welcome import render as _render_welcome
 from app.core.email_templates.billing_receipt import render as _render_billing_receipt
 from app.core.email_templates.notification import render as _render_notification
@@ -8,8 +10,6 @@ from app.core.email_templates.notification import render as _render_notification
 class TemplateNotFoundError(Exception):
     """Raised when a requested email template does not exist."""
 
-
-from typing import Callable
 
 _REGISTRY: dict[str, Callable] = {
     "welcome": _render_welcome,

@@ -3,7 +3,6 @@
 Validates that backup infrastructure exists and meets SOC2 CC6.1 requirements.
 """
 
-import os
 import re
 import stat
 from functools import cache
@@ -43,7 +42,9 @@ class TestBackupScriptContent:
 
     def test_uses_sqlite3_backup(self) -> None:
         content = _read_script()
-        assert ".backup" in content, "Script must use sqlite3 .backup for consistent snapshots"
+        assert ".backup" in content, (
+            "Script must use sqlite3 .backup for consistent snapshots"
+        )
 
     def test_has_error_handling(self) -> None:
         content = _read_script()
@@ -55,7 +56,9 @@ class TestBackupScriptContent:
 
     def test_has_retention_policy(self) -> None:
         content = _read_script()
-        assert re.search(r"retain|prune|cleanup|remove.*old|keep.*last", content, re.IGNORECASE)
+        assert re.search(
+            r"retain|prune|cleanup|remove.*old|keep.*last", content, re.IGNORECASE
+        )
 
     def test_has_timestamp_in_filename(self) -> None:
         content = _read_script()

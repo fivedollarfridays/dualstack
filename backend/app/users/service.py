@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import NotFoundError
 from app.users.models import User
 from app.users.schemas import UserUpdate
 
@@ -38,13 +39,13 @@ async def get_or_create_user(db: AsyncSession, clerk_user_id: str) -> User:
 
 async def get_user_by_clerk_id(db: AsyncSession, clerk_user_id: str) -> User | None:
     """Look up a user by Clerk user ID."""
-    result = await db.execute(
-        select(User).where(User.clerk_user_id == clerk_user_id)
-    )
+    result = await db.execute(select(User).where(User.clerk_user_id == clerk_user_id))
     return result.scalar_one_or_none()
 
 
-async def get_user_by_stripe_id(db: AsyncSession, stripe_customer_id: str) -> User | None:
+async def get_user_by_stripe_id(
+    db: AsyncSession, stripe_customer_id: str
+) -> User | None:
     """Look up a user by Stripe customer ID."""
     result = await db.execute(
         select(User).where(User.stripe_customer_id == stripe_customer_id)
@@ -56,7 +57,7 @@ async def update_user(db: AsyncSession, clerk_user_id: str, data: UserUpdate) ->
     """Partial update of user fields."""
     user = await get_user_by_clerk_id(db, clerk_user_id)
     if user is None:
-        raise ValueError(f"User with clerk_user_id '{clerk_user_id}' not found")
+        raise NotFoundError(message="User not found")
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -74,7 +75,7 @@ async def link_stripe_customer(
     """Link a Stripe customer ID to an existing user."""
     user = await get_user_by_clerk_id(db, clerk_user_id)
     if user is None:
-        raise ValueError(f"User with clerk_user_id '{clerk_user_id}' not found")
+        raise NotFoundError(message="User not found")
 
     user.stripe_customer_id = stripe_customer_id
     await db.commit()

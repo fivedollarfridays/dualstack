@@ -47,7 +47,9 @@ class TestDocsExposure:
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             for path in ["/docs", "/redoc", "/openapi.json"]:
                 response = await client.get(path)
-                assert response.status_code == 404, f"{path} should be 404 in production"
+                assert response.status_code == 404, (
+                    f"{path} should be 404 in production"
+                )
 
     @pytest.mark.asyncio
     async def test_docs_accessible_in_development(self):
@@ -271,7 +273,6 @@ class TestLifespan:
     @pytest.mark.asyncio
     async def test_logs_warning_when_clerk_jwks_url_empty(self):
         """Lifespan logs a loud warning in dev mode without clerk_jwks_url."""
-        import logging
         from fastapi import FastAPI
 
         mock_settings = MagicMock()
@@ -345,7 +346,8 @@ class TestLifespan:
                     pass
                 assert mock_logger.warning.call_count >= 1
                 clerk_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "Clerk" in str(call)
                 ]
                 assert len(clerk_warnings) >= 1
@@ -443,7 +445,8 @@ class TestLifespan:
                 async with lifespan(test_app):
                     pass
                 stripe_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "STRIPE_SECRET_KEY" in str(call)
                 ]
                 assert len(stripe_warnings) == 1
@@ -466,7 +469,8 @@ class TestLifespan:
                 async with lifespan(test_app):
                     pass
                 stripe_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "STRIPE_SECRET_KEY" in str(call)
                 ]
                 assert len(stripe_warnings) == 0
@@ -491,7 +495,8 @@ class TestRouterRegistration:
         """WebSocket router should be mounted at /ws."""
         # Verify the route exists in the app's routes
         ws_paths = [
-            route.path for route in app.routes
+            route.path
+            for route in app.routes
             if hasattr(route, "path") and route.path == "/ws"
         ]
         assert len(ws_paths) == 1, "WebSocket route /ws not found in app routes"
@@ -538,7 +543,8 @@ class TestStorageWarning:
                 async with lifespan(test_app):
                     pass
                 storage_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "storage" in str(call).lower()
                 ]
                 assert len(storage_warnings) >= 1
@@ -562,7 +568,8 @@ class TestStorageWarning:
                 async with lifespan(test_app):
                     pass
                 storage_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "storage" in str(call).lower()
                 ]
                 assert len(storage_warnings) == 0

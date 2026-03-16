@@ -18,7 +18,9 @@ COMPOSE_DEV = MONITORING_DIR / "docker-compose.dev.yml"
 COMPOSE_PROD = MONITORING_DIR / "docker-compose.prod.yml"
 README = MONITORING_DIR / "README.md"
 COMPLIANCE = PROJ_DIR / "docs" / "COMPLIANCE.md"
-LOKI_DATASOURCE = MONITORING_DIR / "grafana" / "provisioning" / "datasources" / "loki.yml"
+LOKI_DATASOURCE = (
+    MONITORING_DIR / "grafana" / "provisioning" / "datasources" / "loki.yml"
+)
 
 
 @cache
@@ -80,11 +82,15 @@ class TestComposeServices:
 
     def test_loki_service_exists(self) -> None:
         services = _load_compose().get("services", {})
-        assert any("loki" in k for k in services), f"No loki service. Services: {list(services.keys())}"
+        assert any("loki" in k for k in services), (
+            f"No loki service. Services: {list(services.keys())}"
+        )
 
     def test_fluent_bit_service_exists(self) -> None:
         services = _load_compose().get("services", {})
-        assert any("fluent" in k for k in services), f"No fluent-bit service. Services: {list(services.keys())}"
+        assert any("fluent" in k for k in services), (
+            f"No fluent-bit service. Services: {list(services.keys())}"
+        )
 
     def test_loki_has_health_check(self) -> None:
         services = _load_compose().get("services", {})
@@ -136,8 +142,9 @@ class TestProductionConfig:
         """Config supports swapping output via env vars."""
         content = _read_fluent_bit_conf()
         # Should reference env var for output host or have placeholder
-        assert re.search(r"\$\{|LOKI_HOST|LOKI_URL", content) or \
-            "loki" in content.lower()
+        assert (
+            re.search(r"\$\{|LOKI_HOST|LOKI_URL", content) or "loki" in content.lower()
+        )
 
 
 class TestReadmeUpdated:
@@ -150,11 +157,15 @@ class TestReadmeUpdated:
         assert re.search(r"loki", _read_readme(), re.IGNORECASE)
 
     def test_mentions_log_query(self) -> None:
-        assert re.search(r"LogQL|log.*query|log.*explore", _read_readme(), re.IGNORECASE)
+        assert re.search(
+            r"LogQL|log.*query|log.*explore", _read_readme(), re.IGNORECASE
+        )
 
 
 class TestComplianceUpdated:
     """AC: COMPLIANCE.md updated for CC7.1 log aggregation."""
 
     def test_cc71_mentions_log_aggregation(self) -> None:
-        assert re.search(r"log.aggregat|fluent.bit|loki", _read_compliance(), re.IGNORECASE)
+        assert re.search(
+            r"log.aggregat|fluent.bit|loki", _read_compliance(), re.IGNORECASE
+        )

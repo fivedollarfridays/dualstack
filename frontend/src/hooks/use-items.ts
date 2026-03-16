@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { useAppAuth } from '@/contexts/auth-context';
 import * as api from '@/lib/api/items';
 
@@ -27,7 +28,13 @@ export function useCreateItem() {
       if (!token) throw new Error('Authentication required');
       return api.createItem(token, data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast.success('Item created');
+    },
+    onError: () => {
+      toast.error('Failed to create item');
+    },
   });
 }
 
@@ -40,7 +47,13 @@ export function useUpdateItem() {
       if (!token) throw new Error('Authentication required');
       return api.updateItem(token, id, data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast.success('Item updated');
+    },
+    onError: () => {
+      toast.error('Failed to update item');
+    },
   });
 }
 
@@ -53,6 +66,12 @@ export function useDeleteItem() {
       if (!token) throw new Error('Authentication required');
       return api.deleteItem(token, id);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast.success('Item deleted');
+    },
+    onError: () => {
+      toast.error('Failed to delete item');
+    },
   });
 }

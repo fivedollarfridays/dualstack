@@ -2,7 +2,20 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+ALLOWED_CONTENT_TYPES = frozenset(
+    {
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "text/plain",
+        "text/csv",
+        "application/json",
+    }
+)
 
 
 class UploadUrlRequest(BaseModel):
@@ -10,11 +23,17 @@ class UploadUrlRequest(BaseModel):
     content_type: str = Field(..., min_length=1, max_length=127)
     size: int = Field(..., gt=0)
 
+    @field_validator("content_type")
+    @classmethod
+    def validate_content_type(cls, v: str) -> str:
+        if v not in ALLOWED_CONTENT_TYPES:
+            raise ValueError(f"Content type '{v}' is not allowed")
+        return v
+
 
 class UploadUrlResponse(BaseModel):
     file_id: str
     upload_url: str
-    storage_key: str
 
 
 class FileResponse(BaseModel):

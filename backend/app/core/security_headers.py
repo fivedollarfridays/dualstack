@@ -15,7 +15,7 @@ SECURITY_HEADERS = {
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
 }
 
-CSP_HEADER = "default-src 'self'"
+CSP_HEADER = "default-src 'self'; script-src 'none'; style-src 'none'; frame-ancestors 'none'; form-action 'none'"
 
 
 MAX_BODY_SIZE = 1 * 1024 * 1024  # 1 MB
@@ -87,15 +87,19 @@ class ContentSizeLimitMiddleware:
 
     @staticmethod
     async def _send_error(send: Send, status: int, body: bytes) -> None:
-        await send({
-            "type": "http.response.start",
-            "status": status,
-            "headers": [[b"content-type", b"application/json"]],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": body,
-        })
+        await send(
+            {
+                "type": "http.response.start",
+                "status": status,
+                "headers": [[b"content-type", b"application/json"]],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": body,
+            }
+        )
 
 
 class _BodyTooLargeError(Exception):

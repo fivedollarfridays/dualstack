@@ -44,7 +44,9 @@ class TestSeverityLevels:
 
     def test_response_times_defined(self) -> None:
         content = _read_runbook()
-        assert re.search(r"response.{0,20}time|acknowledge|minutes|hour", content, re.IGNORECASE)
+        assert re.search(
+            r"response.{0,20}time|acknowledge|minutes|hour", content, re.IGNORECASE
+        )
 
 
 class TestDetection:

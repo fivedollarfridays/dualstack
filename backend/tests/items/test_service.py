@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-import pytest_asyncio
 
 from app.items.models import Item
 from app.items.schemas import ItemCreate, ItemUpdate
@@ -214,9 +213,7 @@ class TestUpdatableFieldsAllowlist:
 
         # Patch model_dump at class level to inject a non-updatable field
         poisoned = {"title": "Updated", "user_id": "hacker-99"}
-        with patch.object(
-            ItemUpdate, "model_dump", return_value=poisoned
-        ):
+        with patch.object(ItemUpdate, "model_dump", return_value=poisoned):
             updated = await update_item(
                 db_session,
                 item_id=created.id,

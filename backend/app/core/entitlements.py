@@ -3,7 +3,12 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.billing.plans import ACTIVE_STATUSES, DEFAULT_PLAN, get_plan_features, PLAN_TIERS
+from app.billing.plans import (
+    ACTIVE_STATUSES,
+    DEFAULT_PLAN,
+    get_plan_features,
+    PLAN_TIERS,
+)
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.core.errors import AuthorizationError

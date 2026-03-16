@@ -1,6 +1,6 @@
 """Tests for file upload API routes."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -19,7 +19,9 @@ async def mock_storage():
     storage = MagicMock(spec=StorageService)
     storage.bucket = "test-bucket"
     storage.generate_upload_url.return_value = "https://s3.example.com/presigned-upload"
-    storage.generate_download_url.return_value = "https://s3.example.com/presigned-download"
+    storage.generate_download_url.return_value = (
+        "https://s3.example.com/presigned-download"
+    )
     return storage
 
 
@@ -65,7 +67,7 @@ class TestUploadUrl:
         data = response.json()
         assert data["upload_url"] == "https://s3.example.com/presigned-upload"
         assert "file_id" in data
-        assert "storage_key" in data
+        assert "storage_key" not in data
 
     async def test_rejects_missing_filename(self, client):
         response = await client.post(
@@ -77,9 +79,36 @@ class TestUploadUrl:
     async def test_rejects_oversized_file(self, client):
         response = await client.post(
             "/api/v1/files/upload-url",
-            json={"filename": "big.bin", "content_type": "application/octet-stream", "size": 200_000_000},
+            json={
+                "filename": "big.png",
+                "content_type": "image/png",
+                "size": 200_000_000,
+            },
         )
         assert response.status_code == 400
+
+
+class TestContentTypeValidationRoute:
+    async def test_rejects_text_html(self, client):
+        response = await client.post(
+            "/api/v1/files/upload-url",
+            json={"filename": "xss.html", "content_type": "text/html", "size": 100},
+        )
+        assert response.status_code == 422
+
+    async def test_rejects_svg_xml(self, client):
+        response = await client.post(
+            "/api/v1/files/upload-url",
+            json={"filename": "xss.svg", "content_type": "image/svg+xml", "size": 100},
+        )
+        assert response.status_code == 422
+
+    async def test_accepts_image_png(self, client):
+        response = await client.post(
+            "/api/v1/files/upload-url",
+            json={"filename": "ok.png", "content_type": "image/png", "size": 100},
+        )
+        assert response.status_code == 201
 
 
 class TestListFiles:
@@ -109,13 +138,20 @@ class TestDownloadUrl:
         # Upload first
         upload = await client.post(
             "/api/v1/files/upload-url",
-            json={"filename": "doc.pdf", "content_type": "application/pdf", "size": 512},
+            json={
+                "filename": "doc.pdf",
+                "content_type": "application/pdf",
+                "size": 512,
+            },
         )
         file_id = upload.json()["file_id"]
 
         response = await client.get(f"/api/v1/files/{file_id}/download-url")
         assert response.status_code == 200
-        assert response.json()["download_url"] == "https://s3.example.com/presigned-download"
+        assert (
+            response.json()["download_url"]
+            == "https://s3.example.com/presigned-download"
+        )
 
     async def test_returns_404_for_nonexistent_file(self, client):
         response = await client.get("/api/v1/files/nonexistent/download-url")
@@ -142,3 +178,41 @@ class TestDeleteFile:
     async def test_returns_404_for_nonexistent_file(self, client):
         response = await client.delete("/api/v1/files/nonexistent")
         assert response.status_code == 404
+
+
+class TestFileRouteAuditEvents:
+    """Audit events are persisted for file read routes."""
+
+    async def test_list_files_logs_audit_event(self, client):
+        """GET /files emits a log-only 'list' audit event."""
+        with patch(
+            "app.files.routes.log_audit_event",
+        ) as mock_audit:
+            await client.get("/api/v1/files")
+            mock_audit.assert_called_once()
+            call_kwargs = mock_audit.call_args
+            assert call_kwargs.kwargs["action"] == "list"
+            assert call_kwargs.kwargs["resource_type"] == "file"
+            assert call_kwargs.kwargs["user_id"] == "user-1"
+
+    async def test_download_url_persists_audit_event(self, client):
+        """GET /files/{id}/download-url emits a 'download_request' audit event."""
+        # Upload a file first so we have a valid file_id
+        upload = await client.post(
+            "/api/v1/files/upload-url",
+            json={"filename": "audit.txt", "content_type": "text/plain", "size": 64},
+        )
+        file_id = upload.json()["file_id"]
+
+        with patch(
+            "app.files.routes.persist_audit_event",
+            new_callable=AsyncMock,
+        ) as mock_audit:
+            response = await client.get(f"/api/v1/files/{file_id}/download-url")
+            assert response.status_code == 200
+            mock_audit.assert_called_once()
+            call_kwargs = mock_audit.call_args
+            assert call_kwargs.kwargs["action"] == "download_request"
+            assert call_kwargs.kwargs["resource_type"] == "file"
+            assert call_kwargs.kwargs["resource_id"] == file_id
+            assert call_kwargs.kwargs["user_id"] == "user-1"

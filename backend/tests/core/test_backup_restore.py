@@ -64,7 +64,9 @@ class TestRestoreScriptFeatures:
     def test_validates_restored_db(self) -> None:
         """Validates the restored database is accessible."""
         content = _read_restore()
-        assert re.search(r"integrity_check|PRAGMA|validation|verify", content, re.IGNORECASE)
+        assert re.search(
+            r"integrity_check|PRAGMA|validation|verify", content, re.IGNORECASE
+        )
 
     def test_exits_nonzero_on_missing_file(self) -> None:
         """Exits non-zero when backup file doesn't exist."""
@@ -96,7 +98,12 @@ class TestBackupAlertRules:
         """BackupTooOld should have at least a warning severity."""
         rules = _load_backup_rules()
         rule = next(
-            (r for g in rules["groups"] for r in g["rules"] if r["alert"] == "BackupTooOld"),
+            (
+                r
+                for g in rules["groups"]
+                for r in g["rules"]
+                if r["alert"] == "BackupTooOld"
+            ),
             None,
         )
         assert rule is not None, "BackupTooOld rule not found"
@@ -105,7 +112,12 @@ class TestBackupAlertRules:
     def test_backup_size_anomaly_is_warning(self) -> None:
         rules = _load_backup_rules()
         rule = next(
-            (r for g in rules["groups"] for r in g["rules"] if r["alert"] == "BackupSizeAnomaly"),
+            (
+                r
+                for g in rules["groups"]
+                for r in g["rules"]
+                if r["alert"] == "BackupSizeAnomaly"
+            ),
             None,
         )
         assert rule is not None, "BackupSizeAnomaly rule not found"
@@ -129,7 +141,9 @@ class TestBackupDocumentation:
 
     def test_has_monitoring_alerts_section(self) -> None:
         content = _read_backup_doc()
-        assert re.search(r"BackupTooOld|backup.*alert|backup.*monitor", content, re.IGNORECASE)
+        assert re.search(
+            r"BackupTooOld|backup.*alert|backup.*monitor", content, re.IGNORECASE
+        )
 
     def test_has_disaster_recovery(self) -> None:
         content = _read_backup_doc()
@@ -145,4 +159,6 @@ class TestComplianceUpdated:
 
     def test_backup_monitoring_gap_addressed(self) -> None:
         content = _read_compliance()
-        assert re.search(r"~~.*backup.*monitor|backup.*alert.*address", content, re.IGNORECASE)
+        assert re.search(
+            r"~~.*backup.*monitor|backup.*alert.*address", content, re.IGNORECASE
+        )

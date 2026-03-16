@@ -1,6 +1,6 @@
 """Tests for app.core.scheduler module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from app.core.scheduler import get_scheduler, reset_scheduler
 import app.core.scheduler as scheduler_module
