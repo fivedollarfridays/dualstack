@@ -1,11 +1,14 @@
 """Tests for the initial alembic migration (001_initial_items)."""
 
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture
@@ -18,9 +21,9 @@ def alembic_config(tmp_path):
     db_path = tmp_path / "test.db"
     db_url = f"sqlite:///{db_path}"
 
-    cfg = Config("alembic.ini")
+    cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     cfg.set_main_option("sqlalchemy.url", db_url)
-    cfg.set_main_option("script_location", "alembic")
+    cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
 
     with patch("app.core.database.get_alembic_database_url", return_value=db_url):
         yield cfg, db_url
