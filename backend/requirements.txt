@@ -23,7 +23,7 @@ python-multipart==0.0.22
 stripe==12.5.0
 
 # Logging
-structlog==24.1.0
+structlog==25.5.0
 python-json-logger==2.0.7
 
 # Metrics
