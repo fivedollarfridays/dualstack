@@ -337,3 +337,7 @@ The API logs a warning on startup when storage is not configured. Set all four s
 | `frontend/src/hooks/` | React Query hooks, WebSocket hook |
 | `frontend/src/lib/` | API client, auth helpers, utilities |
 | `monitoring/` | Prometheus + Grafana + Alertmanager Docker Compose stack |
+
+---
+
+Built with [PairCoder](https://github.com/bpsai-labs/paircoder) -- AI-augmented pair programming by BPS AI.

@@ -478,6 +478,10 @@ const navItems = [
 2. Edit `frontend/src/app/(dashboard)/billing/page.tsx` to match your plan names and pricing
 3. Modify `backend/app/billing/plans.py` to adjust tier limits and features
 
+## Built With
+
+This project was built using [PairCoder](https://github.com/bpsai-labs/paircoder) -- an AI-augmented pair programming framework for sprint-based development with enforcement gates, typed memory, and Trello integration.
+
 ## License
 
 Personal Use License - Copyright (c) 2026 Kevin Masterson. See [LICENSE](LICENSE) for details.
