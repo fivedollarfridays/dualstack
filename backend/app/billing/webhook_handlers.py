@@ -8,6 +8,11 @@ from app.users.service import get_or_create_user, get_user_by_stripe_id
 
 logger = logging.getLogger(__name__)
 
+VALID_STRIPE_STATUSES = frozenset({
+    "active", "trialing", "past_due", "canceled",
+    "unpaid", "incomplete", "incomplete_expired",
+})
+
 
 async def handle_checkout_completed(db: AsyncSession, event_data: dict) -> None:
     """Process checkout.session.completed — link Stripe customer to Clerk user."""
@@ -48,7 +53,8 @@ async def handle_subscription_updated(db: AsyncSession, event_data: dict) -> Non
         )
         return
 
-    user.subscription_status = event_data.get("status", "unknown")
+    raw_status = event_data.get("status", "unknown")
+    user.subscription_status = raw_status if raw_status in VALID_STRIPE_STATUSES else "unknown"
     user.subscription_plan = _extract_plan(event_data)
     await db.commit()
     await db.refresh(user)

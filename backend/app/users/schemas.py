@@ -72,15 +72,3 @@ class UserProfileUpdate(BaseModel):
         return v
 
 
-class UserResponse(BaseModel):
-    """Schema for returning a user in API responses."""
-
-    model_config = {"from_attributes": True}
-
-    id: str
-    clerk_user_id: str
-    stripe_customer_id: str | None = None
-    subscription_plan: str | None = "free"
-    subscription_status: str | None = "none"
-    created_at: datetime
-    updated_at: datetime

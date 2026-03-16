@@ -2,6 +2,10 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppAuth } from '@/contexts/auth-context';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws';
+
+if (process.env.NODE_ENV === 'production' && WS_URL.startsWith('ws://')) {
+  console.error('[Security] NEXT_PUBLIC_WS_URL must use wss:// in production');
+}
 const MAX_RETRIES = 5;
 const BASE_DELAY_MS = 1000;
 

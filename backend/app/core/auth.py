@@ -70,7 +70,7 @@ async def _verify_clerk_token(request: Request, jwks_url: str) -> str:
 async def get_current_user_id(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
-    x_user_id: str | None = Header(None),
+    x_user_id: str | None = Header(None, max_length=200),
 ) -> str:
     """Extract and verify user_id from Bearer JWT or dev header.
 
