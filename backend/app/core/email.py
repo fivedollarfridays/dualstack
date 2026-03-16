@@ -76,4 +76,6 @@ class EmailService:
     ) -> str:
         """Render a template and send the email without blocking the event loop."""
         rendered = render_template(template_name, template_data or {})
-        return await self.send_async(to=to, subject=rendered["subject"], html=rendered["html"])
+        return await self.send_async(
+            to=to, subject=rendered["subject"], html=rendered["html"]
+        )

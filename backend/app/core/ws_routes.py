@@ -41,7 +41,9 @@ async def _broadcast_event(payload: dict) -> None:
     if user_id:
         await manager.send_to_user(user_id, payload)
     else:
-        logger.warning("Event missing user_id, dropping: %s", payload.get("type", "unknown"))
+        logger.warning(
+            "Event missing user_id, dropping: %s", payload.get("type", "unknown")
+        )
 
 
 # Subscribe to all item events and route them to the owning user

@@ -98,7 +98,9 @@ class TestHandleCheckoutCompleted:
         assert result.scalar_one_or_none() is None
 
     @pytest.mark.asyncio
-    async def test_defaults_plan_to_pro_without_line_items(self, db_session: AsyncSession):
+    async def test_defaults_plan_to_pro_without_line_items(
+        self, db_session: AsyncSession
+    ):
         """Checkout without line_items defaults subscription_plan to 'pro'."""
         from app.billing.webhook_handlers import handle_checkout_completed
 
@@ -130,9 +132,7 @@ class TestHandleSubscriptionUpdated:
         event_data = {
             "customer": "cus_sub_upd",
             "status": "active",
-            "items": {
-                "data": [{"price": {"id": "price_pro", "lookup_key": "pro"}}]
-            },
+            "items": {"data": [{"price": {"id": "price_pro", "lookup_key": "pro"}}]},
         }
         await handle_subscription_updated(db_session, event_data)
 
@@ -151,9 +151,7 @@ class TestHandleSubscriptionUpdated:
         event_data = {
             "customer": "cus_no_key",
             "status": "active",
-            "items": {
-                "data": [{"price": {"id": "price_enterprise_monthly"}}]
-            },
+            "items": {"data": [{"price": {"id": "price_enterprise_monthly"}}]},
         }
         await handle_subscription_updated(db_session, event_data)
 

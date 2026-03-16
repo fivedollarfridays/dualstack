@@ -24,7 +24,9 @@ class TestFrontendDockerJob:
     def test_frontend_docker_job_exists(self) -> None:
         ci = _load_ci()
         jobs = ci.get("jobs", {})
-        docker_fe = [k for k in jobs if "docker" in k.lower() and "frontend" in k.lower()]
+        docker_fe = [
+            k for k in jobs if "docker" in k.lower() and "frontend" in k.lower()
+        ]
         assert len(docker_fe) >= 1, f"No frontend Docker job. Jobs: {list(jobs.keys())}"
 
     def test_job_runs_on_pr(self) -> None:
@@ -37,18 +39,31 @@ class TestFrontendDockerJob:
         """AC: Reasonable timeout."""
         ci = _load_ci()
         jobs = ci.get("jobs", {})
-        job = next((v for k, v in jobs.items() if "docker" in k.lower() and "frontend" in k.lower()), None)
+        job = next(
+            (
+                v
+                for k, v in jobs.items()
+                if "docker" in k.lower() and "frontend" in k.lower()
+            ),
+            None,
+        )
         assert job is not None
         assert "timeout-minutes" in job
 
     def test_does_not_push(self) -> None:
         """AC: Build only, no push."""
-        content = CI_WORKFLOW.read_text()
         # The frontend docker section should have push: false or no push at all
         # Check that build-push-action uses push: false, or plain docker build (no push)
         ci = _load_ci()
         jobs = ci.get("jobs", {})
-        job = next((v for k, v in jobs.items() if "docker" in k.lower() and "frontend" in k.lower()), None)
+        job = next(
+            (
+                v
+                for k, v in jobs.items()
+                if "docker" in k.lower() and "frontend" in k.lower()
+            ),
+            None,
+        )
         assert job is not None
         steps_yaml = yaml.dump(job.get("steps", []))
         if "build-push-action" in steps_yaml:
@@ -61,7 +76,14 @@ class TestFrontendDockerJob:
         """AC: Docker layer caching configured."""
         ci = _load_ci()
         jobs = ci.get("jobs", {})
-        job = next((v for k, v in jobs.items() if "docker" in k.lower() and "frontend" in k.lower()), None)
+        job = next(
+            (
+                v
+                for k, v in jobs.items()
+                if "docker" in k.lower() and "frontend" in k.lower()
+            ),
+            None,
+        )
         assert job is not None
         steps_yaml = yaml.dump(job.get("steps", []))
         assert re.search(r"cache|buildx", steps_yaml, re.IGNORECASE)
@@ -70,7 +92,14 @@ class TestFrontendDockerJob:
         """Builds from frontend/ directory."""
         ci = _load_ci()
         jobs = ci.get("jobs", {})
-        job = next((v for k, v in jobs.items() if "docker" in k.lower() and "frontend" in k.lower()), None)
+        job = next(
+            (
+                v
+                for k, v in jobs.items()
+                if "docker" in k.lower() and "frontend" in k.lower()
+            ),
+            None,
+        )
         assert job is not None
         steps_yaml = yaml.dump(job.get("steps", []))
         assert "frontend" in steps_yaml

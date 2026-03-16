@@ -1,7 +1,7 @@
 """Tests for query param sanitization in middleware (S-11)."""
 
 import pytest
-from unittest.mock import patch, call
+from unittest.mock import patch
 from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI
 
@@ -109,7 +109,8 @@ class TestMiddlewareSanitization:
 
             # Find the request_started log call
             started_calls = [
-                c for c in mock_logger.info.call_args_list
+                c
+                for c in mock_logger.info.call_args_list
                 if c.args and c.args[0] == "request_started"
             ]
             assert len(started_calls) >= 1

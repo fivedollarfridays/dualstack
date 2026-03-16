@@ -9,7 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import get_settings
-from app.core.db_metrics import register_query_metrics_listeners, reset_metrics_listeners
+from app.core.db_metrics import (
+    register_query_metrics_listeners,
+    reset_metrics_listeners,
+)
 
 
 class Base(DeclarativeBase):

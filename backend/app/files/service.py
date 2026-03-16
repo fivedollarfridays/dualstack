@@ -22,7 +22,9 @@ async def request_upload_url(
     size: int,
 ) -> dict:
     if size > MAX_FILE_SIZE:
-        raise ValidationError(message=f"File size {size} exceeds maximum of {MAX_FILE_SIZE} bytes")
+        raise ValidationError(
+            message=f"File size {size} exceeds maximum of {MAX_FILE_SIZE} bytes"
+        )
 
     file_id = str(uuid.uuid4())
     safe_filename = PurePosixPath(filename).name
@@ -49,7 +51,11 @@ async def request_upload_url(
 async def list_files(
     db: AsyncSession, user_id: str, skip: int = 0, limit: int = 20
 ) -> tuple[list[FileRecord], int]:
-    count_q = select(func.count()).select_from(FileRecord).where(FileRecord.user_id == user_id)
+    count_q = (
+        select(func.count())
+        .select_from(FileRecord)
+        .where(FileRecord.user_id == user_id)
+    )
     total = (await db.execute(count_q)).scalar_one()
 
     list_q = (
@@ -67,7 +73,9 @@ async def list_files(
 async def get_download_url(
     db: AsyncSession, storage: StorageService, file_id: str, user_id: str
 ) -> str:
-    q = select(FileRecord).where(FileRecord.id == file_id, FileRecord.user_id == user_id)
+    q = select(FileRecord).where(
+        FileRecord.id == file_id, FileRecord.user_id == user_id
+    )
     record = (await db.execute(q)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(message="File not found")
@@ -78,7 +86,9 @@ async def get_download_url(
 async def delete_file(
     db: AsyncSession, storage: StorageService, file_id: str, user_id: str
 ) -> None:
-    q = select(FileRecord).where(FileRecord.id == file_id, FileRecord.user_id == user_id)
+    q = select(FileRecord).where(
+        FileRecord.id == file_id, FileRecord.user_id == user_id
+    )
     record = (await db.execute(q)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(message="File not found")

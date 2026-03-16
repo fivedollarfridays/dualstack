@@ -2,6 +2,7 @@
 
 import { ClerkProvider } from '@clerk/nextjs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 import { ReactNode, useState } from 'react';
 import { ThemeProvider } from '@/contexts/theme-context';
 import { clerkAppearance } from '@/lib/clerk-config';
@@ -35,6 +36,7 @@ export function Providers({ children, nonce }: ProvidersProps) {
     return (
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
+          <Toaster />
           <ClerkProvider appearance={clerkAppearance} nonce={nonce}>
             <ClerkAuthBridge>
               {children}
@@ -48,6 +50,7 @@ export function Providers({ children, nonce }: ProvidersProps) {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
+        <Toaster />
         <DevAuthProvider>
           {children}
         </DevAuthProvider>

@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-import pytest
-
 
 class TestPublish:
     async def test_notifies_exact_subscriber(self):

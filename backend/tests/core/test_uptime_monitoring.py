@@ -69,7 +69,12 @@ class TestUptimeAlertRules:
     def test_live_down_is_critical(self) -> None:
         rules = _load_uptime_rules()
         rule = next(
-            (r for g in rules["groups"] for r in g["rules"] if r["alert"] == "HealthLiveEndpointDown"),
+            (
+                r
+                for g in rules["groups"]
+                for r in g["rules"]
+                if r["alert"] == "HealthLiveEndpointDown"
+            ),
             None,
         )
         assert rule is not None, "HealthLiveEndpointDown rule not found"
@@ -78,7 +83,12 @@ class TestUptimeAlertRules:
     def test_slow_is_warning(self) -> None:
         rules = _load_uptime_rules()
         rule = next(
-            (r for g in rules["groups"] for r in g["rules"] if r["alert"] == "HealthEndpointSlow"),
+            (
+                r
+                for g in rules["groups"]
+                for r in g["rules"]
+                if r["alert"] == "HealthEndpointSlow"
+            ),
             None,
         )
         assert rule is not None, "HealthEndpointSlow rule not found"

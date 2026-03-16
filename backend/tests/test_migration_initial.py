@@ -52,7 +52,15 @@ def test_items_table_has_correct_columns(alembic_config):
     inspector = inspect(engine)
     columns = {col["name"] for col in inspector.get_columns("items")}
 
-    expected = {"id", "user_id", "title", "description", "status", "created_at", "updated_at"}
+    expected = {
+        "id",
+        "user_id",
+        "title",
+        "description",
+        "status",
+        "created_at",
+        "updated_at",
+    }
     assert columns == expected
     engine.dispose()
 

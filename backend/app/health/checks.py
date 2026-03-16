@@ -28,7 +28,9 @@ async def check_database() -> ServiceCheck:
         return ServiceCheck(name="database", status="up")
     except Exception:
         logger.exception("Database health check failed")
-        return ServiceCheck(name="database", status="down", error="database unavailable")
+        return ServiceCheck(
+            name="database", status="down", error="database unavailable"
+        )
 
 
 @router.get("/live", response_model=LivenessStatus)

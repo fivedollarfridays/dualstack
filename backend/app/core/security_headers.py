@@ -87,15 +87,19 @@ class ContentSizeLimitMiddleware:
 
     @staticmethod
     async def _send_error(send: Send, status: int, body: bytes) -> None:
-        await send({
-            "type": "http.response.start",
-            "status": status,
-            "headers": [[b"content-type", b"application/json"]],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": body,
-        })
+        await send(
+            {
+                "type": "http.response.start",
+                "status": status,
+                "headers": [[b"content-type", b"application/json"]],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": body,
+            }
+        )
 
 
 class _BodyTooLargeError(Exception):

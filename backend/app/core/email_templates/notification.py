@@ -8,8 +8,5 @@ def render(data: dict) -> dict[str, str]:
     message = escape(data.get("message", "You have a new notification."))
     return {
         "subject": title,
-        "html": (
-            f"<h1>{title}</h1>"
-            f"<p>{message}</p>"
-        ),
+        "html": (f"<h1>{title}</h1><p>{message}</p>"),
     }

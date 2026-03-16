@@ -58,7 +58,8 @@ class TestForwardedAllowIpsWarning:
                 async with lifespan(test_app):
                     pass
                 forwarded_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "FORWARDED_ALLOW_IPS" in str(call)
                 ]
                 assert len(forwarded_warnings) == 1
@@ -84,7 +85,8 @@ class TestForwardedAllowIpsWarning:
                 async with lifespan(test_app):
                     pass
                 forwarded_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "FORWARDED_ALLOW_IPS" in str(call)
                 ]
                 assert len(forwarded_warnings) == 0
@@ -109,7 +111,8 @@ class TestForwardedAllowIpsWarning:
                 async with lifespan(test_app):
                     pass
                 forwarded_warnings = [
-                    call for call in mock_logger.warning.call_args_list
+                    call
+                    for call in mock_logger.warning.call_args_list
                     if "FORWARDED_ALLOW_IPS" in str(call)
                 ]
                 assert len(forwarded_warnings) == 0

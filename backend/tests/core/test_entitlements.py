@@ -1,7 +1,5 @@
 """Tests for feature gating entitlements."""
 
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,7 +25,8 @@ class TestRequireFeature:
 
         await get_or_create_user(db_session, "clerk_pro")
         await update_user(
-            db_session, "clerk_pro",
+            db_session,
+            "clerk_pro",
             UserUpdate(subscription_plan="pro", subscription_status="active"),
         )
 
@@ -45,27 +44,35 @@ class TestRequireFeature:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_denies_access_for_canceled_subscription(self, db_session: AsyncSession):
+    async def test_denies_access_for_canceled_subscription(
+        self, db_session: AsyncSession
+    ):
         """Canceled pro user cannot access pro features."""
         from app.core.entitlements import check_feature_access
 
         await get_or_create_user(db_session, "clerk_canceled")
         await update_user(
-            db_session, "clerk_canceled",
+            db_session,
+            "clerk_canceled",
             UserUpdate(subscription_plan="pro", subscription_status="canceled"),
         )
 
-        result = await check_feature_access(db_session, "clerk_canceled", "billing.portal")
+        result = await check_feature_access(
+            db_session, "clerk_canceled", "billing.portal"
+        )
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_allows_free_features_for_canceled_user(self, db_session: AsyncSession):
+    async def test_allows_free_features_for_canceled_user(
+        self, db_session: AsyncSession
+    ):
         """Canceled user still gets free-tier features."""
         from app.core.entitlements import check_feature_access
 
         await get_or_create_user(db_session, "clerk_can_free")
         await update_user(
-            db_session, "clerk_can_free",
+            db_session,
+            "clerk_can_free",
             UserUpdate(subscription_plan="pro", subscription_status="canceled"),
         )
 
@@ -73,17 +80,22 @@ class TestRequireFeature:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_enterprise_wildcard_grants_any_feature(self, db_session: AsyncSession):
+    async def test_enterprise_wildcard_grants_any_feature(
+        self, db_session: AsyncSession
+    ):
         """Enterprise user with wildcard has access to everything."""
         from app.core.entitlements import check_feature_access
 
         await get_or_create_user(db_session, "clerk_ent")
         await update_user(
-            db_session, "clerk_ent",
+            db_session,
+            "clerk_ent",
             UserUpdate(subscription_plan="enterprise", subscription_status="active"),
         )
 
-        result = await check_feature_access(db_session, "clerk_ent", "some.random.feature")
+        result = await check_feature_access(
+            db_session, "clerk_ent", "some.random.feature"
+        )
         assert result is True
 
     @pytest.mark.asyncio
@@ -114,7 +126,9 @@ class TestRequireFeatureErrorEnvelope:
         app = FastAPI()
         register_exception_handlers(app)
 
-        @app.get("/test-gated", dependencies=[Depends(require_feature("billing.portal"))])
+        @app.get(
+            "/test-gated", dependencies=[Depends(require_feature("billing.portal"))]
+        )
         async def gated_route():
             return {"ok": True}
 
@@ -147,7 +161,8 @@ class TestGetUserEntitlements:
 
         await get_or_create_user(db_session, "clerk_ent_check")
         await update_user(
-            db_session, "clerk_ent_check",
+            db_session,
+            "clerk_ent_check",
             UserUpdate(subscription_plan="pro", subscription_status="active"),
         )
 

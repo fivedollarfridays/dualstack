@@ -20,8 +20,12 @@ PLAN_TIERS: dict[str, PlanTier] = {
     },
     "pro": {
         "features": {
-            "items.create", "items.read", "items.update", "items.delete",
-            "billing.portal", "export.csv",
+            "items.create",
+            "items.read",
+            "items.update",
+            "items.delete",
+            "billing.portal",
+            "export.csv",
         },
         "limits": {"max_items": 1000},
     },

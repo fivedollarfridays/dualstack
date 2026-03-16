@@ -28,14 +28,15 @@ _clerk_auth_cache: OrderedDict[str, Any] = OrderedDict()
 def _audit_auth_failure(action: str, user_id: str = "unknown") -> None:
     """Log an auth failure audit event."""
     log_audit_event(
-        user_id=user_id, action=action,
-        resource_type="token", resource_id="unknown", outcome="failure",
+        user_id=user_id,
+        action=action,
+        resource_type="token",
+        resource_id="unknown",
+        outcome="failure",
     )
 
 
-async def _verify_clerk_token(
-    request: Request, jwks_url: str
-) -> str:
+async def _verify_clerk_token(request: Request, jwks_url: str) -> str:
     """Validate a Bearer JWT against Clerk JWKS and return the user ID.
 
     Raises:

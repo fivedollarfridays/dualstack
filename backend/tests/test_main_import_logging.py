@@ -5,8 +5,6 @@ import logging
 import sys
 from unittest.mock import patch
 
-import pytest
-
 
 class TestImportErrorLogging:
     """Test that ImportError on optional modules is logged, not silenced."""
@@ -23,15 +21,14 @@ class TestImportErrorLogging:
 
         block = {"app.items": None, "app.items.routes": None}
 
-        with patch.object(
-            logging.getLogger("app.main"), "info"
-        ) as mock_info:
+        with patch.object(logging.getLogger("app.main"), "info") as mock_info:
             with patch.dict("sys.modules", block):
                 importlib.reload(app.main)
 
             # Find the call that mentions "Items module not available"
             calls = [
-                c for c in mock_info.call_args_list
+                c
+                for c in mock_info.call_args_list
                 if len(c.args) >= 1 and "Items module not available" in str(c.args[0])
             ]
             assert len(calls) >= 1, (
@@ -54,14 +51,13 @@ class TestImportErrorLogging:
 
         block = {"app.billing": None, "app.billing.routes": None}
 
-        with patch.object(
-            logging.getLogger("app.main"), "info"
-        ) as mock_info:
+        with patch.object(logging.getLogger("app.main"), "info") as mock_info:
             with patch.dict("sys.modules", block):
                 importlib.reload(app.main)
 
             calls = [
-                c for c in mock_info.call_args_list
+                c
+                for c in mock_info.call_args_list
                 if len(c.args) >= 1 and "Billing module not available" in str(c.args[0])
             ]
             assert len(calls) >= 1, (

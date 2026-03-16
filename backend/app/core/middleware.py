@@ -21,9 +21,20 @@ _UUID_RE = re.compile(
 )
 
 SENSITIVE_PARAMS = {
-    "token", "key", "secret", "password", "api_key", "access_token",
-    "auth", "authorization", "apikey", "code", "state",
-    "client_secret", "private_key", "credential",
+    "token",
+    "key",
+    "secret",
+    "password",
+    "api_key",
+    "access_token",
+    "auth",
+    "authorization",
+    "apikey",
+    "code",
+    "state",
+    "client_secret",
+    "private_key",
+    "credential",
 }
 
 
@@ -36,10 +47,7 @@ def _sanitize_params(params: dict) -> dict:
     Returns:
         Copy with sensitive values replaced by '***'.
     """
-    return {
-        k: "***" if k.lower() in SENSITIVE_PARAMS else v
-        for k, v in params.items()
-    }
+    return {k: "***" if k.lower() in SENSITIVE_PARAMS else v for k, v in params.items()}
 
 
 def _bind_request_context(request: Request) -> str:
@@ -56,7 +64,9 @@ def _bind_request_context(request: Request) -> str:
     return correlation_id
 
 
-def _record_request_metrics(request: Request, response: Response, duration_seconds: float) -> None:
+def _record_request_metrics(
+    request: Request, response: Response, duration_seconds: float
+) -> None:
     """Record HTTP request metrics using the route template path."""
     route = request.scope.get("route")
     path_template = route.path if route else request.url.path

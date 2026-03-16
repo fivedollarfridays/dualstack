@@ -18,7 +18,9 @@ class TestContentTypeAllowlist:
         assert req.content_type == "image/jpeg"
 
     def test_accepts_application_pdf(self):
-        req = UploadUrlRequest(filename="a.pdf", content_type="application/pdf", size=100)
+        req = UploadUrlRequest(
+            filename="a.pdf", content_type="application/pdf", size=100
+        )
         assert req.content_type == "application/pdf"
 
     def test_accepts_text_plain(self):
@@ -30,7 +32,9 @@ class TestContentTypeAllowlist:
         assert req.content_type == "text/csv"
 
     def test_accepts_application_json(self):
-        req = UploadUrlRequest(filename="a.json", content_type="application/json", size=100)
+        req = UploadUrlRequest(
+            filename="a.json", content_type="application/json", size=100
+        )
         assert req.content_type == "application/json"
 
     def test_accepts_image_gif(self):
@@ -51,11 +55,15 @@ class TestContentTypeAllowlist:
 
     def test_rejects_application_octet_stream(self):
         with pytest.raises(ValidationError, match="not allowed"):
-            UploadUrlRequest(filename="a.bin", content_type="application/octet-stream", size=100)
+            UploadUrlRequest(
+                filename="a.bin", content_type="application/octet-stream", size=100
+            )
 
     def test_rejects_application_javascript(self):
         with pytest.raises(ValidationError, match="not allowed"):
-            UploadUrlRequest(filename="a.js", content_type="application/javascript", size=100)
+            UploadUrlRequest(
+                filename="a.js", content_type="application/javascript", size=100
+            )
 
     def test_rejects_text_xml(self):
         with pytest.raises(ValidationError, match="not allowed"):
@@ -70,7 +78,9 @@ class TestUploadUrlResponseNoStorageKey:
         assert "storage_key" not in UploadUrlResponse.model_fields
 
     def test_response_construction_without_storage_key(self):
-        resp = UploadUrlResponse(file_id="abc", upload_url="https://s3.example.com/signed")
+        resp = UploadUrlResponse(
+            file_id="abc", upload_url="https://s3.example.com/signed"
+        )
         assert resp.file_id == "abc"
         assert resp.upload_url == "https://s3.example.com/signed"
         assert not hasattr(resp, "storage_key")

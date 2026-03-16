@@ -1,7 +1,7 @@
 """Tests for app.core.exception_handlers module."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -85,7 +85,13 @@ class TestValidationErrorHandler:
 
         request = _make_request()
         exc = RequestValidationError(
-            errors=[{"loc": ["body", "price_id"], "msg": "field required", "type": "value_error.missing"}]
+            errors=[
+                {
+                    "loc": ["body", "price_id"],
+                    "msg": "field required",
+                    "type": "value_error.missing",
+                }
+            ]
         )
         response = await validation_error_handler(request, exc)
         assert response.status_code == 422

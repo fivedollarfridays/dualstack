@@ -35,7 +35,11 @@ class TestGetCurrentUserRoute:
         mock_user.subscription_plan = "pro"
         mock_user.subscription_status = "active"
 
-        with patch("app.users.routes.get_user_by_clerk_id", new_callable=AsyncMock, return_value=mock_user):
+        with patch(
+            "app.users.routes.get_user_by_clerk_id",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ):
             response = await client.get("/api/v1/users/me")
 
         assert response.status_code == 200
@@ -45,7 +49,11 @@ class TestGetCurrentUserRoute:
 
     async def test_returns_free_defaults_for_unknown_user(self, client):
         """User not in database gets free plan defaults."""
-        with patch("app.users.routes.get_user_by_clerk_id", new_callable=AsyncMock, return_value=None):
+        with patch(
+            "app.users.routes.get_user_by_clerk_id",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
             response = await client.get("/api/v1/users/me")
 
         assert response.status_code == 200
@@ -59,7 +67,11 @@ class TestGetCurrentUserRoute:
         mock_user.subscription_plan = None
         mock_user.subscription_status = None
 
-        with patch("app.users.routes.get_user_by_clerk_id", new_callable=AsyncMock, return_value=mock_user):
+        with patch(
+            "app.users.routes.get_user_by_clerk_id",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ):
             response = await client.get("/api/v1/users/me")
 
         assert response.status_code == 200
@@ -73,7 +85,11 @@ class TestGetCurrentUserRoute:
         mock_user.subscription_plan = "pro"
         mock_user.subscription_status = "active"
 
-        with patch("app.users.routes.get_user_by_clerk_id", new_callable=AsyncMock, return_value=mock_user):
+        with patch(
+            "app.users.routes.get_user_by_clerk_id",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ):
             response = await client.get("/api/v1/users/me")
 
         data = response.json()

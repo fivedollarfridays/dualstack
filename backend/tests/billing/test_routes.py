@@ -64,10 +64,16 @@ class TestCheckoutRoute:
 
 class TestPortalRoute:
     @patch("app.core.url_validation.get_settings")
-    async def test_returns_404_when_no_billing_account(self, mock_gs: MagicMock, client):
+    async def test_returns_404_when_no_billing_account(
+        self, mock_gs: MagicMock, client
+    ):
         """Portal returns 404 when user has no billing account."""
         mock_gs.return_value = mock_settings_with_cors("https://example.com")
-        with patch("app.billing.routes.get_user_by_clerk_id", new_callable=AsyncMock, return_value=None):
+        with patch(
+            "app.billing.routes.get_user_by_clerk_id",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
             response = await client.post(
                 "/api/v1/billing/portal",
                 json={"return_url": "https://example.com/dashboard"},
@@ -82,7 +88,9 @@ class TestPortalRoute:
         from app.billing.routes import create_portal
 
         # slowapi wraps the function, setting __wrapped__
-        assert hasattr(create_portal, "__wrapped__"), "create_portal should have rate limit decorator"
+        assert hasattr(create_portal, "__wrapped__"), (
+            "create_portal should have rate limit decorator"
+        )
 
 
 class TestCheckoutAuditEvent:
@@ -97,7 +105,9 @@ class TestCheckoutAuditEvent:
                 new_callable=AsyncMock,
                 return_value="https://checkout.stripe.com/session_123",
             ),
-            patch("app.billing.routes.persist_audit_event", new_callable=AsyncMock) as mock_audit,
+            patch(
+                "app.billing.routes.persist_audit_event", new_callable=AsyncMock
+            ) as mock_audit,
         ):
             await client.post(
                 "/api/v1/billing/checkout",
@@ -117,12 +127,14 @@ class TestCheckoutAuditEvent:
 
 class TestWebhookRoute:
     async def test_processes_valid_webhook(self, client):
-        with patch("app.billing.routes.get_settings") as mock_gs, \
-             patch(
+        with (
+            patch("app.billing.routes.get_settings") as mock_gs,
+            patch(
                 "app.billing.service.handle_webhook",
                 new_callable=AsyncMock,
                 return_value={"handled": True, "type": "checkout.session.completed"},
-             ):
+            ),
+        ):
             settings = MagicMock()
             settings.stripe_webhook_secret = "whsec_test"
             mock_gs.return_value = settings

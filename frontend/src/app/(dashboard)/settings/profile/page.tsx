@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { useAppAuth } from '@/contexts/auth-context';
 import { AvatarDisplay } from '@/components/profile/avatar-display';
 import { ProfileForm } from '@/components/profile/profile-form';
@@ -28,7 +29,13 @@ export default function ProfilePage() {
       if (!token) throw new Error('Authentication required');
       return api.updateProfile(token, { display_name: displayName });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Profile saved');
+    },
+    onError: () => {
+      toast.error('Failed to save profile');
+    },
   });
 
   const deleteMutation = useMutation({
@@ -39,6 +46,9 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       router.push('/');
+    },
+    onError: () => {
+      toast.error('Failed to delete account');
     },
   });
 

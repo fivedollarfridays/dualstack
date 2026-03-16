@@ -67,9 +67,7 @@ async def authenticate_ws(websocket: WebSocket) -> str:
 
     if not settings.clerk_jwks_url:
         if settings.environment == "production":
-            raise AuthenticationError(
-                message="Dev-mode auth is disabled in production"
-            )
+            raise AuthenticationError(message="Dev-mode auth is disabled in production")
         user_id = websocket.query_params.get("user_id")
         if not user_id:
             raise AuthenticationError(message="Missing user_id query param")

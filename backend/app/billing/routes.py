@@ -29,8 +29,11 @@ async def create_checkout(
         user_id, data.price_id, data.success_url, data.cancel_url
     )
     await persist_audit_event(
-        db, user_id=user_id, action="billing.checkout",
-        resource_type="checkout", resource_id=data.price_id,
+        db,
+        user_id=user_id,
+        action="billing.checkout",
+        resource_type="checkout",
+        resource_id=data.price_id,
     )
     return {"url": url}
 
@@ -51,8 +54,11 @@ async def create_portal(
         )
     url = await service.create_portal_session(user.stripe_customer_id, data.return_url)
     await persist_audit_event(
-        db, user_id=user_id, action="billing.portal_created",
-        resource_type="portal", resource_id=user.stripe_customer_id,
+        db,
+        user_id=user_id,
+        action="billing.portal_created",
+        resource_type="portal",
+        resource_id=user.stripe_customer_id,
     )
     return {"url": url}
 

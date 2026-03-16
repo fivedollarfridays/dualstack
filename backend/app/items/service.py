@@ -13,7 +13,11 @@ from app.items.schemas import ItemCreate, ItemUpdate
 
 UPDATABLE_FIELDS: frozenset[str] = frozenset({"title", "description", "status"})
 
-SORTABLE_FIELDS = {"title": Item.title, "created_at": Item.created_at, "updated_at": Item.updated_at}
+SORTABLE_FIELDS = {
+    "title": Item.title,
+    "created_at": Item.created_at,
+    "updated_at": Item.updated_at,
+}
 SortField = Literal["title", "created_at", "updated_at"]
 SortDir = Literal["asc", "desc"]
 

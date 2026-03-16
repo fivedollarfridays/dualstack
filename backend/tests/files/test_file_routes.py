@@ -19,7 +19,9 @@ async def mock_storage():
     storage = MagicMock(spec=StorageService)
     storage.bucket = "test-bucket"
     storage.generate_upload_url.return_value = "https://s3.example.com/presigned-upload"
-    storage.generate_download_url.return_value = "https://s3.example.com/presigned-download"
+    storage.generate_download_url.return_value = (
+        "https://s3.example.com/presigned-download"
+    )
     return storage
 
 
@@ -77,7 +79,11 @@ class TestUploadUrl:
     async def test_rejects_oversized_file(self, client):
         response = await client.post(
             "/api/v1/files/upload-url",
-            json={"filename": "big.png", "content_type": "image/png", "size": 200_000_000},
+            json={
+                "filename": "big.png",
+                "content_type": "image/png",
+                "size": 200_000_000,
+            },
         )
         assert response.status_code == 400
 
@@ -132,13 +138,20 @@ class TestDownloadUrl:
         # Upload first
         upload = await client.post(
             "/api/v1/files/upload-url",
-            json={"filename": "doc.pdf", "content_type": "application/pdf", "size": 512},
+            json={
+                "filename": "doc.pdf",
+                "content_type": "application/pdf",
+                "size": 512,
+            },
         )
         file_id = upload.json()["file_id"]
 
         response = await client.get(f"/api/v1/files/{file_id}/download-url")
         assert response.status_code == 200
-        assert response.json()["download_url"] == "https://s3.example.com/presigned-download"
+        assert (
+            response.json()["download_url"]
+            == "https://s3.example.com/presigned-download"
+        )
 
     async def test_returns_404_for_nonexistent_file(self, client):
         response = await client.get("/api/v1/files/nonexistent/download-url")

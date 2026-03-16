@@ -1,8 +1,13 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { toast } from 'sonner';
 import { useItems, useCreateItem, useUpdateItem, useDeleteItem } from './use-items';
 import * as api from '@/lib/api/items';
+
+jest.mock('sonner', () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
 
 const mockGetToken = jest.fn().mockResolvedValue('mock-token');
 jest.mock('@/contexts/auth-context', () => ({
@@ -115,6 +120,73 @@ describe('useDeleteItem', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockApi.deleteItem).toHaveBeenCalledWith('mock-token', 'item-1');
+  });
+});
+
+describe('toast notifications', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetToken.mockResolvedValue('mock-token');
+  });
+
+  it('shows success toast on create', async () => {
+    mockApi.createItem.mockResolvedValueOnce(mockItem);
+    const { result } = renderHook(() => useCreateItem(), { wrapper: createWrapper() });
+
+    result.current.mutate({ title: 'New Item' });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toast.success).toHaveBeenCalledWith('Item created');
+  });
+
+  it('shows error toast on create failure', async () => {
+    mockApi.createItem.mockRejectedValueOnce(new Error('Network error'));
+    const { result } = renderHook(() => useCreateItem(), { wrapper: createWrapper() });
+
+    result.current.mutate({ title: 'New Item' });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to create item');
+  });
+
+  it('shows success toast on update', async () => {
+    mockApi.updateItem.mockResolvedValueOnce({ ...mockItem, title: 'Updated' });
+    const { result } = renderHook(() => useUpdateItem(), { wrapper: createWrapper() });
+
+    result.current.mutate({ id: 'item-1', data: { title: 'Updated' } });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toast.success).toHaveBeenCalledWith('Item updated');
+  });
+
+  it('shows error toast on update failure', async () => {
+    mockApi.updateItem.mockRejectedValueOnce(new Error('Network error'));
+    const { result } = renderHook(() => useUpdateItem(), { wrapper: createWrapper() });
+
+    result.current.mutate({ id: 'item-1', data: { title: 'Updated' } });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to update item');
+  });
+
+  it('shows success toast on delete', async () => {
+    mockApi.deleteItem.mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useDeleteItem(), { wrapper: createWrapper() });
+
+    result.current.mutate('item-1');
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toast.success).toHaveBeenCalledWith('Item deleted');
+  });
+
+  it('shows error toast on delete failure', async () => {
+    mockApi.deleteItem.mockRejectedValueOnce(new Error('Network error'));
+    const { result } = renderHook(() => useDeleteItem(), { wrapper: createWrapper() });
+
+    result.current.mutate('item-1');
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to delete item');
   });
 });
 

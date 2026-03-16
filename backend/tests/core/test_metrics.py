@@ -10,17 +10,6 @@ from app.core.metrics import (
     increment_external_api_calls,
     track_job_metrics,
     update_pool_metrics,
-    http_requests_total,
-    http_request_duration_seconds,
-    db_operations_total,
-    external_api_calls_total,
-    background_job_duration_seconds,
-    background_job_executions_total,
-    background_job_failures_total,
-    background_job_last_success,
-    db_connection_pool_size,
-    db_connection_pool_checked_out,
-    db_connection_pool_overflow,
 )
 
 

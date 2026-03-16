@@ -1,7 +1,7 @@
 """Tests for app.core.database module."""
 
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -115,7 +115,9 @@ class TestGetAlembicDatabaseUrl:
                 turso_auth_token="test-token",
             )
             url = get_alembic_database_url()
-            assert url == "sqlite+libsql://my-db.turso.io?authToken=test-token&secure=true"
+            assert (
+                url == "sqlite+libsql://my-db.turso.io?authToken=test-token&secure=true"
+            )
 
     def test_converts_asyncpg_to_psycopg2(self):
         """Converts async PostgreSQL URL to sync for Alembic."""
@@ -334,8 +336,8 @@ class TestEnableQueryMetricsForTesting:
         """Should call register_query_metrics_listeners with force=True."""
         with patch("app.core.database.get_database_url") as mock_url:
             mock_url.return_value = "sqlite+aiosqlite:///:memory:"
-            # Create engine first
-            engine = get_engine()
+            # Create engine first (side effect: registers metrics listeners)
+            get_engine()
             enable_query_metrics_for_testing()
             assert db_metrics_module._metrics_listeners_registered is True
 

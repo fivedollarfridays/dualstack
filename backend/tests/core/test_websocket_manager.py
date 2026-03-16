@@ -1,10 +1,6 @@
 """Tests for WebSocket connection manager."""
 
-import asyncio
-import logging
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
+from unittest.mock import AsyncMock, patch
 
 
 class TestConnect:
@@ -126,7 +122,11 @@ class TestBroadcastEventHandler:
         with patch("app.core.ws_routes.manager", mgr):
             from app.core.ws_routes import _broadcast_event
 
-            payload = {"type": "item.updated", "user_id": "user-b", "data": {"id": "x2"}}
+            payload = {
+                "type": "item.updated",
+                "user_id": "user-b",
+                "data": {"id": "x2"},
+            }
             await _broadcast_event(payload)
 
         ws_b.send_json.assert_called_once_with(payload)

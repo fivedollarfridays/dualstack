@@ -55,6 +55,7 @@ class UserProfileUpdate(BaseModel):
         if not v:
             return v
         import html
+
         return html.escape(v, quote=True)
 
     @field_validator("avatar_url")

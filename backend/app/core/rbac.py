@@ -58,9 +58,7 @@ async def _get_user_role(db: AsyncSession, user_id: str) -> Role:
     """Load a user's role from the database, raising if not found."""
     from app.users.models import User
 
-    result = await db.execute(
-        select(User).where(User.clerk_user_id == user_id)
-    )
+    result = await db.execute(select(User).where(User.clerk_user_id == user_id))
     user = result.scalar_one_or_none()
     if user is None:
         raise AuthorizationError(message="User not found")

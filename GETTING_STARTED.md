@@ -246,11 +246,11 @@ Copy the webhook signing secret it prints and set it as `STRIPE_WEBHOOK_SECRET`.
 
 DualStack ships with a generic "Items" entity. To rename it to your domain (e.g., "projects", "posts"):
 
-1. Copy `backend/app/items/` to `backend/app/your_entity/`
-2. Rename the model, schemas, service, and routes
-3. Register the new router in `backend/app/main.py`
-4. Copy `frontend/src/components/items/` and update the frontend
-5. Run `alembic revision --autogenerate -m "add your_entity"` for a migration
+```bash
+python scripts/rename.py --from item --to project
+```
+
+Preview first with `--dry-run`, or use `--to-plural` for irregular plurals. See `python scripts/rename.py --help` for details.
 
 ### Set Up Monitoring
 

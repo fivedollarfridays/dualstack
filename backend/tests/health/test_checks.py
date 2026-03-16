@@ -23,7 +23,6 @@ def health_app():
     return app
 
 
-
 class TestCheckDatabase:
     """Test check_database function."""
 
@@ -33,9 +32,7 @@ class TestCheckDatabase:
         mock_conn = AsyncMock()
         mock_engine = MagicMock()
         mock_engine.connect = MagicMock(return_value=AsyncMock())
-        mock_engine.connect.return_value.__aenter__ = AsyncMock(
-            return_value=mock_conn
-        )
+        mock_engine.connect.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
         mock_engine.connect.return_value.__aexit__ = AsyncMock(return_value=False)
 
         with patch("app.health.checks.get_engine", return_value=mock_engine):

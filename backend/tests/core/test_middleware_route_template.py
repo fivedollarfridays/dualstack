@@ -21,8 +21,10 @@ class TestRouteTemplateMetrics:
         async def get_item(item_id: str):
             return {"id": item_id}
 
-        with patch("app.core.middleware.increment_http_requests") as mock_inc, \
-             patch("app.core.middleware.observe_http_duration") as mock_obs:
+        with (
+            patch("app.core.middleware.increment_http_requests") as mock_inc,
+            patch("app.core.middleware.observe_http_duration") as mock_obs,
+        ):
             transport = ASGITransport(app=app)
             async with AsyncClient(
                 transport=transport, base_url="http://test"
@@ -48,14 +50,16 @@ class TestRouteTemplateMetrics:
         async def ok():
             return {"ok": True}
 
-        with patch("app.core.middleware.increment_http_requests") as mock_inc, \
-             patch("app.core.middleware.observe_http_duration") as mock_obs:
+        with (
+            patch("app.core.middleware.increment_http_requests") as mock_inc,
+            patch("app.core.middleware.observe_http_duration"),
+        ):
             transport = ASGITransport(app=app)
             async with AsyncClient(
                 transport=transport, base_url="http://test"
             ) as client:
                 # Request a path that doesn't match any route
-                response = await client.get("/nonexistent")
+                await client.get("/nonexistent")
 
             # For unmatched routes, raw path is used
             mock_inc.assert_called_once()
@@ -81,7 +85,8 @@ class TestRouteTemplateMetrics:
 
             # request_started log should use raw path
             started_calls = [
-                c for c in mock_logger.info.call_args_list
+                c
+                for c in mock_logger.info.call_args_list
                 if c.args and c.args[0] == "request_started"
             ]
             assert len(started_calls) >= 1

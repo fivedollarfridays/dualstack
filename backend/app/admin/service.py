@@ -68,9 +68,7 @@ async def assign_role(
 async def get_health(db: AsyncSession) -> dict:
     """Return system health metrics."""
     try:
-        total = (
-            await db.execute(select(func.count()).select_from(User))
-        ).scalar_one()
+        total = (await db.execute(select(func.count()).select_from(User))).scalar_one()
         return {
             "status": "healthy",
             "database": "connected",
@@ -88,15 +86,10 @@ async def list_audit_logs(
     db: AsyncSession, skip: int = 0, limit: int = 50
 ) -> tuple[list[AuditLog], int]:
     """List audit log entries with pagination."""
-    total = (
-        await db.execute(select(func.count()).select_from(AuditLog))
-    ).scalar_one()
+    total = (await db.execute(select(func.count()).select_from(AuditLog))).scalar_one()
 
     stmt = (
-        select(AuditLog)
-        .order_by(AuditLog.created_at.desc())
-        .offset(skip)
-        .limit(limit)
+        select(AuditLog).order_by(AuditLog.created_at.desc()).offset(skip).limit(limit)
     )
     entries = list((await db.execute(stmt)).scalars().all())
     return entries, total

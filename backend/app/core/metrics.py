@@ -140,9 +140,7 @@ def _record_job_failure(job_name: str, duration: float, exc: Exception) -> None:
     error_type = type(exc).__name__
     background_job_duration_seconds.labels(job_name=job_name).observe(duration)
     background_job_executions_total.labels(job_name=job_name, status="failure").inc()
-    background_job_failures_total.labels(
-        job_name=job_name, error_type=error_type
-    ).inc()
+    background_job_failures_total.labels(job_name=job_name, error_type=error_type).inc()
 
     get_logger(__name__).error(
         "background_job_failed",

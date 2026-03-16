@@ -1,6 +1,6 @@
 # DualStack
 
-![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1327_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
+![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1334_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
 
 Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, file uploads, real-time WebSocket, and monitoring out of the box.
 
@@ -440,10 +440,25 @@ Set environment variables in the Vercel dashboard:
 
 ### Replacing "Items" with your domain entity
 
-1. **Backend**: Copy `app/items/` to `app/your_entity/`, rename model, schemas, service, routes
-2. **Frontend**: Copy `src/components/items/` and `src/app/(dashboard)/items/`, rename components and pages
-3. **Database**: Update schemas in both backend (SQLAlchemy) and frontend (Drizzle)
-4. **API client**: Update `src/lib/api/items.ts` to match new backend routes
+Run the rename script to automatically update all files, directories, imports, and references:
+
+```bash
+python scripts/rename.py --from item --to project
+```
+
+Preview changes first with `--dry-run`:
+
+```bash
+python scripts/rename.py --from item --to project --dry-run
+```
+
+For irregular plurals, use the override flags:
+
+```bash
+python scripts/rename.py --from item --to person --to-plural people
+```
+
+The script handles class names, variable names, route prefixes, import paths, file renames, and directory renames across the entire codebase.
 
 ### Adding new API routes
 

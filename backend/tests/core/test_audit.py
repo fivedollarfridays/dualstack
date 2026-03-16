@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 
 from app.core.audit import log_audit_event, persist_audit_event
 

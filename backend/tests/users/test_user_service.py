@@ -42,9 +42,9 @@ class TestGetOrCreateUser:
         await get_or_create_user(db_session, "clerk_nodup")
 
         result = await db_session.execute(
-            select(func.count()).select_from(User).where(
-                User.clerk_user_id == "clerk_nodup"
-            )
+            select(func.count())
+            .select_from(User)
+            .where(User.clerk_user_id == "clerk_nodup")
         )
         assert result.scalar_one() == 1
 

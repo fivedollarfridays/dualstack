@@ -4,16 +4,18 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-ALLOWED_CONTENT_TYPES = frozenset({
-    "image/png",
-    "image/jpeg",
-    "image/gif",
-    "image/webp",
-    "application/pdf",
-    "text/plain",
-    "text/csv",
-    "application/json",
-})
+ALLOWED_CONTENT_TYPES = frozenset(
+    {
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "text/plain",
+        "text/csv",
+        "application/json",
+    }
+)
 
 
 class UploadUrlRequest(BaseModel):

@@ -83,9 +83,7 @@ class TestAuthAuditEvents:
             patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
             patch("app.core.auth.log_audit_event") as mock_audit,
         ):
-            await client.get(
-                "/me", headers={"Authorization": "Bearer bad-jwt"}
-            )
+            await client.get("/me", headers={"Authorization": "Bearer bad-jwt"})
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
             assert kwargs["outcome"] == "failure"
@@ -106,9 +104,7 @@ class TestAuthAuditEvents:
             patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
             patch("app.core.auth.log_audit_event") as mock_audit,
         ):
-            await client.get(
-                "/me", headers={"Authorization": "Bearer no-sub-jwt"}
-            )
+            await client.get("/me", headers={"Authorization": "Bearer no-sub-jwt"})
             mock_audit.assert_called_once()
             kwargs = mock_audit.call_args[1]
             assert kwargs["outcome"] == "failure"
@@ -152,9 +148,7 @@ class TestDevMode:
 
     async def test_returns_user_id_from_header(self, client):
         with patch("app.core.auth.get_settings", return_value=_mock_settings("")):
-            response = await client.get(
-                "/me", headers={"x-user-id": "user-42"}
-            )
+            response = await client.get("/me", headers={"x-user-id": "user-42"})
 
         assert response.status_code == 200
         assert response.json() == {"user_id": "user-42"}
@@ -184,9 +178,7 @@ class TestDevMode:
             "app.core.auth.get_settings",
             return_value=_mock_settings("", environment="production"),
         ):
-            response = await client.get(
-                "/me", headers={"x-user-id": "user-42"}
-            )
+            response = await client.get("/me", headers={"x-user-id": "user-42"})
 
         assert response.status_code == 401
 
@@ -196,9 +188,7 @@ class TestDevMode:
             "app.core.auth.get_settings",
             return_value=_mock_settings("", environment="development"),
         ):
-            response = await client.get(
-                "/me", headers={"x-user-id": "user-42"}
-            )
+            response = await client.get("/me", headers={"x-user-id": "user-42"})
 
         assert response.status_code == 200
         assert response.json() == {"user_id": "user-42"}
@@ -231,7 +221,7 @@ class TestAuthCacheBounds:
             _clerk_auth_cache[f"https://jwks-{i}.example.com"] = f"auth-{i}"
 
         assert len(_clerk_auth_cache) == MAX_CACHE_SIZE
-        first_key = f"https://jwks-0.example.com"
+        first_key = "https://jwks-0.example.com"
         assert first_key in _clerk_auth_cache
 
         # Make a request with a new JWKS URL to trigger eviction
@@ -279,9 +269,7 @@ class TestProdMode:
             "app.core.auth.get_settings",
             return_value=_mock_settings(PROD_JWKS),
         ):
-            response = await client.get(
-                "/me", headers={"x-user-id": "user-1"}
-            )
+            response = await client.get("/me", headers={"x-user-id": "user-1"})
 
         assert response.status_code == 401
 
@@ -310,16 +298,14 @@ class TestProdMode:
         with (
             patch("app.core.auth.get_settings", return_value=_mock_settings(PROD_JWKS)),
             patch("app.core.auth.ClerkConfig"),
-            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth) as mock_bearer_cls,
+            patch(
+                "app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth
+            ) as mock_bearer_cls,
         ):
             # First request populates the cache
-            r1 = await client.get(
-                "/me", headers={"Authorization": "Bearer jwt-1"}
-            )
+            r1 = await client.get("/me", headers={"Authorization": "Bearer jwt-1"})
             # Second request should reuse the cached instance
-            r2 = await client.get(
-                "/me", headers={"Authorization": "Bearer jwt-2"}
-            )
+            r2 = await client.get("/me", headers={"Authorization": "Bearer jwt-2"})
 
         assert r1.status_code == 200
         assert r2.status_code == 200
