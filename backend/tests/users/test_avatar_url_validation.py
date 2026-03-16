@@ -47,23 +47,30 @@ class TestAvatarUrlEdgeCases:
 class TestDisplayNameSanitization:
     """T19.5: display_name must strip < and > to prevent stored XSS."""
 
-    def test_strips_script_tags(self):
+    def test_escapes_script_tags(self):
         profile = UserProfileUpdate(display_name="<script>alert(1)</script>")
-        assert profile.display_name == "scriptalert(1)/script"
+        assert profile.display_name == "&lt;script&gt;alert(1)&lt;/script&gt;"
 
     def test_normal_name_unchanged(self):
         profile = UserProfileUpdate(display_name="Normal Name")
         assert profile.display_name == "Normal Name"
 
-    def test_strips_html_tags(self):
+    def test_escapes_html_tags(self):
         profile = UserProfileUpdate(display_name="<b>Bold</b>")
-        assert profile.display_name == "bBold/b"
+        assert profile.display_name == "&lt;b&gt;Bold&lt;/b&gt;"
+
+    def test_escapes_quotes(self):
+        profile = UserProfileUpdate(display_name='He said "hello"')
+        assert profile.display_name == "He said &quot;hello&quot;"
+
+    def test_escapes_ampersand(self):
+        profile = UserProfileUpdate(display_name="Tom & Jerry")
+        assert profile.display_name == "Tom &amp; Jerry"
 
     def test_none_unchanged(self):
         profile = UserProfileUpdate(display_name=None)
         assert profile.display_name is None
 
-    def test_angle_brackets_only_stripped_to_empty(self):
-        """A name of only angle brackets becomes empty string after stripping."""
+    def test_angle_brackets_escaped(self):
         profile = UserProfileUpdate(display_name="<>")
-        assert profile.display_name == ""
+        assert profile.display_name == "&lt;&gt;"

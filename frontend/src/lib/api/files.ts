@@ -16,7 +16,6 @@ export interface FileListResponse {
 export interface UploadUrlResponse {
   file_id: string;
   upload_url: string;
-  storage_key: string;
 }
 
 export interface DownloadUrlResponse {

@@ -51,10 +51,11 @@ class UserProfileUpdate(BaseModel):
     @field_validator("display_name")
     @classmethod
     def sanitize_display_name(cls, v: str | None) -> str | None:
-        """Strip < and > characters to prevent stored XSS."""
+        """Escape HTML-significant characters to prevent stored XSS."""
         if not v:
             return v
-        return v.replace("<", "").replace(">", "")
+        import html
+        return html.escape(v, quote=True)
 
     @field_validator("avatar_url")
     @classmethod

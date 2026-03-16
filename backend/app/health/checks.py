@@ -32,7 +32,8 @@ async def check_database() -> ServiceCheck:
 
 
 @router.get("/live", response_model=LivenessStatus)
-async def liveness():
+@limiter.limit("120/minute")
+async def liveness(request: Request):
     """
     Liveness probe - is the application running?
 

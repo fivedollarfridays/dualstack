@@ -247,13 +247,13 @@ class TestHealthRateLimiting:
         )
 
     @pytest.mark.asyncio
-    async def test_liveness_is_not_rate_limited(self, rate_limited_health_app):
-        """GET /health/live should NOT be rate-limited (no I/O, no DB queries)."""
+    async def test_liveness_is_rate_limited(self, rate_limited_health_app):
+        """GET /health/live should be rate-limited to prevent abuse."""
         from app.health.checks import liveness
 
         import inspect
 
         sig = inspect.signature(liveness)
-        assert "request" not in sig.parameters, (
-            "liveness() should NOT accept 'request' — it has no rate limiting"
+        assert "request" in sig.parameters, (
+            "liveness() should accept 'request' for rate limiting"
         )

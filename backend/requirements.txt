@@ -33,7 +33,7 @@ prometheus-client==0.21.0
 slowapi==0.1.9
 
 # Migrations
-alembic==1.13.1
+alembic==1.18.4
 
 # Email
 resend==2.23.0
