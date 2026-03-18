@@ -11,7 +11,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "test:all": "npm run test:coverage && npm run test:e2e"
+    "test:all": "pnpm run test:coverage && pnpm run test:e2e"
   },
   "dependencies": {
     "@clerk/nextjs": "6.36.8",

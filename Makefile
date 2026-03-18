@@ -10,7 +10,7 @@ setup: ## Install dependencies and create .env files from templates
 	@echo "==> Installing backend dependencies..."
 	cd backend && pip install -r requirements-dev.txt
 	@echo "==> Installing frontend dependencies..."
-	cd frontend && npm ci
+	cd frontend && pnpm install
 	@echo "==> Creating .env files (will not overwrite existing)..."
 	[ -f backend/.env ] || cp -n backend/.env.example backend/.env
 	[ -f frontend/.env.local ] || cp -n frontend/.env.example frontend/.env.local
@@ -30,7 +30,7 @@ dev: ## Start backend, frontend, and monitoring stack
 	@echo "  Grafana:    http://localhost:3001"
 	@trap 'kill 0' EXIT; \
 		cd backend && uvicorn app.main:app --reload --port 8000 & \
-		cd frontend && npm run dev & \
+		cd frontend && pnpm dev & \
 		cd monitoring && docker compose up -d && \
 		wait
 
@@ -38,7 +38,7 @@ test: ## Run backend and frontend test suites
 	@echo "==> Running backend tests..."
 	cd backend && pytest --cov=app --cov-report=term-missing tests/
 	@echo "==> Running frontend tests..."
-	cd frontend && npm test
+	cd frontend && pnpm test
 
 build: ## Build Docker images via docker-compose
 	docker compose build
@@ -52,7 +52,7 @@ lint: ## Run linters on backend and frontend
 	@echo "==> Running ruff on backend..."
 	cd backend && ruff check app/ tests/
 	@echo "==> Running ESLint on frontend..."
-	cd frontend && npm run lint
+	cd frontend && pnpm lint
 
 format: ## Format code
 	@echo "==> Formatting backend..."

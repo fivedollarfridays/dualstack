@@ -100,7 +100,7 @@ class TestMakefileTargets:
         assert "ruff check" in self.content
 
     def test_lint_runs_eslint(self) -> None:
-        assert "npm run lint" in self.content
+        assert "pnpm lint" in self.content
 
     def test_format_target_exists(self) -> None:
         assert "format:" in self.content

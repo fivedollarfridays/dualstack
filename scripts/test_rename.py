@@ -1,6 +1,5 @@
 """Tests for the rename/rebrand script."""
 
-import os
 import shutil
 import tempfile
 import unittest
