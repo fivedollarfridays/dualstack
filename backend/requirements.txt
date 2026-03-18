@@ -3,14 +3,14 @@ fastapi==0.128.0
 starlette==0.50.0
 uvicorn==0.40.0
 pydantic==2.12.5
-pydantic-settings==2.12.0
+pydantic-settings==2.13.1
 fastapi-clerk-auth==0.0.9
 
 # HTTP client
 httpx==0.28.1
 
 # Database
-SQLAlchemy==2.0.45
+SQLAlchemy==2.0.48
 aiosqlite==0.22.1
 greenlet==3.3.0
 sqlalchemy-libsql==0.2.0
@@ -20,10 +20,10 @@ python-dotenv==1.2.1
 python-multipart==0.0.22
 
 # Payments
-stripe==12.5.0
+stripe==14.4.1
 
 # Logging
-structlog==24.1.0
+structlog==25.5.0
 python-json-logger==2.0.7
 
 # Metrics

@@ -226,6 +226,7 @@ class TestCriticalPaths:
         )
 
 
+
 class TestEnvCleanup:
     """Verify stale env files are removed and env example is complete."""
 
