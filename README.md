@@ -1,6 +1,6 @@
 # DualStack
 
-![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1334_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
+![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1357_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
 
 Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, file uploads, real-time WebSocket, and monitoring out of the box.
 
@@ -9,7 +9,7 @@ Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, fil
 - **FastAPI Backend** -- Python 3.13, async SQLAlchemy, Pydantic v2, structured logging, Prometheus metrics
 - **Next.js 15 Frontend** -- App Router, TypeScript, Tailwind CSS, shadcn/ui components
 - **Authentication** -- Clerk (backend JWT via JWKS + frontend components)
-- **Database** -- SQLite (Turso-ready) with Drizzle ORM (frontend) and SQLAlchemy (backend)
+- **Database** -- SQLite (Turso-ready) with SQLAlchemy ORM
 - **Payments** -- Stripe Checkout + Customer Portal with plan enforcement
 - **File Uploads** -- S3/R2-compatible presigned URLs with content-type allowlisting
 - **Real-time** -- WebSocket with JWT authentication and per-user message routing
@@ -18,8 +18,8 @@ Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, fil
 - **Monitoring** -- Prometheus + Grafana + Alertmanager (Docker Compose)
 - **Health Checks** -- Kubernetes liveness + readiness probes
 - **Background Jobs** -- APScheduler for async task scheduling
-- **Email** -- Resend integration for transactional email
-- **Testing** -- pytest (845 tests, backend) + Jest + Playwright (482 tests, frontend)
+- **Email** -- Resend transactional email (infrastructure-ready: service + templates included, wire your own triggers)
+- **Testing** -- pytest (863 tests, backend) + Jest + Playwright (494 tests, frontend)
 - **Generic CRUD Entity** -- "Items" module demonstrating the full pattern to extend
 
 ## Tech Stack
@@ -29,11 +29,11 @@ Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, fil
 | Backend | FastAPI, SQLAlchemy 2.0, Pydantic v2 |
 | Frontend | Next.js 15, React 18, TypeScript 5 |
 | Database | SQLite (Turso-ready with configuration) |
-| ORM | SQLAlchemy (backend), Drizzle (frontend) |
+| ORM | SQLAlchemy |
 | Auth | Clerk (JWT + JWKS verification) |
 | Payments | Stripe (Checkout, Portal, Webhooks) |
 | File Storage | S3/R2-compatible (presigned URLs) |
-| Email | Resend (transactional templates) |
+| Email | Resend (infrastructure-ready transactional templates) |
 | Styling | Tailwind CSS, shadcn/ui |
 | State | React Query, Zustand |
 | Real-time | WebSocket (JWT-authenticated) |
@@ -57,17 +57,15 @@ dualstack/
 │   │   ├── admin/            # Admin dashboard (user mgmt, audit, health)
 │   │   ├── billing/          # Stripe integration (checkout, portal, webhooks)
 │   │   └── files/            # File upload/download (S3/R2 presigned URLs)
-│   ├── tests/                # pytest (845 tests, 95% coverage)
+│   ├── tests/                # pytest (863 tests, 95% coverage)
 │   ├── alembic/              # DB migrations
 │   └── scripts/              # Seed scripts
 ├── frontend/                 # Next.js 15 (TypeScript)
 │   ├── src/
 │   │   ├── app/              # Pages (dashboard, items, billing, settings, auth, onboarding)
 │   │   ├── components/       # UI components (upload, onboarding, etc.)
-│   │   ├── db/               # Drizzle + Turso
 │   │   ├── lib/              # API clients, auth, utils
 │   │   └── hooks/            # React Query + WebSocket hooks
-│   └── drizzle/              # Frontend migrations
 └── monitoring/               # Prometheus + Grafana + Alertmanager
     ├── docker-compose.yml
     ├── prometheus/
@@ -314,12 +312,12 @@ Use any future expiry date, any CVC, and any postal code.
 ## Running Tests
 
 ```bash
-# Backend (845 tests)
+# Backend (863 tests)
 cd backend
 pip install -r requirements-dev.txt
 pytest --cov=app --cov-report=term-missing tests/
 
-# Frontend (482 tests)
+# Frontend (494 tests)
 cd frontend
 pnpm test
 pnpm run test:coverage

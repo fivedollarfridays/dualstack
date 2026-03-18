@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup check-env dev test build clean seed lint format smoke
+.PHONY: help setup check-env dev test build clean seed lint format smoke dist
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -70,3 +70,6 @@ clean: ## Stop services and remove build artifacts
 	find backend -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	rm -rf frontend/node_modules/.cache frontend/.next
 	@echo "==> Clean complete"
+
+dist: ## Create distributable zip for marketplace delivery
+	@./scripts/dist.sh

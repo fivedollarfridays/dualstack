@@ -81,7 +81,7 @@ def test_has_not_included_table(listing_content: str) -> None:
 def test_has_badge_row(listing_content: str) -> None:
     """Must have badge row with actual metrics."""
     assert "Badge row" in listing_content or "badge row" in listing_content
-    assert "1,356" in listing_content or "1356" in listing_content
+    assert "1,357" in listing_content or "1357" in listing_content
     assert "95%" in listing_content
 
 

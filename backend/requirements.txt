@@ -46,3 +46,6 @@ boto3==1.42.31
 
 # Background jobs
 APScheduler==3.11.2
+
+# Security pins (transitive dependencies)
+pyasn1>=0.6.3,<1.0

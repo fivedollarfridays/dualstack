@@ -116,8 +116,8 @@ class TestReadmeBadge:
         readme_path = ROOT / "README.md"
         self.content = readme_path.read_text()
 
-    def test_badge_shows_1334_tests(self) -> None:
-        assert "tests-1334_passing" in self.content
+    def test_badge_shows_1357_tests(self) -> None:
+        assert "tests-1357_passing" in self.content
 
 
 class TestRequirementsDev:

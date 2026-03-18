@@ -36,7 +36,7 @@ You get a complete, tested, audited codebase that goes from `git clone` to runni
 - Prometheus + Grafana + Alertmanager monitoring stack (Docker Compose)
 - Background job scheduler (APScheduler)
 - Makefile-driven setup — `make setup && make dev` and you're running
-- Resend email integration for transactional email
+- Resend email integration for transactional email (infrastructure-ready)
 - Environment configuration with `.env.example` for every service
 - Generic CRUD entity ("Items") demonstrating the full-stack pattern to extend
 
@@ -48,9 +48,9 @@ DualStack gives you the Python/FastAPI foundation with a modern Next.js frontend
 
 **The numbers:**
 
-- 1,356 tests passing (95% coverage)
+- 1,357 tests passing (95% coverage)
 - 0 security vulnerabilities (audited, CVE patched)
-- 863 backend tests + 493 frontend tests
+- 863 backend tests + 494 frontend tests
 - 102 kB shared JS bundle
 - 84-second deploy time (clone to running)
 - Built-in monitoring (Prometheus + Grafana + Alertmanager)
@@ -85,7 +85,7 @@ GitHub repo access with full source code. Lifetime updates. No subscription, no 
 
 | Feature | DualStack ($79) | ShipFast ($179) | Supastarter ($299) | Makerkit ($249) |
 |---------|:-:|:-:|:-:|:-:|
-| Test coverage | 95% (1,356 tests) | Minimal | Partial | Partial |
+| Test coverage | 95% (1,357 tests) | Minimal | Partial | Partial |
 | Backend language | Python (FastAPI) | Node.js | Node.js | Node.js |
 | Database options | SQLite + PostgreSQL | PostgreSQL | PostgreSQL/Supabase | PostgreSQL/Supabase |
 | Monitoring stack | Prometheus + Grafana + Alertmanager | No | No | No |
@@ -115,7 +115,7 @@ GitHub repo access with full source code. Lifetime updates. No subscription, no 
 ### Badge row (paste into README and product images)
 
 ```
-![Tests](https://img.shields.io/badge/tests-1%2C356_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102_kB-blue) ![Deploy](https://img.shields.io/badge/deploy-84_seconds-blue) ![Deps](https://img.shields.io/badge/deps-up_to_date-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
+![Tests](https://img.shields.io/badge/tests-1%2C357_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102_kB-blue) ![Deploy](https://img.shields.io/badge/deploy-84_seconds-blue) ![Deps](https://img.shields.io/badge/deps-up_to_date-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
 ```
 
 ---
@@ -124,7 +124,7 @@ GitHub repo access with full source code. Lifetime updates. No subscription, no 
 
 **Line 1 (large):** DualStack
 **Line 2 (medium):** Python-powered SaaS scaffold
-**Line 3 (small, badge row):** 1,356 tests | 0 vulnerabilities | 84s deploy
+**Line 3 (small, badge row):** 1,357 tests | 0 vulnerabilities | 84s deploy
 **Line 4 (price):** $79 one-time
 
 ---
