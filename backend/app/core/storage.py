@@ -1,9 +1,13 @@
 """S3/R2-compatible object storage service with presigned URL generation."""
 
+import logging
+
 import boto3
 
 from app.core.config import get_settings
 from app.core.errors import StorageError
+
+logger = logging.getLogger(__name__)
 
 
 class StorageService:
@@ -27,7 +31,8 @@ class StorageService:
                 ExpiresIn=expires_in,
             )
         except Exception as exc:
-            raise StorageError(message=f"Failed to generate upload URL: {exc}") from exc
+            logger.exception("Upload URL generation failed for key=%s", key)
+            raise StorageError(message="Upload URL generation failed") from exc
 
     def generate_download_url(self, key: str, expires_in: int = 3600) -> str:
         try:
@@ -37,15 +42,15 @@ class StorageService:
                 ExpiresIn=expires_in,
             )
         except Exception as exc:
-            raise StorageError(
-                message=f"Failed to generate download URL: {exc}"
-            ) from exc
+            logger.exception("Download URL generation failed for key=%s", key)
+            raise StorageError(message="Download URL generation failed") from exc
 
     def delete_object(self, key: str) -> None:
         try:
             self._client.delete_object(Bucket=self.bucket, Key=key)
         except Exception as exc:
-            raise StorageError(message=f"Failed to delete object: {exc}") from exc
+            logger.exception("File deletion failed for key=%s", key)
+            raise StorageError(message="File deletion failed") from exc
 
 
 def get_storage_service() -> StorageService:

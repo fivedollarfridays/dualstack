@@ -51,3 +51,9 @@ playwright/.clerk/
 # Monitoring (secrets)
 monitoring/grafana/data/
 monitoring/prometheus/data/
+
+# Planning/audit docs (contain sensitive operational data)
+audit-report.md
+product-line-plan.md
+sprint-estimates.md
+dualstack-sellable.md

@@ -216,6 +216,42 @@ describe('useWebSocket', () => {
     });
   });
 
+  it('stops retrying after MAX_RETRIES', async () => {
+    jest.useFakeTimers();
+    mockGetToken.mockResolvedValue('test-token');
+
+    renderHook(() => useWebSocket());
+
+    // Simulate 5 close events (MAX_RETRIES = 5) with advancing timers
+    for (let i = 0; i < 5; i++) {
+      await waitFor(() => {
+        expect(MockWebSocket.instances.length).toBe(i + 1);
+      });
+      act(() => {
+        MockWebSocket.instances[i].onclose?.();
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(2000 * Math.pow(2, i));
+      });
+    }
+
+    await waitFor(() => {
+      expect(MockWebSocket.instances.length).toBe(6);
+    });
+
+    // Close the 6th — should NOT retry (retries exhausted)
+    const countBefore = MockWebSocket.instances.length;
+    act(() => {
+      MockWebSocket.instances[5].onclose?.();
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(100000);
+    });
+
+    expect(MockWebSocket.instances.length).toBe(countBefore);
+    jest.useRealTimers();
+  });
+
   it('cleans up socket on unmount', async () => {
     mockGetToken.mockResolvedValue('test-token');
 

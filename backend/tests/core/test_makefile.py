@@ -101,7 +101,7 @@ class TestDevTarget:
 
     def test_starts_frontend(self) -> None:
         content = _read_makefile()
-        assert re.search(r"npm run dev", content)
+        assert re.search(r"pnpm dev", content)
 
     def test_starts_monitoring(self) -> None:
         content = _read_makefile()

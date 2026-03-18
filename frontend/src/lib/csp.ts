@@ -17,7 +17,10 @@ const CSP_SUFFIX =
   "font-src 'self'; " +
   "connect-src 'self' https://*.clerk.accounts.dev https://api.stripe.com; " +
   "frame-src https://js.stripe.com https://*.clerk.accounts.dev; " +
-  "worker-src 'self' blob:";
+  "worker-src 'self' blob:; " +
+  "form-action 'self'; " +
+  "base-uri 'none'; " +
+  "object-src 'none'";
 
 /**
  * Build a Content-Security-Policy header value with a nonce.

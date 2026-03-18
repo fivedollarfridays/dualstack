@@ -144,10 +144,17 @@ This creates all tables in your local SQLite database. For production, set `DATA
 ### Seed Demo Data
 
 ```bash
-python scripts/seed.py
+make seed
 ```
 
-This inserts sample items so you have data to work with immediately.
+Or manually:
+
+```bash
+cd backend
+python -m scripts.seed
+```
+
+This inserts a demo user and sample items so you have data to work with immediately.
 
 ## Step 4: Start Development
 

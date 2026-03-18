@@ -81,7 +81,7 @@ async def delete_user_account(
     """Delete the authenticated user's account. Requires confirmation header."""
     if not x_confirm_delete or x_confirm_delete != CONFIRM_PHRASE:
         raise ValidationError(
-            message=f'Set X-Confirm-Delete header to "{CONFIRM_PHRASE}" to confirm.'
+            message="Account deletion requires confirmation via the X-Confirm-Delete header."
         )
     await delete_account(db, user_id)
     await persist_audit_event(
