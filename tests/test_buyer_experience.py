@@ -224,3 +224,53 @@ class TestCriticalPaths:
             "GETTING_STARTED.md should use 'make seed' or 'python -m scripts.seed', "
             "not 'python scripts/seed.py' (causes ImportError)"
         )
+
+
+
+class TestEnvCleanup:
+    """Verify stale env files are removed and env example is complete."""
+
+    def test_no_env_local_in_tree(self) -> None:
+        """frontend/.env.local must not exist — it contains pk_test_placeholder."""
+        path = ROOT / "frontend" / ".env.local"
+        assert not path.is_file(), (
+            "frontend/.env.local must be deleted — pk_test_placeholder breaks Clerk auth"
+        )
+
+    def test_env_example_has_ws_url(self) -> None:
+        """frontend/.env.example must include NEXT_PUBLIC_WS_URL."""
+        text = (ROOT / "frontend" / ".env.example").read_text()
+        assert "NEXT_PUBLIC_WS_URL" in text, (
+            "frontend/.env.example must include NEXT_PUBLIC_WS_URL"
+        )
+
+    def test_env_example_stripe_has_comment(self) -> None:
+        """The line before NEXT_PUBLIC_STRIPE_PRO_PRICE_ID must describe it."""
+        lines = (ROOT / "frontend" / ".env.example").read_text().splitlines()
+        for i, line in enumerate(lines):
+            if "NEXT_PUBLIC_STRIPE_PRO_PRICE_ID" in line and not line.startswith("#"):
+                assert i > 0, "Stripe price ID cannot be the first line"
+                assert "Stripe" in lines[i - 1], (
+                    "Line before NEXT_PUBLIC_STRIPE_PRO_PRICE_ID must contain "
+                    "a descriptive comment mentioning 'Stripe'"
+                )
+                return
+        pytest.fail("NEXT_PUBLIC_STRIPE_PRO_PRICE_ID not found in .env.example")
+
+
+class TestLockfileConsistency:
+    """Verify the repo uses pnpm exclusively — no npm lockfiles."""
+
+    def test_no_npm_lockfile(self) -> None:
+        """frontend/package-lock.json must not exist — we use pnpm."""
+        path = ROOT / "frontend" / "package-lock.json"
+        assert not path.is_file(), (
+            "frontend/package-lock.json must be deleted — project uses pnpm"
+        )
+
+    def test_pnpm_lockfile_exists(self) -> None:
+        """Root pnpm-lock.yaml must exist for reproducible installs."""
+        path = ROOT / "pnpm-lock.yaml"
+        assert path.is_file(), (
+            "pnpm-lock.yaml must exist at project root"
+        )
