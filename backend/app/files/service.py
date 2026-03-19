@@ -70,29 +70,30 @@ async def list_files(
     return files, total
 
 
-async def get_download_url(
-    db: AsyncSession, storage: StorageService, file_id: str, user_id: str
-) -> str:
+async def _get_file_record(
+    db: AsyncSession, file_id: str, user_id: str
+) -> FileRecord:
+    """Fetch a file record scoped to the user, or raise NotFoundError."""
     q = select(FileRecord).where(
         FileRecord.id == file_id, FileRecord.user_id == user_id
     )
     record = (await db.execute(q)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(message="File not found")
+    return record
 
+
+async def get_download_url(
+    db: AsyncSession, storage: StorageService, file_id: str, user_id: str
+) -> str:
+    record = await _get_file_record(db, file_id, user_id)
     return storage.generate_download_url(record.storage_key)
 
 
 async def delete_file(
     db: AsyncSession, storage: StorageService, file_id: str, user_id: str
 ) -> None:
-    q = select(FileRecord).where(
-        FileRecord.id == file_id, FileRecord.user_id == user_id
-    )
-    record = (await db.execute(q)).scalar_one_or_none()
-    if record is None:
-        raise NotFoundError(message="File not found")
-
+    record = await _get_file_record(db, file_id, user_id)
     storage.delete_object(record.storage_key)
     await db.delete(record)
     await db.commit()

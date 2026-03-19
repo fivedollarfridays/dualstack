@@ -111,6 +111,16 @@ class TestDeleteObject:
 
 
 class TestGetStorageService:
+    def setup_method(self):
+        from app.core.storage import reset_storage_service
+
+        reset_storage_service()
+
+    def teardown_method(self):
+        from app.core.storage import reset_storage_service
+
+        reset_storage_service()
+
     @patch("app.core.storage.get_settings")
     @patch("app.core.storage.boto3")
     def test_creates_service_with_configured_settings(self, mock_boto3, mock_settings):

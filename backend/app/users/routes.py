@@ -83,7 +83,8 @@ async def delete_user_account(
         raise ValidationError(
             message="Account deletion requires confirmation via the X-Confirm-Delete header."
         )
-    await delete_account(db, user_id)
+    # Persist audit event BEFORE deletion — delete_account commits the session,
+    # so a post-delete flush would never be committed.
     await persist_audit_event(
         db,
         user_id=user_id,
@@ -91,4 +92,5 @@ async def delete_user_account(
         resource_type="user",
         resource_id=user_id,
     )
+    await delete_account(db, user_id)
     return Response(status_code=204)

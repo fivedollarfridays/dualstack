@@ -19,11 +19,15 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     try:
         user_id = await authenticate_ws(websocket)
     except Exception:
+        # Accept then immediately close — ASGI requires accept before close frame.
+        await websocket.accept()
         await websocket.close(code=4001, reason="Authentication failed")
         return
 
     await websocket.accept()
-    await manager.connect(websocket, user_id=user_id)
+    connected = await manager.connect(websocket, user_id=user_id)
+    if not connected:
+        return
 
     try:
         while True:

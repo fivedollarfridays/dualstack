@@ -24,13 +24,15 @@ class ConnectionManager:
     def active_count(self) -> int:
         return len(self._connections)
 
-    async def connect(self, websocket: WebSocket, user_id: str) -> None:
+    async def connect(self, websocket: WebSocket, user_id: str) -> bool:
+        """Register a WebSocket connection. Returns False if rejected."""
         if len(self._user_connections[user_id]) >= MAX_CONNECTIONS_PER_USER:
             logger.warning("User %s exceeded max WS connections (%d)", user_id, MAX_CONNECTIONS_PER_USER)
             await websocket.close(code=4008, reason="Too many connections")
-            return
+            return False
         self._connections[websocket] = user_id
         self._user_connections[user_id].add(websocket)
+        return True
 
     def disconnect(self, websocket: WebSocket) -> None:
         user_id = self._connections.pop(websocket, None)

@@ -3,9 +3,6 @@ import { useAppAuth } from '@/contexts/auth-context';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws';
 
-if (process.env.NODE_ENV === 'production' && WS_URL.startsWith('ws://')) {
-  console.error('[Security] NEXT_PUBLIC_WS_URL must use wss:// in production');
-}
 const MAX_RETRIES = 5;
 const BASE_DELAY_MS = 1000;
 
@@ -21,7 +18,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { getToken } = useAppAuth();
   const wsRef = useRef<WebSocket | null>(null);
   const retriesRef = useRef(0);
+  const onMessageRef = useRef(onMessage);
+  const enabledRef = useRef(enabled);
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+
+  // Keep refs in sync without triggering reconnects
+  onMessageRef.current = onMessage;
+  enabledRef.current = enabled;
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' && WS_URL.startsWith('ws://')) {
+      console.error('[Security] NEXT_PUBLIC_WS_URL must use wss:// in production');
+    }
+  }, []);
 
   const connect = useCallback(async () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -42,23 +51,23 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     };
 
     ws.onmessage = (event) => {
-      onMessage?.(event);
+      onMessageRef.current?.(event);
     };
 
     ws.onclose = () => {
       setStatus('disconnected');
       wsRef.current = null;
-      if (enabled && retriesRef.current < MAX_RETRIES) {
+      if (enabledRef.current && retriesRef.current < MAX_RETRIES) {
         const delay = BASE_DELAY_MS * Math.pow(2, retriesRef.current);
         retriesRef.current += 1;
-        setTimeout(() => { if (enabled) connect(); }, delay);
+        setTimeout(() => { if (enabledRef.current) connect(); }, delay);
       }
     };
 
     ws.onerror = () => {
       ws.close();
     };
-  }, [getToken, onMessage, enabled]);
+  }, [getToken]);
 
   useEffect(() => {
     if (!enabled) return;

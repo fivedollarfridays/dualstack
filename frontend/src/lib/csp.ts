@@ -15,7 +15,7 @@ const CSP_SUFFIX =
   "'; " +
   "img-src 'self' data: https://*.clerk.accounts.dev https://img.clerk.com; " +
   "font-src 'self'; " +
-  "connect-src 'self' https://*.clerk.accounts.dev https://api.stripe.com; " +
+  "connect-src 'self' https://*.clerk.accounts.dev https://api.stripe.com wss: ws:; " +
   "frame-src https://js.stripe.com https://*.clerk.accounts.dev; " +
   "worker-src 'self' blob:; " +
   "form-action 'self'; " +

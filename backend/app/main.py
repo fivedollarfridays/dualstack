@@ -4,7 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import stripe
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
@@ -117,7 +117,8 @@ def _register_routers(application: FastAPI) -> None:
         logger.info("WebSocket module not available: %s", e)
 
     @application.get("/")
-    async def root():
+    @limiter.limit("120/minute")
+    async def root(request: Request):
         return {"message": "DualStack API", "status": "running"}
 
 

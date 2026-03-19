@@ -21,6 +21,11 @@ class Base(DeclarativeBase):
     pass
 
 
+def escape_like(value: str) -> str:
+    """Escape SQL LIKE wildcards for safe use in ILIKE/LIKE patterns."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def enable_query_metrics_for_testing():
     """Enable query metrics even in test mode.
 
@@ -85,8 +90,9 @@ def get_alembic_database_url() -> str:
             return f"sqlite:///./{path}"
         if url.startswith("libsql://"):
             host = url.removeprefix("libsql://")
-
             token = settings.turso_auth_token
+            # Note: authToken is embedded in the URL for sqlalchemy-libsql compatibility.
+            # Ensure Alembic/SQLAlchemy log level is INFO+ in production to avoid leaking it.
             return f"sqlite+libsql://{host}?authToken={token}&secure=true"
         return url.replace("+aiosqlite", "")
 
