@@ -21,13 +21,13 @@ ALLOWED_CONTENT_TYPES = frozenset(
 class UploadUrlRequest(BaseModel):
     filename: str = Field(..., min_length=1, max_length=255)
     content_type: str = Field(..., min_length=1, max_length=127)
-    size: int = Field(..., gt=0)
+    size: int = Field(..., gt=0, le=104857600)
 
     @field_validator("content_type")
     @classmethod
     def validate_content_type(cls, v: str) -> str:
         if v not in ALLOWED_CONTENT_TYPES:
-            raise ValueError(f"Content type '{v}' is not allowed")
+            raise ValueError("Content type is not allowed")
         return v
 
 

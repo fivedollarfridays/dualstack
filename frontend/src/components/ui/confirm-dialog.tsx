@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface ConfirmDialogProps {
@@ -21,6 +21,7 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open && cancelRef.current) {
@@ -28,13 +29,41 @@ export function ConfirmDialog({
     }
   }, [open]);
 
-  if (!open) return null;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+        return;
+      }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') {
-      onCancel();
-    }
-  }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusableSelector =
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusableElements = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector)
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    },
+    [onCancel]
+  );
+
+  if (!open) return null;
 
   return (
     <div
@@ -44,7 +73,7 @@ export function ConfirmDialog({
       aria-labelledby="confirm-dialog-title"
       onKeyDown={handleKeyDown}
     >
-      <div className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6">
+      <div ref={dialogRef} className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6">
         <h2 id="confirm-dialog-title" className="text-lg font-semibold text-white">
           {title}
         </h2>

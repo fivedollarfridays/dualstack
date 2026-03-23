@@ -38,3 +38,22 @@ class PortalRequest(BaseModel):
 class WebhookPayload(BaseModel):
     type: str
     data: dict
+
+
+class CheckoutResponse(BaseModel):
+    """Response from checkout session creation."""
+
+    url: str
+
+
+class PortalResponse(BaseModel):
+    """Response from portal session creation."""
+
+    url: str
+
+
+class WebhookResponse(BaseModel):
+    """Response from webhook processing."""
+
+    handled: bool
+    type: str

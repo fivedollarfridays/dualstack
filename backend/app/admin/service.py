@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.models import AuditLog
+from app.core.database import escape_like
 from app.core.errors import NotFoundError, ValidationError
 from app.core.rbac import Role
 from app.users.models import User
@@ -20,8 +21,7 @@ async def list_users(
     count_base = select(func.count()).select_from(User)
 
     if search:
-        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        pattern = f"%{escaped}%"
+        pattern = f"%{escape_like(search)}%"
         condition = User.clerk_user_id.ilike(pattern)
         base = base.where(condition)
         count_base = count_base.where(condition)
@@ -34,15 +34,13 @@ async def list_users(
     return users, total
 
 
-async def assign_role(
-    db: AsyncSession, user_id: str, role: str, admin_clerk_id: str | None = None
-) -> User:
+async def assign_role(db: AsyncSession, user_id: str, role: str) -> User:
     """Assign a role to a user by their internal ID."""
     # Validate role value
     try:
         Role(role)
     except ValueError:
-        raise ValidationError(message=f"Invalid role: {role}")
+        raise ValidationError(message="Invalid role value")
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()

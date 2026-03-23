@@ -51,12 +51,15 @@ class UserProfileUpdate(BaseModel):
     @field_validator("display_name")
     @classmethod
     def sanitize_display_name(cls, v: str | None) -> str | None:
-        """Escape HTML-significant characters to prevent stored XSS."""
+        """Strip < and > to prevent script injection while storing raw Unicode.
+
+        Safe because display_name is only rendered via React JSX text
+        interpolation, which auto-escapes. Must NOT be used in
+        dangerouslySetInnerHTML, email templates, or raw HTML contexts.
+        """
         if not v:
             return v
-        import html
-
-        return html.escape(v, quote=True)
+        return v.replace("<", "").replace(">", "")
 
     @field_validator("avatar_url")
     @classmethod

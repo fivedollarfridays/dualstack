@@ -4,7 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import stripe
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
@@ -35,6 +35,20 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("STRIPE_WEBHOOK_SECRET must be set in production")
     if settings.environment == "production" and not settings.clerk_jwks_url:
         raise RuntimeError("CLERK_JWKS_URL must be set in production")
+    if (
+        settings.environment == "production"
+        and settings.clerk_jwks_url
+        and not settings.clerk_audience
+    ):
+        raise RuntimeError(
+            "CLERK_AUDIENCE must be set in production when CLERK_JWKS_URL is configured. "
+            "This prevents cross-app JWT replay attacks."
+        )
+    if settings.clerk_jwks_url and not settings.clerk_audience:
+        logger.warning(
+            "WARNING: CLERK_AUDIENCE is not set. JWT audience validation is disabled. "
+            "Set CLERK_AUDIENCE before deploying to production."
+        )
     if not settings.clerk_jwks_url:
         logger.warning(
             "WARNING: Running without Clerk JWT validation. All X-User-ID headers "
@@ -117,7 +131,8 @@ def _register_routers(application: FastAPI) -> None:
         logger.info("WebSocket module not available: %s", e)
 
     @application.get("/")
-    async def root():
+    @limiter.limit("120/minute")
+    async def root(request: Request):
         return {"message": "DualStack API", "status": "running"}
 
 

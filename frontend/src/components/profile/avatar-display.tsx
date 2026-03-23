@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 interface AvatarDisplayProps {
   avatarUrl: string | null;
   displayName: string | null;
@@ -13,7 +15,7 @@ export function AvatarDisplay({ avatarUrl, displayName, size = 64 }: AvatarDispl
 
   if (avatarUrl) {
     return (
-      <img
+      <Image
         src={avatarUrl}
         alt={displayName ?? 'User avatar'}
         width={size}

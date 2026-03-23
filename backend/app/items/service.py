@@ -7,6 +7,7 @@ from typing import Literal
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import escape_like
 from app.core.errors import NotFoundError
 from app.items.models import Item
 from app.items.schemas import ItemCreate, ItemUpdate
@@ -61,8 +62,7 @@ async def list_items(
     count_base = select(func.count()).select_from(Item).where(Item.user_id == user_id)
 
     if search:
-        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        pattern = f"%{escaped}%"
+        pattern = f"%{escape_like(search)}%"
         search_cond = or_(Item.title.ilike(pattern), Item.description.ilike(pattern))
         base = base.where(search_cond)
         count_base = count_base.where(search_cond)

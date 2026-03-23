@@ -53,11 +53,24 @@ class StorageService:
             raise StorageError(message="File deletion failed") from exc
 
 
+_storage_service: StorageService | None = None
+
+
+def reset_storage_service() -> None:
+    """Reset the cached storage service (for testing)."""
+    global _storage_service
+    _storage_service = None
+
+
 def get_storage_service() -> StorageService:
-    """Create a StorageService from environment settings."""
+    """Get or create a cached StorageService singleton."""
+    global _storage_service
+    if _storage_service is not None:
+        return _storage_service
+
     settings = get_settings()
 
-    if not settings.storage_bucket or not settings.storage_access_key:
+    if not settings.storage_bucket or not settings.storage_access_key or not settings.storage_secret_key:
         raise StorageError(message="Object storage is not configured")
 
     client = boto3.client(
@@ -67,4 +80,5 @@ def get_storage_service() -> StorageService:
         aws_secret_access_key=settings.storage_secret_key,
         region_name=settings.storage_region,
     )
-    return StorageService(client=client, bucket=settings.storage_bucket)
+    _storage_service = StorageService(client=client, bucket=settings.storage_bucket)
+    return _storage_service

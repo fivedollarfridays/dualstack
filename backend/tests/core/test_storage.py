@@ -111,6 +111,16 @@ class TestDeleteObject:
 
 
 class TestGetStorageService:
+    def setup_method(self):
+        from app.core.storage import reset_storage_service
+
+        reset_storage_service()
+
+    def teardown_method(self):
+        from app.core.storage import reset_storage_service
+
+        reset_storage_service()
+
     @patch("app.core.storage.get_settings")
     @patch("app.core.storage.boto3")
     def test_creates_service_with_configured_settings(self, mock_boto3, mock_settings):
@@ -145,6 +155,19 @@ class TestGetStorageService:
         settings = MagicMock()
         settings.storage_bucket = ""
         settings.storage_access_key = ""
+        mock_settings.return_value = settings
+
+        with pytest.raises(StorageError, match="not configured"):
+            get_storage_service()
+
+    @patch("app.core.storage.get_settings")
+    def test_raises_when_secret_key_empty(self, mock_settings):
+        from app.core.storage import get_storage_service
+
+        settings = MagicMock()
+        settings.storage_bucket = "my-bucket"
+        settings.storage_access_key = "key123"
+        settings.storage_secret_key = ""
         mock_settings.return_value = settings
 
         with pytest.raises(StorageError, match="not configured"):

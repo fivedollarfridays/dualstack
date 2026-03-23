@@ -106,3 +106,38 @@ describe('DashboardLayout', () => {
     expect(mobileNav).toHaveClass('hidden');
   });
 });
+
+describe('DashboardLayout ErrorBoundary', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('catches child render errors and shows fallback', () => {
+    function BrokenChild(): JSX.Element {
+      throw new Error('Page crash');
+    }
+
+    render(
+      <DashboardLayout>
+        <BrokenChild />
+      </DashboardLayout>
+    );
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+
+  it('renders page content normally when no error occurs', () => {
+    render(
+      <DashboardLayout>
+        <div>Dashboard page</div>
+      </DashboardLayout>
+    );
+
+    expect(screen.getByText('Dashboard page')).toBeInTheDocument();
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
+  });
+});

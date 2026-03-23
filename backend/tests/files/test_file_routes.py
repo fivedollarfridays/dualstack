@@ -85,7 +85,7 @@ class TestUploadUrl:
                 "size": 200_000_000,
             },
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 class TestContentTypeValidationRoute:

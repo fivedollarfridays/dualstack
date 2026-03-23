@@ -1,4 +1,4 @@
-"""WebSocket authentication — verify token from query param or dev header."""
+"""WebSocket authentication — verify token from first-message or query param."""
 
 import asyncio
 import logging
@@ -58,9 +58,29 @@ async def _verify_token(token: str, jwks_url: str) -> str:
         raise AuthenticationError(message="Invalid or expired token") from exc
 
 
-async def authenticate_ws(websocket: WebSocket) -> str:
-    """Authenticate a WebSocket connection.
+async def authenticate_ws_from_message(token: str) -> str:
+    """Authenticate a WebSocket connection from a first-message JWT.
 
+    In dev mode (no clerk_jwks_url): treats token as user_id directly.
+    In production: validates the JWT via JWKS.
+    """
+    settings = get_settings()
+
+    if not token:
+        raise AuthenticationError(message="Token is required")
+
+    if not settings.clerk_jwks_url:
+        if settings.environment == "production":
+            raise AuthenticationError(message="Dev-mode auth is disabled in production")
+        return token
+
+    return await _verify_token(token, settings.clerk_jwks_url)
+
+
+async def authenticate_ws(websocket: WebSocket) -> str:
+    """Authenticate a WebSocket connection (legacy query-param method).
+
+    Deprecated: Use authenticate_ws_from_message with first-message pattern.
     In dev mode (no clerk_jwks_url): trusts user_id query param.
     In production: validates token query param.
     """

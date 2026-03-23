@@ -1,5 +1,5 @@
 /**
- * Tests for useWebSocket hook.
+ * Tests for useWebSocket hook — first-message auth pattern.
  */
 import { renderHook, act, waitFor } from '@testing-library/react';
 
@@ -23,6 +23,7 @@ class MockWebSocket {
   close = jest.fn(() => {
     this.readyState = 3;
   });
+  send = jest.fn();
 
   constructor(url: string) {
     this.url = url;
@@ -48,8 +49,8 @@ beforeEach(() => {
   mockGetToken.mockReset();
 });
 
-describe('useWebSocket', () => {
-  it('connects with auth token in query param', async () => {
+describe('useWebSocket — first-message auth', () => {
+  it('connects WITHOUT token in URL query string', async () => {
     mockGetToken.mockResolvedValue('test-token');
 
     renderHook(() => useWebSocket());
@@ -58,10 +59,52 @@ describe('useWebSocket', () => {
       expect(MockWebSocket.instances.length).toBe(1);
     });
 
-    expect(MockWebSocket.instances[0].url).toContain('token=test-token');
+    // URL must NOT contain token query param
+    expect(MockWebSocket.instances[0].url).not.toContain('token=');
+    expect(MockWebSocket.instances[0].url).not.toContain('?');
   });
 
-  it('reports connected status after open', async () => {
+  it('sends auth message as first message after open', async () => {
+    mockGetToken.mockResolvedValue('my-jwt-token');
+
+    renderHook(() => useWebSocket());
+
+    await waitFor(() => {
+      expect(MockWebSocket.instances.length).toBe(1);
+    });
+
+    act(() => {
+      MockWebSocket.instances[0].simulateOpen();
+    });
+
+    expect(MockWebSocket.instances[0].send).toHaveBeenCalledWith(
+      JSON.stringify({ type: 'auth', token: 'my-jwt-token' })
+    );
+  });
+
+  it('transitions to connected only after auth_ok', async () => {
+    mockGetToken.mockResolvedValue('test-token');
+
+    const { result } = renderHook(() => useWebSocket());
+
+    await waitFor(() => {
+      expect(MockWebSocket.instances.length).toBe(1);
+    });
+
+    // After open, should still be connecting (waiting for auth_ok)
+    act(() => {
+      MockWebSocket.instances[0].simulateOpen();
+    });
+    expect(result.current.status).toBe('connecting');
+
+    // After auth_ok, should be connected
+    act(() => {
+      MockWebSocket.instances[0].simulateMessage('{"type":"auth_ok"}');
+    });
+    expect(result.current.status).toBe('connected');
+  });
+
+  it('closes connection if first message is not auth_ok', async () => {
     mockGetToken.mockResolvedValue('test-token');
 
     const { result } = renderHook(() => useWebSocket());
@@ -74,10 +117,15 @@ describe('useWebSocket', () => {
       MockWebSocket.instances[0].simulateOpen();
     });
 
-    expect(result.current.status).toBe('connected');
+    // Server sends an error instead of auth_ok
+    act(() => {
+      MockWebSocket.instances[0].simulateMessage('{"type":"auth_error"}');
+    });
+
+    expect(MockWebSocket.instances[0].close).toHaveBeenCalled();
   });
 
-  it('calls onMessage when message received', async () => {
+  it('forwards messages to onMessage after auth_ok', async () => {
     mockGetToken.mockResolvedValue('test-token');
     const onMessage = jest.fn();
 
@@ -87,11 +135,22 @@ describe('useWebSocket', () => {
       expect(MockWebSocket.instances.length).toBe(1);
     });
 
+    const ws = MockWebSocket.instances[0];
+
     act(() => {
-      MockWebSocket.instances[0].simulateOpen();
-      MockWebSocket.instances[0].simulateMessage('{"type":"item.created"}');
+      ws.simulateOpen();
     });
 
+    // auth_ok should NOT be forwarded to onMessage
+    act(() => {
+      ws.simulateMessage('{"type":"auth_ok"}');
+    });
+    expect(onMessage).not.toHaveBeenCalled();
+
+    // Subsequent messages should be forwarded
+    act(() => {
+      ws.simulateMessage('{"type":"item.created"}');
+    });
     expect(onMessage).toHaveBeenCalledWith({ data: '{"type":"item.created"}' });
   });
 
@@ -100,7 +159,6 @@ describe('useWebSocket', () => {
 
     const { result } = renderHook(() => useWebSocket());
 
-    // Wait for the async getToken to resolve
     await waitFor(() => {
       expect(result.current.status).toBe('disconnected');
     });
@@ -129,10 +187,11 @@ describe('useWebSocket', () => {
     const ws1 = MockWebSocket.instances[0];
     act(() => {
       ws1.simulateOpen();
+      ws1.simulateMessage('{"type":"auth_ok"}');
     });
     expect(result.current.status).toBe('connected');
 
-    // Simulate close — should trigger retry
+    // Simulate close
     act(() => {
       ws1.onclose?.();
     });
@@ -143,7 +202,6 @@ describe('useWebSocket', () => {
       jest.advanceTimersByTime(1100);
     });
 
-    // A second WebSocket instance should have been created for retry
     await waitFor(() => {
       expect(MockWebSocket.instances.length).toBe(2);
     });
@@ -171,7 +229,6 @@ describe('useWebSocket', () => {
   it('skips reconnect when socket is already open', async () => {
     mockGetToken.mockResolvedValue('test-token');
 
-    // Start with one onMessage, then change it to trigger useCallback change
     const onMessage1 = jest.fn();
     const { result, rerender } = renderHook(
       ({ onMsg }: { onMsg: (e: MessageEvent) => void }) =>
@@ -186,16 +243,14 @@ describe('useWebSocket', () => {
     const ws = MockWebSocket.instances[0];
     act(() => {
       ws.simulateOpen();
+      ws.simulateMessage('{"type":"auth_ok"}');
     });
     expect(result.current.status).toBe('connected');
 
-    // Change onMessage to create a new connect callback, triggering the effect
     const onMessage2 = jest.fn();
     rerender({ onMsg: onMessage2 });
 
-    // Give effect time to fire
     await waitFor(() => {
-      // Should still only have 1 instance because readyState === OPEN
       expect(MockWebSocket.instances.length).toBe(1);
     });
   });
@@ -212,6 +267,7 @@ describe('useWebSocket', () => {
     // Should not throw when onMessage is called without handler
     act(() => {
       MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0].simulateMessage('{"type":"auth_ok"}');
       MockWebSocket.instances[0].simulateMessage('test');
     });
   });
@@ -222,7 +278,6 @@ describe('useWebSocket', () => {
 
     renderHook(() => useWebSocket());
 
-    // Simulate 5 close events (MAX_RETRIES = 5) with advancing timers
     for (let i = 0; i < 5; i++) {
       await waitFor(() => {
         expect(MockWebSocket.instances.length).toBe(i + 1);
@@ -239,7 +294,7 @@ describe('useWebSocket', () => {
       expect(MockWebSocket.instances.length).toBe(6);
     });
 
-    // Close the 6th — should NOT retry (retries exhausted)
+    // Close the 6th - should NOT retry
     const countBefore = MockWebSocket.instances.length;
     act(() => {
       MockWebSocket.instances[5].onclose?.();
@@ -250,6 +305,23 @@ describe('useWebSocket', () => {
 
     expect(MockWebSocket.instances.length).toBe(countBefore);
     jest.useRealTimers();
+  });
+
+  it('refuses to connect on ws:// in production', async () => {
+    mockGetToken.mockResolvedValue('test-token');
+    const originalEnv = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = 'production';
+
+    const { result } = renderHook(() => useWebSocket());
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('disconnected');
+    });
+
+    expect(MockWebSocket.instances.length).toBe(0);
+
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('cleans up socket on unmount', async () => {
@@ -263,6 +335,7 @@ describe('useWebSocket', () => {
 
     act(() => {
       MockWebSocket.instances[0].simulateOpen();
+      MockWebSocket.instances[0].simulateMessage('{"type":"auth_ok"}');
     });
 
     unmount();

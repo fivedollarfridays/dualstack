@@ -339,3 +339,87 @@ class TestAuthenticateWebSocket:
 
             with pytest.raises(AuthenticationError):
                 await authenticate_ws(ws)
+
+
+# ---------------------------------------------------------------------------
+# authenticate_ws_from_message — first-message auth pattern
+# ---------------------------------------------------------------------------
+
+
+class TestAuthenticateWsFromMessage:
+    """Tests for authenticate_ws_from_message — takes raw JWT string."""
+
+    @pytest.fixture(autouse=True)
+    def _clear_jwk_cache(self):
+        from app.core import ws_auth
+
+        ws_auth._jwk_client_cache.clear()
+
+    async def test_valid_token_returns_user_id(self):
+        """A valid JWT string returns the user_id."""
+        from app.core.ws_auth import authenticate_ws_from_message
+
+        key = _generate_rsa_keypair()
+        token = _make_jwt(key, {"sub": "user-msg-1", "exp": int(time.time()) + 300})
+
+        mock_jwk = MagicMock()
+        mock_jwk.key = key.public_key()
+
+        with patch("app.core.ws_auth.PyJWKClient") as MockClient:
+            client_instance = MagicMock()
+            client_instance.get_signing_key_from_jwt.return_value = mock_jwk
+            MockClient.return_value = client_instance
+
+            with patch("app.core.ws_auth.get_settings") as mock_settings:
+                settings = MagicMock()
+                settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+                settings.clerk_audience = ""
+                mock_settings.return_value = settings
+
+                result = await authenticate_ws_from_message(token)
+
+        assert result == "user-msg-1"
+
+    async def test_invalid_token_raises(self):
+        """An invalid JWT string raises AuthenticationError."""
+        from app.core.ws_auth import authenticate_ws_from_message
+
+        with patch("app.core.ws_auth.get_settings") as mock_settings:
+            settings = MagicMock()
+            settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+            mock_settings.return_value = settings
+
+            with patch("app.core.ws_auth._verify_token") as mock_verify:
+                mock_verify.side_effect = AuthenticationError(
+                    message="Invalid or expired token"
+                )
+
+                with pytest.raises(AuthenticationError):
+                    await authenticate_ws_from_message("bad-jwt")
+
+    async def test_dev_mode_user_id_returns_directly(self):
+        """In dev mode (no JWKS URL), the token is treated as user_id."""
+        from app.core.ws_auth import authenticate_ws_from_message
+
+        with patch("app.core.ws_auth.get_settings") as mock_settings:
+            settings = MagicMock()
+            settings.clerk_jwks_url = ""
+            settings.environment = "development"
+            mock_settings.return_value = settings
+
+            result = await authenticate_ws_from_message("dev-user-123")
+
+        assert result == "dev-user-123"
+
+    async def test_dev_mode_rejected_in_production(self):
+        """Dev mode auth via first-message is rejected in production."""
+        from app.core.ws_auth import authenticate_ws_from_message
+
+        with patch("app.core.ws_auth.get_settings") as mock_settings:
+            settings = MagicMock()
+            settings.clerk_jwks_url = ""
+            settings.environment = "production"
+            mock_settings.return_value = settings
+
+            with pytest.raises(AuthenticationError):
+                await authenticate_ws_from_message("dev-user-123")

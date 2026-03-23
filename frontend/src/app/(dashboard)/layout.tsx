@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { AppUserButton } from '@/components/auth/app-user-button';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -84,7 +85,9 @@ export default function DashboardLayout({
 
         {/* Page content */}
         <main className="flex-1 p-6">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

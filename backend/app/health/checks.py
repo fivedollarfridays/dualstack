@@ -35,7 +35,7 @@ async def check_database() -> ServiceCheck:
 
 @router.get("/live", response_model=LivenessStatus)
 @limiter.limit("120/minute")
-async def liveness(request: Request):
+async def liveness(request: Request) -> LivenessStatus:
     """
     Liveness probe - is the application running?
 
@@ -47,7 +47,7 @@ async def liveness(request: Request):
 
 @router.get("/ready", response_model=ReadinessStatus)
 @limiter.limit("120/minute")
-async def readiness(request: Request, response: Response):
+async def readiness(request: Request, response: Response) -> ReadinessStatus:
     """
     Readiness probe - can the application serve traffic?
 
@@ -74,7 +74,7 @@ async def readiness(request: Request, response: Response):
 @router.get("", response_model=HealthStatus)
 @router.get("/", response_model=HealthStatus, include_in_schema=False)
 @limiter.limit("120/minute")
-async def health(request: Request):
+async def health(request: Request) -> HealthStatus:
     """
     General health check - status only.
 

@@ -7,11 +7,12 @@ Protected by optional API key via X-Metrics-Key header.
 
 import hmac
 
-from fastapi import APIRouter, Depends, Header, Response
+from fastapi import APIRouter, Depends, Header, Request, Response
 from prometheus_client import REGISTRY, generate_latest
 
 from app.core.config import get_settings
 from app.core.errors import AuthorizationError
+from app.core.rate_limit import limiter
 
 
 async def verify_metrics_key(x_metrics_key: str | None = Header(None)) -> None:
@@ -32,7 +33,8 @@ router = APIRouter()
 
 
 @router.get("/metrics", dependencies=[Depends(verify_metrics_key)])
-async def metrics() -> Response:
+@limiter.limit("60/minute")
+async def metrics(request: Request) -> Response:
     """Expose Prometheus metrics.
 
     Returns:

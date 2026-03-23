@@ -1,33 +1,61 @@
-"""WebSocket endpoint for real-time event streaming."""
+"""WebSocket endpoint for real-time event streaming (first-message auth)."""
 
+import asyncio
+import json
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.events import event_bus
 from app.core.websocket import manager
-from app.core.ws_auth import authenticate_ws
+from app.core.ws_auth import authenticate_ws_from_message
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+AUTH_TIMEOUT = 5.0  # seconds to wait for auth message
+
+
+async def _await_auth_message(websocket: WebSocket) -> str:
+    """Wait for the first-message auth handshake and return the user_id.
+
+    Raises on timeout, invalid message format, or authentication failure.
+    """
+    raw = await asyncio.wait_for(
+        websocket.receive_text(), timeout=AUTH_TIMEOUT
+    )
+    data = json.loads(raw)
+    if data.get("type") != "auth" or not data.get("token"):
+        raise ValueError("Invalid auth message")
+    return await authenticate_ws_from_message(data["token"])
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
-    """Authenticated WebSocket endpoint for real-time events."""
+    """Authenticated WebSocket endpoint using first-message auth pattern."""
+    await websocket.accept()
+
     try:
-        user_id = await authenticate_ws(websocket)
+        user_id = await _await_auth_message(websocket)
+    except asyncio.TimeoutError:
+        await websocket.close(code=4001, reason="Auth timeout")
+        return
+    except (json.JSONDecodeError, ValueError):
+        await websocket.close(code=4001, reason="Invalid auth message")
+        return
     except Exception:
         await websocket.close(code=4001, reason="Authentication failed")
         return
 
-    await websocket.accept()
-    await manager.connect(websocket, user_id=user_id)
+    await websocket.send_json({"type": "auth_ok"})
+
+    connected = await manager.connect(websocket, user_id=user_id)
+    if not connected:
+        return
 
     try:
         while True:
-            # Keep connection alive; client can send pings
             await websocket.receive_text()
     except WebSocketDisconnect:
         pass

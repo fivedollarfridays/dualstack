@@ -89,8 +89,8 @@ async def get_item_route(
 ) -> ItemResponse:
     """Get a single item by ID."""
     item = await get_item(db, item_id=item_id, user_id=user_id)
-    await persist_audit_event(
-        db, user_id=user_id, action="read", resource_type="item", resource_id=item_id
+    log_audit_event(
+        user_id=user_id, action="read", resource_type="item", resource_id=item_id
     )
     return ItemResponse.model_validate(item)
 

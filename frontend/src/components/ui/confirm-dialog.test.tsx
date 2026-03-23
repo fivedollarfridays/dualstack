@@ -123,4 +123,54 @@ describe('ConfirmDialog', () => {
     await user.keyboard('a');
     expect(onCancel).not.toHaveBeenCalled();
   });
+
+  it('traps focus forward with Tab within the dialog', async () => {
+    const user = userEvent.setup();
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Delete?"
+        message="Are you sure?"
+        confirmLabel="Delete"
+        onConfirm={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    );
+    const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+    const confirmBtn = screen.getByRole('button', { name: /delete/i });
+
+    // Cancel button should be focused initially
+    expect(cancelBtn).toHaveFocus();
+
+    // Tab to confirm button
+    await user.tab();
+    expect(confirmBtn).toHaveFocus();
+
+    // Tab should wrap back to cancel button (focus trap)
+    await user.tab();
+    expect(cancelBtn).toHaveFocus();
+  });
+
+  it('traps focus backward with Shift+Tab within the dialog', async () => {
+    const user = userEvent.setup();
+    render(
+      <ConfirmDialog
+        open={true}
+        title="Delete?"
+        message="Are you sure?"
+        confirmLabel="Delete"
+        onConfirm={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    );
+    const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+    const confirmBtn = screen.getByRole('button', { name: /delete/i });
+
+    // Cancel button should be focused initially
+    expect(cancelBtn).toHaveFocus();
+
+    // Shift+Tab should wrap to last focusable element (confirm button)
+    await user.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(confirmBtn).toHaveFocus();
+  });
 });

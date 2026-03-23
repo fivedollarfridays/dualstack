@@ -1,6 +1,6 @@
 """Tests for items API routes."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -239,7 +239,7 @@ class TestReadAuditEvents:
         item_id = create_resp.json()["id"]
 
         with patch(
-            "app.items.routes.persist_audit_event", new_callable=AsyncMock
+            "app.items.routes.log_audit_event"
         ) as mock_audit:
             await client.get(f"/api/v1/items/{item_id}", headers=USER_HEADERS)
             mock_audit.assert_called_once()

@@ -25,7 +25,7 @@ async def get_current_user(
     request: Request,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-):
+) -> SubscriptionInfoResponse:
     """Return the authenticated user's subscription info."""
     user = await get_user_by_clerk_id(db, user_id)
     plan, status = resolve_plan_status(user)
@@ -38,7 +38,7 @@ async def get_user_profile(
     request: Request,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-):
+) -> UserProfileResponse:
     """Return the authenticated user's full profile."""
     user = await get_user_by_clerk_id(db, user_id)
     if user is None:
@@ -53,7 +53,7 @@ async def update_user_profile(
     body: UserProfileUpdate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-):
+) -> UserProfileResponse:
     """Update the authenticated user's profile."""
     data = body.model_dump(exclude_unset=True)
     user = await update_profile(db, user_id, **data)
@@ -77,13 +77,14 @@ async def delete_user_account(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     x_confirm_delete: str | None = Header(None),
-):
+) -> Response:
     """Delete the authenticated user's account. Requires confirmation header."""
     if not x_confirm_delete or x_confirm_delete != CONFIRM_PHRASE:
         raise ValidationError(
             message="Account deletion requires confirmation via the X-Confirm-Delete header."
         )
-    await delete_account(db, user_id)
+    # Persist audit event BEFORE deletion — delete_account commits the session,
+    # so a post-delete flush would never be committed.
     await persist_audit_event(
         db,
         user_id=user_id,
@@ -91,4 +92,5 @@ async def delete_user_account(
         resource_type="user",
         resource_id=user_id,
     )
+    await delete_account(db, user_id)
     return Response(status_code=204)

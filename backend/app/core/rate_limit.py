@@ -8,6 +8,20 @@ from app.core.errors import RateLimitError
 from app.core.exception_handlers import app_error_handler
 
 
+_trusted_ips: set[str] | None = None
+
+
+def _get_trusted_ips() -> set[str]:
+    """Parse and cache the trusted proxy IP set."""
+    global _trusted_ips
+    if _trusted_ips is None:
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        _trusted_ips = {ip.strip() for ip in settings.forwarded_allow_ips.split(",")}
+    return _trusted_ips
+
+
 def get_client_ip(request: Request) -> str:
     """Extract the real client IP, respecting X-Forwarded-For from trusted proxies.
 
@@ -18,13 +32,9 @@ def get_client_ip(request: Request) -> str:
     Production requirement: Set FORWARDED_ALLOW_IPS to your reverse proxy's
     IP range, or configure uvicorn's --forwarded-allow-ips flag.
     """
-    from app.core.config import get_settings
-
     forwarded_for = request.headers.get("x-forwarded-for", "")
     if forwarded_for and request.client:
-        settings = get_settings()
-        trusted = {ip.strip() for ip in settings.forwarded_allow_ips.split(",")}
-        if request.client.host in trusted:
+        if request.client.host in _get_trusted_ips():
             return forwarded_for.split(",")[0].strip()
     if request.client:
         return request.client.host
