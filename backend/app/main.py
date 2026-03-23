@@ -69,9 +69,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         settings.environment == "production"
         and settings.forwarded_allow_ips == "127.0.0.1"
     ):
-        logger.warning(
-            "WARNING: FORWARDED_ALLOW_IPS is set to default '127.0.0.1'. "
-            "Set this to your reverse proxy's IP range in production."
+        raise RuntimeError(
+            "FORWARDED_ALLOW_IPS must be set to your reverse proxy's IP range "
+            "in production. The default '127.0.0.1' causes all clients to share "
+            "a single rate-limit bucket behind a load balancer."
         )
     if settings.environment == "production" and not settings.metrics_api_key:
         raise RuntimeError(

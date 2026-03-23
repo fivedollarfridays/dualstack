@@ -9,6 +9,7 @@ from collections import defaultdict
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.events import event_bus
+from app.core.rate_limit import resolve_client_ip
 from app.core.websocket import manager
 from app.core.ws_auth import authenticate_ws_from_message
 
@@ -81,7 +82,10 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     """Authenticated WebSocket endpoint using first-message auth pattern."""
     await websocket.accept()
 
-    client_ip = websocket.client.host if websocket.client else "unknown"
+    client_ip = resolve_client_ip(
+        direct_ip=websocket.client.host if websocket.client else None,
+        headers=dict(websocket.headers),
+    )
     if not _check_ws_rate_limit(client_ip):
         await websocket.close(code=4029, reason="Too many connections")
         return
