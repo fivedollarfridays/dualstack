@@ -154,7 +154,9 @@ class TestDownloadUrl:
         )
 
     async def test_returns_404_for_nonexistent_file(self, client):
-        response = await client.get("/api/v1/files/nonexistent/download-url")
+        response = await client.get(
+            "/api/v1/files/00000000-0000-0000-0000-000000000000/download-url"
+        )
         assert response.status_code == 404
 
 
@@ -176,7 +178,38 @@ class TestDeleteFile:
         assert list_resp.json()["total"] == 0
 
     async def test_returns_404_for_nonexistent_file(self, client):
-        response = await client.delete("/api/v1/files/nonexistent")
+        response = await client.delete(
+            "/api/v1/files/00000000-0000-0000-0000-000000000000"
+        )
+        assert response.status_code == 404
+
+
+class TestFileIdUuidValidation:
+    """file_id path params must be valid UUID format."""
+
+    async def test_download_url_rejects_non_uuid(self, client):
+        """GET /files/{file_id}/download-url rejects non-UUID file_id with 422."""
+        response = await client.get("/api/v1/files/not-a-uuid/download-url")
+        assert response.status_code == 422
+
+    async def test_delete_rejects_non_uuid(self, client):
+        """DELETE /files/{file_id} rejects non-UUID file_id with 422."""
+        response = await client.delete("/api/v1/files/not-a-uuid")
+        assert response.status_code == 422
+
+    async def test_download_url_accepts_valid_uuid(self, client):
+        """GET /files/{file_id}/download-url accepts valid UUID format (may 404)."""
+        response = await client.get(
+            "/api/v1/files/12345678-1234-1234-1234-123456789abc/download-url"
+        )
+        # Valid UUID format is accepted (404 because file doesn't exist)
+        assert response.status_code == 404
+
+    async def test_delete_accepts_valid_uuid(self, client):
+        """DELETE /files/{file_id} accepts valid UUID format (may 404)."""
+        response = await client.delete(
+            "/api/v1/files/12345678-1234-1234-1234-123456789abc"
+        )
         assert response.status_code == 404
 
 

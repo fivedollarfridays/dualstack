@@ -6,8 +6,8 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-# Import database base and URL helper
-from app.core.database import Base, get_alembic_database_url
+# Import database base and URL/connect_args helpers
+from app.core.database import Base, get_alembic_connect_args, get_alembic_database_url
 
 # Import all models so Alembic can detect them
 try:
@@ -64,10 +64,12 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
+    connect_args = get_alembic_connect_args()
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:

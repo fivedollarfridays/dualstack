@@ -25,12 +25,12 @@ def _get_operation_type(statement: str) -> str:
     return _OP_TYPE_MAP.get(keyword, "unknown")
 
 
-def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany) -> None:
     """Store query start time before execution."""
     conn.info["query_start_time"] = time.time()
 
 
-def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany) -> None:
     """Calculate and record query duration after execution."""
     global _db_query_duration_seconds
     if _db_query_duration_seconds is None:
@@ -46,7 +46,7 @@ def _after_cursor_execute(conn, cursor, statement, parameters, context, executem
         ).observe(duration)
 
 
-def register_query_metrics_listeners(engine, force: bool = False):
+def register_query_metrics_listeners(engine, force: bool = False) -> None:
     """Register database query metrics listeners on the engine.
 
     Only registers if not in test mode (TESTING env var != 'true').
@@ -63,7 +63,7 @@ def register_query_metrics_listeners(engine, force: bool = False):
     event.listen(engine, "after_cursor_execute", _after_cursor_execute)
 
 
-def reset_metrics_listeners():
+def reset_metrics_listeners() -> None:
     """Reset the registration flag so listeners can be re-registered on a new engine."""
     global _metrics_listeners_registered
     _metrics_listeners_registered = False

@@ -1,6 +1,7 @@
 """Rate limiting configuration using slowapi."""
 
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 
@@ -44,6 +45,6 @@ def get_client_ip(request: Request) -> str:
 limiter = Limiter(key_func=get_client_ip)
 
 
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """Convert slowapi's RateLimitExceeded to the app error format."""
     return await app_error_handler(request, RateLimitError())

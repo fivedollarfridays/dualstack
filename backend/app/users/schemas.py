@@ -48,19 +48,6 @@ class UserProfileUpdate(BaseModel):
     display_name: str | None = Field(None, min_length=1, max_length=255)
     avatar_url: str | None = Field(None, min_length=1, max_length=2000)
 
-    @field_validator("display_name")
-    @classmethod
-    def sanitize_display_name(cls, v: str | None) -> str | None:
-        """Strip < and > to prevent script injection while storing raw Unicode.
-
-        Safe because display_name is only rendered via React JSX text
-        interpolation, which auto-escapes. Must NOT be used in
-        dangerouslySetInnerHTML, email templates, or raw HTML contexts.
-        """
-        if not v:
-            return v
-        return v.replace("<", "").replace(">", "")
-
     @field_validator("avatar_url")
     @classmethod
     def validate_avatar_url(cls, v: str | None) -> str | None:

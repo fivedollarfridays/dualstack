@@ -5,7 +5,9 @@ SQLAlchemy 2.0 async setup with environment-specific drivers.
 Provides session management and base model class.
 """
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+import re
+
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import get_settings
@@ -26,7 +28,7 @@ def escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-def enable_query_metrics_for_testing():
+def enable_query_metrics_for_testing() -> None:
     """Enable query metrics even in test mode.
 
     Call this from tests that specifically test database metrics functionality.
@@ -90,13 +92,40 @@ def get_alembic_database_url() -> str:
             return f"sqlite:///./{path}"
         if url.startswith("libsql://"):
             host = url.removeprefix("libsql://")
-            token = settings.turso_auth_token
-            # Note: authToken is embedded in the URL for sqlalchemy-libsql compatibility.
-            # Ensure Alembic/SQLAlchemy log level is INFO+ in production to avoid leaking it.
-            return f"sqlite+libsql://{host}?authToken={token}&secure=true"
+            # Auth token is passed via connect_args (see get_alembic_connect_args),
+            # NOT in the URL, to prevent token leaks in logs.
+            return f"sqlite+libsql://{host}?secure=true"
         return url.replace("+aiosqlite", "")
 
     return "sqlite:///:memory:"
+
+
+def get_alembic_connect_args() -> dict:
+    """Get connect_args for Alembic engine creation.
+
+    Returns auth_token separately from the URL so it never appears
+    in log output from SQLAlchemy or Alembic.
+    """
+    settings = get_settings()
+
+    if not settings.database_url and settings.turso_database_url:
+        if settings.turso_database_url.startswith("libsql://"):
+            return {"auth_token": settings.turso_auth_token}
+
+    return {}
+
+
+def mask_database_url(url: str) -> str:
+    """Mask secrets in a database URL for safe logging.
+
+    Replaces authToken query parameter values and user:password
+    credentials with '***'.
+    """
+    # Mask authToken=xxx query parameter
+    masked = re.sub(r"authToken=[^&]*", "authToken=***", url)
+    # Mask user:password@host patterns (use .+ greedy to match last @)
+    masked = re.sub(r"://([^:]+):.+@", r"://\1:***@", masked)
+    return masked
 
 
 # Engine creation is deferred to allow testing with different URLs
@@ -104,7 +133,7 @@ _engine = None
 _async_session_factory = None
 
 
-def get_engine():
+def get_engine() -> AsyncEngine:
     """Get or create the async engine."""
     global _engine
     if _engine is None:

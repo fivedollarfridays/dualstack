@@ -6,7 +6,7 @@ import { renderHook } from '@testing-library/react';
 import { useAppAuth } from '@/contexts/auth-context';
 
 // Keep a reference to allow overriding getDevToken per test
-let mockDevToken: string | null = 'dev-token';
+let mockDevToken: string | null = 'mock-random-token-abc123';
 jest.mock('@/lib/auth-config', () => ({
   ...jest.requireActual('@/lib/auth-config'),
   getDevToken: () => mockDevToken,
@@ -40,13 +40,13 @@ describe('DevAuthProvider', () => {
     expect(result.current.isSignedIn).toBe(true);
   });
 
-  it('provides getToken that returns dev-token', async () => {
+  it('provides getToken that returns the mock dev token', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <DevAuthProvider>{children}</DevAuthProvider>
     );
     const { result } = renderHook(() => useAppAuth(), { wrapper });
     const token = await result.current.getToken();
-    expect(token).toBe('dev-token');
+    expect(token).toBe('mock-random-token-abc123');
   });
 
   it('logs a warning when active', () => {
@@ -69,7 +69,7 @@ describe('DevAuthProvider', () => {
     const { result } = renderHook(() => useAppAuth(), { wrapper });
     const token = await result.current.getToken();
     expect(token).toBe('');
-    mockDevToken = 'dev-token'; // restore
+    mockDevToken = 'mock-random-token-abc123'; // restore
   });
 
   it('throws an error in production environment', () => {

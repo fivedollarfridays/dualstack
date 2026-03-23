@@ -1,6 +1,7 @@
 """DualStack API - FastAPI + Next.js SaaS Starter Kit"""
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import stripe
@@ -28,7 +29,7 @@ configure_logging()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Manage application lifespan."""
     settings = get_settings()
     if settings.environment == "production" and not settings.stripe_webhook_secret:

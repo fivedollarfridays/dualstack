@@ -57,8 +57,16 @@ describe('constants', () => {
     expect(DEV_USER_ID).toBe('dev-user-001');
   });
 
-  it('exports DEV_TOKEN', () => {
-    expect(DEV_TOKEN).toBe('dev-token');
+  it('exports DEV_TOKEN as a non-empty random string (not the old static value)', () => {
+    expect(typeof DEV_TOKEN).toBe('string');
+    expect(DEV_TOKEN.length).toBeGreaterThan(0);
+    expect(DEV_TOKEN).not.toBe('dev-token');
+  });
+
+  it('exports the same DEV_TOKEN on repeated imports (session-stable)', () => {
+    // Re-import and verify the token is the same instance
+    const { DEV_TOKEN: token2 } = require('./auth-config');
+    expect(token2).toBe(DEV_TOKEN);
   });
 });
 
@@ -101,6 +109,10 @@ describe('isLocalDev', () => {
 
 describe('getDevToken', () => {
   it('returns dev token on localhost (jsdom default)', () => {
-    expect(getDevToken()).toBe('dev-token');
+    const token = getDevToken();
+    expect(typeof token).toBe('string');
+    expect(token!.length).toBeGreaterThan(0);
+    expect(token).not.toBe('dev-token');
+    expect(token).toBe(DEV_TOKEN);
   });
 });

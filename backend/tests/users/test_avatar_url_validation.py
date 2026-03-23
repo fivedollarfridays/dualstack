@@ -44,20 +44,26 @@ class TestAvatarUrlEdgeCases:
             UserProfileUpdate(avatar_url="ftp://files.example.com/img.png")
 
 
-class TestDisplayNameSanitization:
-    """T25.7: display_name strips < and > but stores raw Unicode (no HTML entities)."""
+class TestDisplayNameRawStorage:
+    """T26.7: display_name stored as raw Unicode — no stripping.
 
-    def test_strips_script_tags(self):
+    XSS prevention is handled at output sinks:
+    - React JSX auto-escapes text interpolation
+    - Email templates use html.escape() if needed
+    """
+
+    def test_stores_script_tags_raw(self):
+        """Angle brackets are preserved — escaping happens at render time."""
         profile = UserProfileUpdate(display_name="<script>alert(1)</script>")
-        assert profile.display_name == "scriptalert(1)/script"
+        assert profile.display_name == "<script>alert(1)</script>"
 
     def test_normal_name_unchanged(self):
         profile = UserProfileUpdate(display_name="Normal Name")
         assert profile.display_name == "Normal Name"
 
-    def test_strips_html_tags(self):
+    def test_stores_html_tags_raw(self):
         profile = UserProfileUpdate(display_name="<b>Bold</b>")
-        assert profile.display_name == "bBold/b"
+        assert profile.display_name == "<b>Bold</b>"
 
     def test_preserves_quotes(self):
         """Quotes are stored raw — no HTML entity encoding."""
@@ -73,9 +79,10 @@ class TestDisplayNameSanitization:
         profile = UserProfileUpdate(display_name=None)
         assert profile.display_name is None
 
-    def test_angle_brackets_stripped(self):
+    def test_stores_angle_brackets_raw(self):
+        """Angle brackets are no longer stripped."""
         profile = UserProfileUpdate(display_name="<>")
-        assert profile.display_name == ""
+        assert profile.display_name == "<>"
 
     def test_preserves_unicode(self):
         """Unicode characters are stored as-is, not HTML-escaped."""
@@ -86,7 +93,17 @@ class TestDisplayNameSanitization:
         profile = UserProfileUpdate(display_name="Jose Garcia")
         assert profile.display_name == "Jose Garcia"
 
-    def test_strips_angle_brackets_only(self):
-        """Only < and > are removed; other special chars remain."""
+    def test_preserves_all_special_chars(self):
+        """All special characters stored raw — no stripping at all."""
         profile = UserProfileUpdate(display_name="a<b>c&d\"e'f")
-        assert profile.display_name == "abc&d\"e'f"
+        assert profile.display_name == "a<b>c&d\"e'f"
+
+    def test_max_length_enforced(self):
+        """Pydantic max_length=255 still enforces size bounds."""
+        with pytest.raises(ValidationError, match="String should have at most 255"):
+            UserProfileUpdate(display_name="x" * 256)
+
+    def test_min_length_enforced(self):
+        """Pydantic min_length=1 rejects empty strings."""
+        with pytest.raises(ValidationError, match="String should have at least 1"):
+            UserProfileUpdate(display_name="")

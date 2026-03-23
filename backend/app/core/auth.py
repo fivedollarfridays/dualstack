@@ -47,13 +47,18 @@ async def _verify_clerk_token(request: Request, jwks_url: str) -> str:
             message="Clerk auth library not installed. Run: pip install fastapi-clerk-auth"
         )
     try:
-        if jwks_url not in _clerk_auth_cache:
+        settings = get_settings()
+        cache_key = f"{jwks_url}|{settings.clerk_audience}"
+        if cache_key not in _clerk_auth_cache:
             if len(_clerk_auth_cache) >= MAX_CACHE_SIZE:
                 _clerk_auth_cache.popitem(last=False)
-            config = ClerkConfig(jwks_url=jwks_url)
-            _clerk_auth_cache[jwks_url] = ClerkHTTPBearer(config=config)
-        _clerk_auth_cache.move_to_end(jwks_url)
-        clerk_auth = _clerk_auth_cache[jwks_url]
+            config_kwargs: dict[str, str] = {"jwks_url": jwks_url}
+            if settings.clerk_audience:
+                config_kwargs["audience"] = settings.clerk_audience
+            config = ClerkConfig(**config_kwargs)
+            _clerk_auth_cache[cache_key] = ClerkHTTPBearer(config=config)
+        _clerk_auth_cache.move_to_end(cache_key)
+        clerk_auth = _clerk_auth_cache[cache_key]
         verified = await clerk_auth(request)
         user_id = verified.decoded.get("sub")
         if not user_id:
