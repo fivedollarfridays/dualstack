@@ -6,7 +6,6 @@ from collections import OrderedDict
 from typing import Any
 
 import jwt as pyjwt
-from fastapi import WebSocket
 from jwt import PyJWKClient
 
 from app.core.config import get_settings
@@ -73,29 +72,5 @@ async def authenticate_ws_from_message(token: str) -> str:
         if settings.environment == "production":
             raise AuthenticationError(message="Dev-mode auth is disabled in production")
         return token
-
-    return await _verify_token(token, settings.clerk_jwks_url)
-
-
-async def authenticate_ws(websocket: WebSocket) -> str:
-    """Authenticate a WebSocket connection (legacy query-param method).
-
-    Deprecated: Use authenticate_ws_from_message with first-message pattern.
-    In dev mode (no clerk_jwks_url): trusts user_id query param.
-    In production: validates token query param.
-    """
-    settings = get_settings()
-
-    if not settings.clerk_jwks_url:
-        if settings.environment == "production":
-            raise AuthenticationError(message="Dev-mode auth is disabled in production")
-        user_id = websocket.query_params.get("user_id")
-        if not user_id:
-            raise AuthenticationError(message="Missing user_id query param")
-        return user_id
-
-    token = websocket.query_params.get("token")
-    if not token:
-        raise AuthenticationError(message="Missing token query param")
 
     return await _verify_token(token, settings.clerk_jwks_url)

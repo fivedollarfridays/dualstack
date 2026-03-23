@@ -18,8 +18,8 @@ jest.mock('sonner', () => ({
 jest.mock('@/lib/auth-config', () => ({
   isClerkEnabled: jest.fn(),
   DEV_USER_ID: 'dev-user-001',
-  DEV_TOKEN: 'dev-token',
-  getDevToken: jest.fn(() => 'dev-token'),
+  DEV_TOKEN: 'mock-dev-token',
+  getDevToken: jest.fn(() => 'mock-dev-token'),
   isLocalDev: jest.fn(() => true),
 }));
 

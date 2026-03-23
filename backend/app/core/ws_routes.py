@@ -3,6 +3,8 @@
 import asyncio
 import json
 import logging
+import time
+from collections import defaultdict
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
@@ -15,6 +17,49 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 AUTH_TIMEOUT = 5.0  # seconds to wait for auth message
+MAX_WS_MESSAGE_SIZE = 64 * 1024  # 64 KB max post-auth message size
+
+# IP-level WebSocket connection rate limiting.
+# Safe under asyncio because this function contains no await points — it runs
+# atomically within the event loop. The rate check happens after accept()
+# because Starlette requires accept before close with a reason code.
+_ws_connection_timestamps: dict[str, list[float]] = defaultdict(list)
+_ws_rate_check_counter = 0
+WS_RATE_LIMIT = 30  # max connections per IP per window
+WS_RATE_WINDOW = 60.0  # seconds
+_MAX_TRACKED_IPS = 10000  # cap to prevent unbounded memory growth
+
+
+def _check_ws_rate_limit(client_ip: str) -> bool:
+    """Return True if the connection should be allowed, False if rate-limited."""
+    global _ws_rate_check_counter
+    now = time.monotonic()
+
+    # Periodic full sweep: evict expired IPs every 100 checks
+    _ws_rate_check_counter += 1
+    if _ws_rate_check_counter >= 100:
+        _ws_rate_check_counter = 0
+        expired = [
+            ip
+            for ip, ts in _ws_connection_timestamps.items()
+            if not ts or all(now - t >= WS_RATE_WINDOW for t in ts)
+        ]
+        for ip in expired:
+            del _ws_connection_timestamps[ip]
+        # Hard cap: if still too large, drop oldest entries
+        if len(_ws_connection_timestamps) > _MAX_TRACKED_IPS:
+            excess = len(_ws_connection_timestamps) - _MAX_TRACKED_IPS
+            for ip in list(_ws_connection_timestamps)[:excess]:
+                del _ws_connection_timestamps[ip]
+
+    timestamps = _ws_connection_timestamps[client_ip]
+    _ws_connection_timestamps[client_ip] = [
+        t for t in timestamps if now - t < WS_RATE_WINDOW
+    ]
+    if len(_ws_connection_timestamps[client_ip]) >= WS_RATE_LIMIT:
+        return False
+    _ws_connection_timestamps[client_ip].append(now)
+    return True
 
 
 async def _await_auth_message(websocket: WebSocket) -> str:
@@ -36,6 +81,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     """Authenticated WebSocket endpoint using first-message auth pattern."""
     await websocket.accept()
 
+    client_ip = websocket.client.host if websocket.client else "unknown"
+    if not _check_ws_rate_limit(client_ip):
+        await websocket.close(code=4029, reason="Too many connections")
+        return
+
     try:
         user_id = await _await_auth_message(websocket)
     except asyncio.TimeoutError:
@@ -56,7 +106,10 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     try:
         while True:
-            await websocket.receive_text()
+            data = await websocket.receive_text()
+            if len(data) > MAX_WS_MESSAGE_SIZE:
+                await websocket.close(code=4009, reason="Message too large")
+                return
     except WebSocketDisconnect:
         pass
     finally:

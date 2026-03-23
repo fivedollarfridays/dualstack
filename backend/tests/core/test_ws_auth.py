@@ -1,7 +1,7 @@
 """Tests for WebSocket authentication."""
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import jwt as pyjwt
 import pytest
@@ -250,95 +250,6 @@ class TestVerifyToken:
 
             # PyJWKClient should only be instantiated once for the same URL
             assert MockClient.call_count == 1
-
-
-# ---------------------------------------------------------------------------
-# authenticate_ws — integration tests (existing + updated)
-# ---------------------------------------------------------------------------
-
-
-class TestAuthenticateWebSocket:
-    async def test_returns_user_id_from_dev_header(self):
-        from app.core.ws_auth import authenticate_ws
-
-        ws = AsyncMock()
-        ws.query_params = {"user_id": "user-1"}
-
-        with patch("app.core.ws_auth.get_settings") as mock_settings:
-            settings = MagicMock()
-            settings.clerk_jwks_url = ""
-            settings.environment = "development"
-            mock_settings.return_value = settings
-
-            user_id = await authenticate_ws(ws)
-
-        assert user_id == "user-1"
-
-    async def test_returns_user_id_from_token_query_param(self):
-        from app.core.ws_auth import authenticate_ws
-
-        ws = AsyncMock()
-        ws.query_params = {"token": "valid-jwt"}
-
-        with patch("app.core.ws_auth.get_settings") as mock_settings:
-            settings = MagicMock()
-            settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
-            mock_settings.return_value = settings
-
-            with patch("app.core.ws_auth._verify_token") as mock_verify:
-                mock_verify.return_value = "user-42"
-
-                user_id = await authenticate_ws(ws)
-
-        assert user_id == "user-42"
-
-    async def test_raises_on_missing_token(self):
-        from app.core.ws_auth import authenticate_ws
-
-        ws = AsyncMock()
-        ws.query_params = {}
-
-        with patch("app.core.ws_auth.get_settings") as mock_settings:
-            settings = MagicMock()
-            settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
-            mock_settings.return_value = settings
-
-            with pytest.raises(AuthenticationError):
-                await authenticate_ws(ws)
-
-    async def test_raises_on_invalid_token(self):
-        from app.core.ws_auth import authenticate_ws
-
-        ws = AsyncMock()
-        ws.query_params = {"token": "bad-jwt"}
-
-        with patch("app.core.ws_auth.get_settings") as mock_settings:
-            settings = MagicMock()
-            settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
-            mock_settings.return_value = settings
-
-            with patch("app.core.ws_auth._verify_token") as mock_verify:
-                mock_verify.side_effect = AuthenticationError(
-                    message="Invalid or expired token"
-                )
-
-                with pytest.raises(AuthenticationError):
-                    await authenticate_ws(ws)
-
-    async def test_rejects_dev_mode_in_production(self):
-        from app.core.ws_auth import authenticate_ws
-
-        ws = AsyncMock()
-        ws.query_params = {"user_id": "user-1"}
-
-        with patch("app.core.ws_auth.get_settings") as mock_settings:
-            settings = MagicMock()
-            settings.clerk_jwks_url = ""
-            settings.environment = "production"
-            mock_settings.return_value = settings
-
-            with pytest.raises(AuthenticationError):
-                await authenticate_ws(ws)
 
 
 # ---------------------------------------------------------------------------

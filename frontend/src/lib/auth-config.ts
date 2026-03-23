@@ -4,7 +4,7 @@
  */
 
 export const DEV_USER_ID = 'dev-user-001';
-export const DEV_TOKEN = 'dev-token';
+export const DEV_TOKEN = crypto.randomUUID();
 
 /** Hostnames where dev tokens are permitted. */
 const DEV_HOSTNAMES = ['localhost', '127.0.0.1'];

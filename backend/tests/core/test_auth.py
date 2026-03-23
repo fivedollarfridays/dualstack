@@ -126,11 +126,16 @@ def _create_test_app() -> FastAPI:
 PROD_JWKS = "https://clerk.example.com/.well-known/jwks.json"
 
 
-def _mock_settings(clerk_jwks_url: str = "", environment: str = "development"):
+def _mock_settings(
+    clerk_jwks_url: str = "",
+    environment: str = "development",
+    clerk_audience: str = "",
+):
     """Return a mock Settings object with the given clerk_jwks_url."""
     settings = MagicMock()
     settings.clerk_jwks_url = clerk_jwks_url
     settings.environment = environment
+    settings.clerk_audience = clerk_audience
     return settings
 
 
@@ -242,8 +247,9 @@ class TestAuthCacheBounds:
         assert len(_clerk_auth_cache) == MAX_CACHE_SIZE
         # Oldest entry should have been evicted
         assert first_key not in _clerk_auth_cache
-        # New entry should be present
-        assert new_jwks in _clerk_auth_cache
+        # New entry should be present (cache key includes audience suffix)
+        new_cache_key = f"{new_jwks}|"
+        assert new_cache_key in _clerk_auth_cache
 
 
 class TestProdMode:
@@ -341,3 +347,102 @@ class TestProdMode:
             )
 
         assert response.status_code == 401
+
+
+class TestAudienceEnforcement:
+    """T26.1: HTTP auth must validate JWT audience when CLERK_AUDIENCE is set."""
+
+    @pytest.fixture(autouse=True)
+    def _clear_clerk_cache(self):
+        _clerk_auth_cache.clear()
+        yield
+        _clerk_auth_cache.clear()
+
+    @pytest.fixture
+    def app(self):
+        return _create_test_app()
+
+    @pytest.fixture
+    def client(self, app):
+        transport = ASGITransport(app=app)
+        return AsyncClient(transport=transport, base_url="http://test")
+
+    async def test_audience_passed_to_clerk_config(self, client):
+        """When clerk_audience is set, it should be passed to ClerkConfig."""
+        mock_verified = MagicMock()
+        mock_verified.decoded = {"sub": "user-aud-ok"}
+        mock_clerk_auth = AsyncMock(return_value=mock_verified)
+        audience = "https://my-app.example.com"
+
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings(PROD_JWKS, clerk_audience=audience),
+            ),
+            patch("app.core.auth.ClerkConfig") as mock_config_cls,
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+        ):
+            response = await client.get(
+                "/me", headers={"Authorization": "Bearer valid-jwt"}
+            )
+
+        assert response.status_code == 200
+        mock_config_cls.assert_called_once_with(
+            jwks_url=PROD_JWKS, audience=audience
+        )
+
+    async def test_audience_not_passed_when_empty(self, client):
+        """When clerk_audience is empty, ClerkConfig should NOT get audience."""
+        mock_verified = MagicMock()
+        mock_verified.decoded = {"sub": "user-no-aud"}
+        mock_clerk_auth = AsyncMock(return_value=mock_verified)
+
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings(PROD_JWKS, clerk_audience=""),
+            ),
+            patch("app.core.auth.ClerkConfig") as mock_config_cls,
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+        ):
+            response = await client.get(
+                "/me", headers={"Authorization": "Bearer valid-jwt"}
+            )
+
+        assert response.status_code == 200
+        mock_config_cls.assert_called_once_with(jwks_url=PROD_JWKS)
+
+    async def test_audience_mismatch_rejected(self, client):
+        """When audience validation fails, auth should return 401."""
+        mock_clerk_auth = AsyncMock(
+            side_effect=ValueError("Audience mismatch")
+        )
+
+        with (
+            patch(
+                "app.core.auth.get_settings",
+                return_value=_mock_settings(
+                    PROD_JWKS, clerk_audience="https://my-app.example.com"
+                ),
+            ),
+            patch("app.core.auth.ClerkConfig"),
+            patch("app.core.auth.ClerkHTTPBearer", return_value=mock_clerk_auth),
+        ):
+            response = await client.get(
+                "/me", headers={"Authorization": "Bearer wrong-aud-jwt"}
+            )
+
+        assert response.status_code == 401
+
+    async def test_dev_mode_unaffected_by_audience(self, client):
+        """Dev mode should work regardless of clerk_audience setting."""
+        with patch(
+            "app.core.auth.get_settings",
+            return_value=_mock_settings(
+                "", clerk_audience="https://my-app.example.com"
+            ),
+        ):
+            response = await client.get("/me", headers={"x-user-id": "dev-user"})
+
+        assert response.status_code == 200
+        assert response.json() == {"user_id": "dev-user"}

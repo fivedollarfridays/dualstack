@@ -12,6 +12,8 @@ from app.core.database import (
     Base,
     get_database_url,
     get_alembic_database_url,
+    get_alembic_connect_args,
+    mask_database_url,
     get_engine,
     get_async_session_factory,
     get_db,
@@ -106,7 +108,7 @@ class TestGetAlembicDatabaseUrl:
             assert url == "sqlite:///./local.db"
 
     def test_converts_libsql_for_turso(self):
-        """Remote libsql:// URL is converted to sqlite+libsql:// for sync Alembic."""
+        """Remote libsql:// URL is converted to sqlite+libsql:// WITHOUT auth token."""
         from app.core.config import Settings
 
         with patch("app.core.database.get_settings") as mock_settings:
@@ -115,9 +117,9 @@ class TestGetAlembicDatabaseUrl:
                 turso_auth_token="test-token",
             )
             url = get_alembic_database_url()
-            assert (
-                url == "sqlite+libsql://my-db.turso.io?authToken=test-token&secure=true"
-            )
+            assert url == "sqlite+libsql://my-db.turso.io?secure=true"
+            assert "test-token" not in url
+            assert "authToken" not in url
 
     def test_converts_asyncpg_to_psycopg2(self):
         """Converts async PostgreSQL URL to sync for Alembic."""
@@ -140,6 +142,84 @@ class TestGetAlembicDatabaseUrl:
             )
             url = get_alembic_database_url()
             assert url == "sqlite:///:memory:"
+
+
+class TestGetAlembicConnectArgs:
+    """Test get_alembic_connect_args for passing auth token via connect_args."""
+
+    def test_returns_auth_token_for_libsql(self):
+        """Remote Turso URL should return auth_token in connect_args."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                turso_database_url="libsql://my-db.turso.io",
+                turso_auth_token="secret-token-123",
+            )
+            args = get_alembic_connect_args()
+            assert args == {"auth_token": "secret-token-123"}
+
+    def test_returns_empty_for_file_url(self):
+        """Local file URLs should return empty connect_args."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(turso_database_url="file:local.db")
+            args = get_alembic_connect_args()
+            assert args == {}
+
+    def test_returns_empty_for_database_url(self):
+        """DATABASE_URL (PostgreSQL) should return empty connect_args."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                database_url="postgresql+asyncpg://user:pass@host/db",
+            )
+            args = get_alembic_connect_args()
+            assert args == {}
+
+    def test_returns_empty_for_memory_sqlite(self):
+        """Default in-memory SQLite should return empty connect_args."""
+        from app.core.config import Settings
+
+        with patch("app.core.database.get_settings") as mock_settings:
+            mock_settings.return_value = Settings(
+                database_url="", turso_database_url=""
+            )
+            args = get_alembic_connect_args()
+            assert args == {}
+
+
+class TestMaskDatabaseUrl:
+    """Test mask_database_url utility for safe logging."""
+
+    def test_masks_auth_token_in_url(self):
+        """authToken=xxx should be masked to authToken=***."""
+        url = "sqlite+libsql://my-db.turso.io?authToken=secret123&secure=true"
+        masked = mask_database_url(url)
+        assert "secret123" not in masked
+        assert "authToken=***" in masked
+        assert "secure=true" in masked
+
+    def test_masks_password_in_url(self):
+        """Passwords in user:pass@host URLs should be masked."""
+        url = "postgresql://user:s3cretP@ss@host/db"
+        masked = mask_database_url(url)
+        assert "s3cretP@ss" not in masked
+        assert "user:***@host" in masked
+
+    def test_no_change_for_safe_url(self):
+        """URLs without secrets should pass through unchanged."""
+        url = "sqlite:///./local.db"
+        masked = mask_database_url(url)
+        assert masked == url
+
+    def test_no_change_for_memory_url(self):
+        """In-memory URLs should pass through unchanged."""
+        url = "sqlite:///:memory:"
+        masked = mask_database_url(url)
+        assert masked == url
 
 
 class TestGetEngine:

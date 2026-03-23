@@ -1,5 +1,8 @@
 """Feature gating — check subscription entitlements."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,7 +39,7 @@ async def check_feature_access(
     return "*" in features or feature in features
 
 
-def require_feature(feature: str):
+def require_feature(feature: str) -> Callable[..., Coroutine[Any, Any, None]]:
     """FastAPI dependency factory that gates access to a feature.
 
     Usage:

@@ -1,6 +1,6 @@
 """API routes for file upload and management."""
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import log_audit_event, persist_audit_event
@@ -82,7 +82,7 @@ async def list_files_route(
 @limiter.limit("60/minute")
 async def get_download_url_route(
     request: Request,
-    file_id: str,
+    file_id: str = Path(..., pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     storage: StorageService = Depends(_get_storage),
@@ -103,7 +103,7 @@ async def get_download_url_route(
 @limiter.limit("30/minute")
 async def delete_file_route(
     request: Request,
-    file_id: str,
+    file_id: str = Path(..., pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     storage: StorageService = Depends(_get_storage),
