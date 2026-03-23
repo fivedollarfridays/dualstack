@@ -1,5 +1,6 @@
 """Authentication dependency for FastAPI routes."""
 
+import asyncio
 from collections import OrderedDict
 from typing import Any
 
@@ -21,8 +22,9 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 
 MAX_CACHE_SIZE = 10
 
-# Bounded cache for Clerk auth instances (keyed by JWKS URL)
+# Bounded cache for Clerk auth instances (keyed by JWKS URL|audience)
 _clerk_auth_cache: OrderedDict[str, Any] = OrderedDict()
+_clerk_cache_lock = asyncio.Lock()
 
 
 def _audit_auth_failure(action: str, user_id: str = "unknown") -> None:
@@ -49,16 +51,17 @@ async def _verify_clerk_token(request: Request, jwks_url: str) -> str:
     try:
         settings = get_settings()
         cache_key = f"{jwks_url}|{settings.clerk_audience}"
-        if cache_key not in _clerk_auth_cache:
-            if len(_clerk_auth_cache) >= MAX_CACHE_SIZE:
-                _clerk_auth_cache.popitem(last=False)
-            config_kwargs: dict[str, str] = {"jwks_url": jwks_url}
-            if settings.clerk_audience:
-                config_kwargs["audience"] = settings.clerk_audience
-            config = ClerkConfig(**config_kwargs)
-            _clerk_auth_cache[cache_key] = ClerkHTTPBearer(config=config)
-        _clerk_auth_cache.move_to_end(cache_key)
-        clerk_auth = _clerk_auth_cache[cache_key]
+        async with _clerk_cache_lock:
+            if cache_key not in _clerk_auth_cache:
+                if len(_clerk_auth_cache) >= MAX_CACHE_SIZE:
+                    _clerk_auth_cache.popitem(last=False)
+                config_kwargs: dict[str, str] = {"jwks_url": jwks_url}
+                if settings.clerk_audience:
+                    config_kwargs["audience"] = settings.clerk_audience
+                config = ClerkConfig(**config_kwargs)
+                _clerk_auth_cache[cache_key] = ClerkHTTPBearer(config=config)
+            _clerk_auth_cache.move_to_end(cache_key)
+            clerk_auth = _clerk_auth_cache[cache_key]
         verified = await clerk_auth(request)
         user_id = verified.decoded.get("sub")
         if not user_id:

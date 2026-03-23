@@ -23,23 +23,31 @@ def _get_trusted_ips() -> set[str]:
     return _trusted_ips
 
 
-def get_client_ip(request: Request) -> str:
-    """Extract the real client IP, respecting X-Forwarded-For from trusted proxies.
+def resolve_client_ip(
+    direct_ip: str | None, headers: dict[str, str] | None = None
+) -> str:
+    """Resolve client IP using proxy-aware logic.
 
-    Only trusts X-Forwarded-For when the direct connection comes from a known
-    proxy IP (configured via FORWARDED_ALLOW_IPS). When the connecting IP is
-    not in the trusted list, returns the direct client IP instead.
+    Shared by HTTP (Request) and WebSocket paths. Trusts X-Forwarded-For
+    only when the direct connection comes from a known proxy IP.
+    """
+    forwarded_for = (headers or {}).get("x-forwarded-for", "")
+    if forwarded_for and direct_ip:
+        if direct_ip in _get_trusted_ips():
+            return forwarded_for.split(",")[0].strip()
+    return direct_ip or "unknown"
+
+
+def get_client_ip(request: Request) -> str:
+    """Extract the real client IP from an HTTP request.
 
     Production requirement: Set FORWARDED_ALLOW_IPS to your reverse proxy's
     IP range, or configure uvicorn's --forwarded-allow-ips flag.
     """
-    forwarded_for = request.headers.get("x-forwarded-for", "")
-    if forwarded_for and request.client:
-        if request.client.host in _get_trusted_ips():
-            return forwarded_for.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return "unknown"
+    return resolve_client_ip(
+        direct_ip=request.client.host if request.client else None,
+        headers=dict(request.headers),
+    )
 
 
 limiter = Limiter(key_func=get_client_ip)

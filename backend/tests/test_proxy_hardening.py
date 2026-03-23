@@ -38,8 +38,8 @@ class TestForwardedAllowIpsWarning:
     """T19.4: Production startup warning when FORWARDED_ALLOW_IPS is default."""
 
     @pytest.mark.asyncio
-    async def test_warns_when_default_in_production(self):
-        """Lifespan warns when forwarded_allow_ips is '127.0.0.1' in production."""
+    async def test_raises_when_default_in_production(self):
+        """Lifespan raises RuntimeError when forwarded_allow_ips is '127.0.0.1' in production."""
         from fastapi import FastAPI
 
         mock_settings = MagicMock()
@@ -47,6 +47,7 @@ class TestForwardedAllowIpsWarning:
         mock_settings.stripe_webhook_secret = "whsec_test"
         mock_settings.stripe_secret_key = "sk_test_fake"
         mock_settings.clerk_jwks_url = "https://clerk.example.com/.well-known/jwks.json"
+        mock_settings.clerk_audience = "test-audience"
         mock_settings.turso_database_url = ""
         mock_settings.metrics_api_key = "a-secure-metrics-key-here"
         mock_settings.storage_bucket = "my-bucket"
@@ -54,15 +55,9 @@ class TestForwardedAllowIpsWarning:
 
         test_app = FastAPI()
         with patch("app.main.get_settings", return_value=mock_settings):
-            with patch("app.main.logger") as mock_logger:
+            with pytest.raises(RuntimeError, match="FORWARDED_ALLOW_IPS"):
                 async with lifespan(test_app):
                     pass
-                forwarded_warnings = [
-                    call
-                    for call in mock_logger.warning.call_args_list
-                    if "FORWARDED_ALLOW_IPS" in str(call)
-                ]
-                assert len(forwarded_warnings) == 1
 
     @pytest.mark.asyncio
     async def test_no_warning_when_configured_in_production(self):
