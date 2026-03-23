@@ -9,6 +9,20 @@ const nextConfig = {
   // Production optimizations
   poweredByHeader: false,
 
+  // Optimized image domains for next/image
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gravatar.com',
+      },
+    ],
+  },
+
   // Experimental features for better performance
   experimental: {
     // Optimize package imports

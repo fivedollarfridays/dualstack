@@ -70,7 +70,7 @@ def get_storage_service() -> StorageService:
 
     settings = get_settings()
 
-    if not settings.storage_bucket or not settings.storage_access_key:
+    if not settings.storage_bucket or not settings.storage_access_key or not settings.storage_secret_key:
         raise StorageError(message="Object storage is not configured")
 
     client = boto3.client(

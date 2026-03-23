@@ -19,7 +19,9 @@ class TestNextVersion:
 
     def test_eslint_config_next_matches(self) -> None:
         pkg = json.loads((ROOT / "frontend" / "package.json").read_text())
-        assert pkg["devDependencies"]["eslint-config-next"] == "15.5.13"
+        next_ver = re.sub(r"^[^0-9]*", "", pkg["dependencies"]["next"])
+        eslint_ver = pkg["devDependencies"]["eslint-config-next"]
+        assert eslint_ver == next_ver, f"eslint-config-next {eslint_ver} != next {next_ver}"
 
 
 class TestPyasn1Pin:

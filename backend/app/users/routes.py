@@ -25,7 +25,7 @@ async def get_current_user(
     request: Request,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-):
+) -> SubscriptionInfoResponse:
     """Return the authenticated user's subscription info."""
     user = await get_user_by_clerk_id(db, user_id)
     plan, status = resolve_plan_status(user)
@@ -38,7 +38,7 @@ async def get_user_profile(
     request: Request,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-):
+) -> UserProfileResponse:
     """Return the authenticated user's full profile."""
     user = await get_user_by_clerk_id(db, user_id)
     if user is None:
@@ -53,7 +53,7 @@ async def update_user_profile(
     body: UserProfileUpdate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-):
+) -> UserProfileResponse:
     """Update the authenticated user's profile."""
     data = body.model_dump(exclude_unset=True)
     user = await update_profile(db, user_id, **data)
@@ -77,7 +77,7 @@ async def delete_user_account(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     x_confirm_delete: str | None = Header(None),
-):
+) -> Response:
     """Delete the authenticated user's account. Requires confirmation header."""
     if not x_confirm_delete or x_confirm_delete != CONFIRM_PHRASE:
         raise ValidationError(
