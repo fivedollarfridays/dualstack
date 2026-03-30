@@ -30,7 +30,7 @@ python-json-logger==2.0.7
 prometheus-client==0.21.0
 
 # Auth (JWT)
-PyJWT==2.12.0
+PyJWT==2.12.1
 
 # Rate limiting
 slowapi==0.1.9
