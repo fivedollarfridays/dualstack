@@ -12,7 +12,7 @@ httpx==0.28.1
 # Database
 SQLAlchemy==2.0.48
 aiosqlite==0.22.1
-greenlet==3.3.0
+greenlet==3.3.2
 sqlalchemy-libsql==0.2.0
 
 # Config
