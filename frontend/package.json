@@ -14,7 +14,7 @@
     "test:all": "pnpm run test:coverage && pnpm run test:e2e"
   },
   "dependencies": {
-    "@clerk/nextjs": "6.36.8",
+    "@clerk/nextjs": "7.0.7",
     "@tanstack/react-query": "5.95.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
