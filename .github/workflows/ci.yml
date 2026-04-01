@@ -48,7 +48,7 @@ jobs:
         with:
           version: latest
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "18"
           cache: pnpm
@@ -92,7 +92,7 @@ jobs:
         with:
           version: latest
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         if: steps.check-secrets.outputs.skip == 'false'
         with:
           node-version: "18"
