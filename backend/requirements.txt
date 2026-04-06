@@ -42,7 +42,7 @@ alembic==1.18.4
 resend==2.26.0
 
 # Object storage
-boto3==1.42.78
+boto3==1.42.83
 
 # Background jobs
 APScheduler==3.11.2
