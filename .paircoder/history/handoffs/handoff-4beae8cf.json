@@ -1,8 +1,0 @@
-{
-  "version": "2.0",
-  "task_id": "T7.4",
-  "source_agent": "driver",
-  "target_agent": "reviewer",
-  "task_description": "[T7.4] Security headers and config cleanup: add CSP/HSTS, remove unused config, clean .env.local",
-  "acceptance_criteria": [
-    

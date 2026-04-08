@@ -1,8 +1,0 @@
-{
-  "version": "2.0",
-  "task_id": "T8.5",
-  "source_agent": "driver",
-  "target_agent": "reviewer",
-  "task_description": "[T8.5] Request hardening + config cleanup [NEW-008, NEW-009, NEW-010, NEW-011]",
-  "acceptance_criteria": [
-    

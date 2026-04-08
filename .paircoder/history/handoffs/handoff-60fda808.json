@@ -1,8 +1,0 @@
-{
-  "version": "2.0",
-  "task_id": "T7.5",
-  "source_agent": "driver",
-  "target_agent": "reviewer",
-  "task_description": "[T7.5] Validation and cache hardening: METRICS_API_KEY entropy, auth cache TTL, health endpoint, Uvicorn config",
-  "acceptance_criteria": [
-    

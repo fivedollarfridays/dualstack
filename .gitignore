@@ -57,3 +57,7 @@ audit-report.md
 product-line-plan.md
 sprint-estimates.md
 dualstack-sellable.md
+
+# Internal tooling (not part of public repo)
+.paircoder/
+.claude/

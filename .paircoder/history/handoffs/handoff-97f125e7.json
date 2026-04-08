@@ -1,8 +1,0 @@
-{
-  "version": "2.0",
-  "task_id": "T8.4",
-  "source_agent": "driver",
-  "target_agent": "reviewer",
-  "task_description": "[T8.4] Audit log expansion: auth failures, reads, billing [NEW-006]",
-  "acceptance_criteria": [
-    

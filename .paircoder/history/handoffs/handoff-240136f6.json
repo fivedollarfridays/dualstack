@@ -1,8 +1,0 @@
-{
-  "version": "2.0",
-  "task_id": "T8.3",
-  "source_agent": "driver",
-  "target_agent": "reviewer",
-  "task_description": "[T8.3] Health endpoint + billing schema hardening [NEW-005, NEW-007]",
-  "acceptance_criteria": [
-    
