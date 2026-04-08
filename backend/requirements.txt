@@ -27,7 +27,7 @@ structlog==25.5.0
 python-json-logger==2.0.7
 
 # Metrics
-prometheus-client==0.21.0
+prometheus-client==0.24.1
 
 # Auth (JWT)
 PyJWT==2.12.1
