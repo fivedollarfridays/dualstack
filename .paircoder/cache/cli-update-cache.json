@@ -358,5 +358,9 @@
   "OSS1.1": {
     "last_cli_update": "2026-04-07T21:16:40.517213",
     "last_status": "done"
+  },
+  "OSS1.2": {
+    "last_cli_update": "2026-04-07T21:19:12.593191",
+    "last_status": "done"
   }
 }

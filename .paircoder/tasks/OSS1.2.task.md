@@ -5,9 +5,10 @@ plan: plan-sprint-1-engage
 type: feature
 priority: P0
 complexity: 1
-status: pending
+status: done
 sprint: '1'
 depends_on: []
+completed_at: '2026-04-07T21:19:12.576825'
 ---
 
 # Delete marketplace and internal artifacts
@@ -16,8 +17,8 @@ Remove all files related to the paid marketplace listing and internal audit. Del
 
 # Acceptance Criteria
 
-- [ ] `badges/` directory deleted
-- [ ] `audit-report.md` deleted
-- [ ] `dualstack-sellable.md` not tracked (`git ls-files dualstack-sellable.md` returns empty)
-- [ ] `git grep -l "sellable\|LISTING\.md"` returns no results in source files (excluding `.gitignore`)
-- [ ] All tests pass
+- [x] `badges/` directory deleted
+- [x] `audit-report.md` deleted
+- [x] `dualstack-sellable.md` not tracked (`git ls-files dualstack-sellable.md` returns empty)
+- [x] `git grep -l "sellable\|LISTING\.md"` returns no results in source files (excluding `.gitignore`)
+- [x] All tests pass

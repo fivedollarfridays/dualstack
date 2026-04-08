@@ -1076,5 +1076,19 @@
       }
     ],
     "total_seconds": 90.75626
+  },
+  "OSS1.2": {
+    "entries": [
+      {
+        "id": "local-20260407211702",
+        "task_id": "OSS1.2",
+        "description": "OSS1.2: Delete marketplace and internal artifacts",
+        "start": "2026-04-07T21:17:02.177261",
+        "end": "2026-04-07T21:19:12.711215",
+        "duration_seconds": 130.533954,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 130.533954
   }
 }

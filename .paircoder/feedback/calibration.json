@@ -2,24 +2,24 @@
   "task_types": {
     "feature": {
       "task_type": "feature",
-      "sample_count": 2,
-      "avg_tokens": 57.5,
-      "std_dev": 57.5,
-      "p80_tokens": 105.91499999999999,
-      "avg_duration_seconds": 4.0,
-      "success_rate": 0.5,
+      "sample_count": 5,
+      "avg_tokens": 568.8,
+      "std_dev": 1027.3132725707383,
+      "p80_tokens": 1433.7977755045615,
+      "avg_duration_seconds": 24.8,
+      "success_rate": 0.6,
       "recommended_model": "haiku",
       "model": "aggregate",
       "recommended_effort": "high",
-      "_m2_tokens": 6612.5,
-      "_m2_duration": 32.0,
-      "estimation_mape": 13465.217391304346,
+      "_m2_tokens": 5276862.799999999,
+      "_m2_duration": 9548.800000000001,
+      "estimation_mape": 533.3333333333333,
       "estimation_sample_count": 1,
-      "cx_per_minute": null
+      "cx_per_minute": 0.5357142857142857
     },
     "feature:unknown": {
       "task_type": "feature",
-      "sample_count": 1,
+      "sample_count": 2,
       "avg_tokens": 0.0,
       "std_dev": 0.0,
       "p80_tokens": 0.0,
@@ -34,24 +34,41 @@
       "estimation_sample_count": 0,
       "cx_per_minute": null
     },
-    "feature:claude-opus-4-6": {
+    "feature:claude-opus-4-6[1m]": {
       "task_type": "feature",
       "sample_count": 1,
-      "avg_tokens": 115.0,
+      "avg_tokens": 2621.0,
       "std_dev": 0.0,
-      "p80_tokens": 115.0,
-      "avg_duration_seconds": 8.0,
+      "p80_tokens": 2621.0,
+      "avg_duration_seconds": 112.0,
+      "success_rate": 1.0,
+      "recommended_model": "haiku",
+      "model": "claude-opus-4-6[1m]",
+      "recommended_effort": "high",
+      "_m2_tokens": 0.0,
+      "_m2_duration": 0.0,
+      "estimation_mape": null,
+      "estimation_sample_count": 0,
+      "cx_per_minute": 0.5357142857142857
+    },
+    "feature:claude-opus-4-6": {
+      "task_type": "feature",
+      "sample_count": 2,
+      "avg_tokens": 111.5,
+      "std_dev": 3.5,
+      "p80_tokens": 114.447,
+      "avg_duration_seconds": 6.0,
       "success_rate": 1.0,
       "recommended_model": "haiku",
       "model": "claude-opus-4-6",
       "recommended_effort": "high",
-      "_m2_tokens": 0.0,
-      "_m2_duration": 0.0,
-      "estimation_mape": 13465.217391304346,
+      "_m2_tokens": 24.5,
+      "_m2_duration": 8.0,
+      "estimation_mape": 533.3333333333333,
       "estimation_sample_count": 1,
       "cx_per_minute": null
     }
   },
-  "last_calibrated": "2026-04-08T02:16:40.662497+00:00",
-  "total_records": 2
+  "last_calibrated": "2026-04-08T02:19:12.739873+00:00",
+  "total_records": 5
 }

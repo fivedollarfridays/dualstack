@@ -96,3 +96,5 @@
 {"timestamp": "2026-03-18T00:24:50.000431", "command": "task update --local-only", "task_id": "T23.1", "reason": "LISTING.md created with all required sections, 17 tests passing"}
 {"timestamp": "2026-04-07T21:16:34.818619", "command": "task_done --allow-dirty", "task_id": "OSS1.1", "reason": "Uncommitted changes in working tree"}
 {"timestamp": "2026-04-07T21:16:39.730275", "command": "task_done --allow-dirty", "task_id": "OSS1.1", "reason": "Uncommitted changes in working tree"}
+{"timestamp": "2026-04-07T21:19:07.823811", "command": "task_done --allow-dirty", "task_id": "OSS1.2", "reason": "Uncommitted changes in working tree"}
+{"timestamp": "2026-04-07T21:19:11.932907", "command": "task_done --allow-dirty", "task_id": "OSS1.2", "reason": "Uncommitted changes in working tree"}
