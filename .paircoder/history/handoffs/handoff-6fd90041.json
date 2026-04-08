@@ -1,0 +1,8 @@
+{
+  "version": "2.0",
+  "task_id": "T6.4",
+  "source_agent": "driver",
+  "target_agent": "reviewer",
+  "task_description": "[T6.4] Add full-stack docker-compose and fix monitoring defaults",
+  "acceptance_criteria": [
+    

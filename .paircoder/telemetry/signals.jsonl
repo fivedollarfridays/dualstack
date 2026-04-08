@@ -1,0 +1,1 @@
+{"signal_type": "approval_gate_check", "severity": "info", "timestamp": "2026-04-08T02:07:59.161004+00:00", "session_id": "", "payload": {"action": "run_engage", "intent": "approval", "blocked": false, "approved_by": null}, "source": "automated"}

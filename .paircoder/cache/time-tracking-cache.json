@@ -1,0 +1,1066 @@
+{
+  "T3.1": {
+    "entries": [
+      {
+        "id": "local-20260306140421",
+        "task_id": "T3.1",
+        "description": "T3.1: Generate initial alembic migration for Item model",
+        "start": "2026-03-06T14:04:21.928225",
+        "end": "2026-03-06T14:05:51.692233",
+        "duration_seconds": 89.764008,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 89.764008
+  },
+  "T3.2": {
+    "entries": [
+      {
+        "id": "local-20260306140649",
+        "task_id": "T3.2",
+        "description": "T3.2: Simplify billing portal to documented placeholder",
+        "start": "2026-03-06T14:06:49.825226",
+        "end": "2026-03-06T14:08:13.900908",
+        "duration_seconds": 84.075682,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 84.075682
+  },
+  "T3.3": {
+    "entries": [
+      {
+        "id": "local-20260306141724",
+        "task_id": "T3.3",
+        "description": "T3.3: Add render.yaml for backend deployment",
+        "start": "2026-03-06T14:17:24.490214",
+        "end": "2026-03-06T14:18:33.675037",
+        "duration_seconds": 69.184823,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 69.184823
+  },
+  "T3.4": {
+    "entries": [
+      {
+        "id": "local-20260306141927",
+        "task_id": "T3.4",
+        "description": "T3.4: Update CLAUDE.md auth description to reflect JWT dual-mode",
+        "start": "2026-03-06T14:19:27.407796",
+        "end": "2026-03-06T14:20:18.718145",
+        "duration_seconds": 51.310349,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 51.310349
+  },
+  "T5.1": {
+    "entries": [
+      {
+        "id": "local-20260307020559",
+        "task_id": "T5.1",
+        "description": "T5.1: Clean monitoring stack: remove Companion AI branding and ghost video metrics",
+        "start": "2026-03-07T02:05:59.996784",
+        "end": "2026-03-07T02:10:05.493985",
+        "duration_seconds": 245.497201,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 245.497201
+  },
+  "T5.2": {
+    "entries": [
+      {
+        "id": "local-20260307021131",
+        "task_id": "T5.2",
+        "description": "T5.2: Fix billing flow: checkout payload, portal endpoint, pricing consistency",
+        "start": "2026-03-07T02:11:31.000912",
+        "end": "2026-03-07T02:15:12.190221",
+        "duration_seconds": 221.189309,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 221.189309
+  },
+  "T5.3": {
+    "entries": [
+      {
+        "id": "local-20260307021720",
+        "task_id": "T5.3",
+        "description": "T5.3: Security hardening: auth guardrails, security headers, rate limiting, CORS, input validation",
+        "start": "2026-03-07T02:17:20.850614",
+        "end": "2026-03-07T02:22:41.952391",
+        "duration_seconds": 321.101777,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 321.101777
+  },
+  "T5.4": {
+    "entries": [
+      {
+        "id": "local-20260307022454",
+        "task_id": "T5.4",
+        "description": "T5.4: Fix database story: Turso docs, Drizzle migrations, schema alignment",
+        "start": "2026-03-07T02:24:54.366927",
+        "end": "2026-03-07T02:27:25.119066",
+        "duration_seconds": 150.752139,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 150.752139
+  },
+  "T5.5": {
+    "entries": [
+      {
+        "id": "local-20260307022804",
+        "task_id": "T5.5",
+        "description": "T5.5: Fix deployment: .dockerignore, split requirements, pin deps",
+        "start": "2026-03-07T02:28:04.779612",
+        "end": "2026-03-07T02:31:19.521682",
+        "duration_seconds": 194.74207,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 194.74207
+  },
+  "T5.6": {
+    "entries": [
+      {
+        "id": "local-20260307023318",
+        "task_id": "T5.6",
+        "description": "T5.6: README and docs overhaul for buyer audience",
+        "start": "2026-03-07T02:33:18.540940",
+        "end": "2026-03-07T02:35:01.029471",
+        "duration_seconds": 102.488531,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 102.488531
+  },
+  "T5.7": {
+    "entries": [
+      {
+        "id": "local-20260307023640",
+        "task_id": "T5.7",
+        "description": "T5.7: Frontend UX polish: dashboard, settings, mobile nav, pagination, error details",
+        "start": "2026-03-07T02:36:40.872857",
+        "end": "2026-03-07T02:44:28.480844",
+        "duration_seconds": 467.607987,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 467.607987
+  },
+  "T5.8": {
+    "entries": [
+      {
+        "id": "local-20260307031256",
+        "task_id": "T5.8",
+        "description": "T5.8: Add GitHub Actions CI workflow",
+        "start": "2026-03-07T03:12:56.550143",
+        "end": "2026-03-07T03:15:55.684936",
+        "duration_seconds": 179.134793,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 179.134793
+  },
+  "T6.1": {
+    "entries": [
+      {
+        "id": "local-20260307104113",
+        "task_id": "T6.1",
+        "description": "T6.1: Wire dev-auth into Providers and replace direct Clerk imports",
+        "start": "2026-03-07T10:41:13.250269",
+        "end": "2026-03-07T10:46:21.360577",
+        "duration_seconds": 308.110308,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 308.110308
+  },
+  "T6.2": {
+    "entries": [
+      {
+        "id": "local-20260307105723",
+        "task_id": "T6.2",
+        "description": "T6.2: Fix environment validation and Turso startup guard",
+        "start": "2026-03-07T10:57:23.463338",
+        "end": "2026-03-07T11:03:40.613608",
+        "duration_seconds": 377.15027,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 377.15027
+  },
+  "T6.3": {
+    "entries": [
+      {
+        "id": "local-20260307122024",
+        "task_id": "T6.3",
+        "description": "T6.3: Fix render.yaml and add deployment migration step",
+        "start": "2026-03-07T12:20:24.059893",
+        "end": "2026-03-07T12:22:13.155556",
+        "duration_seconds": 109.095663,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 109.095663
+  },
+  "T6.4": {
+    "entries": [
+      {
+        "id": "local-20260307122347",
+        "task_id": "T6.4",
+        "description": "T6.4: Add full-stack docker-compose and fix monitoring defaults",
+        "start": "2026-03-07T12:23:47.998683",
+        "end": "2026-03-07T12:26:42.536023",
+        "duration_seconds": 174.53734,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 174.53734
+  },
+  "T6.5": {
+    "entries": [
+      {
+        "id": "local-20260307122917",
+        "task_id": "T6.5",
+        "description": "T6.5: Fix paginated query ordering and setState-during-render",
+        "start": "2026-03-07T12:29:17.356333",
+        "end": "2026-03-07T12:34:50.150009",
+        "duration_seconds": 332.793676,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 332.793676
+  },
+  "T6.6": {
+    "entries": [
+      {
+        "id": "local-20260307123557",
+        "task_id": "T6.6",
+        "description": "T6.6: Fix architecture violations in metrics, database, and middleware",
+        "start": "2026-03-07T12:35:57.012100",
+        "end": "2026-03-07T12:39:08.961691",
+        "duration_seconds": 191.949591,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 191.949591
+  },
+  "T7.1": {
+    "entries": [
+      {
+        "id": "local-20260307140816",
+        "task_id": "T7.1",
+        "description": "T7.1: Auth defense-in-depth: environment guard in get_current_user_id and remove user_id from responses",
+        "start": "2026-03-07T14:08:16.635707",
+        "end": "2026-03-07T14:11:37.327641",
+        "duration_seconds": 200.691934,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 200.691934
+  },
+  "T7.2": {
+    "entries": [
+      {
+        "id": "local-20260307141307",
+        "task_id": "T7.2",
+        "description": "T7.2: Metrics endpoint production guard: require METRICS_API_KEY in production",
+        "start": "2026-03-07T14:13:07.703718",
+        "end": "2026-03-07T14:15:08.215018",
+        "duration_seconds": 120.5113,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 120.5113
+  },
+  "T7.3": {
+    "entries": [
+      {
+        "id": "local-20260307141605",
+        "task_id": "T7.3",
+        "description": "T7.3: Proxy-aware rate limiting: use X-Forwarded-For behind reverse proxy",
+        "start": "2026-03-07T14:16:05.879384",
+        "end": "2026-03-07T14:17:43.171011",
+        "duration_seconds": 97.291627,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 97.291627
+  },
+  "T7.4": {
+    "entries": [
+      {
+        "id": "local-20260307142000",
+        "task_id": "T7.4",
+        "description": "T7.4: Security headers and config cleanup: add CSP/HSTS, remove unused config, clean .env.local",
+        "start": "2026-03-07T14:20:00.405936",
+        "end": "2026-03-07T14:22:16.280018",
+        "duration_seconds": 135.874082,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 135.874082
+  },
+  "T7.5": {
+    "entries": [
+      {
+        "id": "local-20260307142439",
+        "task_id": "T7.5",
+        "description": "T7.5: Validation and cache hardening: METRICS_API_KEY entropy, auth cache TTL, health endpoint, Uvicorn config",
+        "start": "2026-03-07T14:24:39.645843",
+        "end": "2026-03-07T14:27:43.974639",
+        "duration_seconds": 184.328796,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 184.328796
+  },
+  "T7.6": {
+    "entries": [
+      {
+        "id": "local-20260307143307",
+        "task_id": "T7.6",
+        "description": "T7.6: Audit logging and endpoint rate limits: write-operation audit log, rate limits on item CRUD",
+        "start": "2026-03-07T14:33:07.265154",
+        "end": "2026-03-07T14:37:01.635457",
+        "duration_seconds": 234.370303,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 234.370303
+  },
+  "T8.1": {
+    "entries": [
+      {
+        "id": "local-20260307150550",
+        "task_id": "T8.1",
+        "description": "T8.1: Production exposure hardening: disable docs + document proxy trust [NEW-001, NEW-002]",
+        "start": "2026-03-07T15:05:50.629409",
+        "end": "2026-03-07T15:08:46.497415",
+        "duration_seconds": 175.868006,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 175.868006
+  },
+  "T8.2": {
+    "entries": [
+      {
+        "id": "local-20260307151512",
+        "task_id": "T8.2",
+        "description": "T8.2: Error handling hardening: webhook signature + 422 sanitization [NEW-003, NEW-004]",
+        "start": "2026-03-07T15:15:12.843322",
+        "end": "2026-03-07T15:18:02.313843",
+        "duration_seconds": 169.470521,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 169.470521
+  },
+  "T8.3": {
+    "entries": [
+      {
+        "id": "local-20260307152135",
+        "task_id": "T8.3",
+        "description": "T8.3: Health endpoint + billing schema hardening [NEW-005, NEW-007]",
+        "start": "2026-03-07T15:21:35.791850",
+        "end": "2026-03-07T15:27:26.896558",
+        "duration_seconds": 351.104708,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 351.104708
+  },
+  "T8.4": {
+    "entries": [
+      {
+        "id": "local-20260307152833",
+        "task_id": "T8.4",
+        "description": "T8.4: Audit log expansion: auth failures, reads, billing [NEW-006]",
+        "start": "2026-03-07T15:28:33.059719",
+        "end": "2026-03-07T15:33:32.167109",
+        "duration_seconds": 299.10739,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 299.10739
+  },
+  "T8.5": {
+    "entries": [
+      {
+        "id": "local-20260307153659",
+        "task_id": "T8.5",
+        "description": "T8.5: Request hardening + config cleanup [NEW-008, NEW-009, NEW-010, NEW-011]",
+        "start": "2026-03-07T15:36:59.711967",
+        "end": "2026-03-07T15:41:02.102141",
+        "duration_seconds": 242.390174,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 242.390174
+  },
+  "T8.6": {
+    "entries": [
+      {
+        "id": "local-20260307154318",
+        "task_id": "T8.6",
+        "description": "T8.6: Frontend type sync + header cleanup [NEW-012, NEW-013, NEW-014]",
+        "start": "2026-03-07T15:43:18.969253",
+        "end": "2026-03-07T15:45:18.286429",
+        "duration_seconds": 119.317176,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 119.317176
+  },
+  "T9.1": {
+    "entries": [
+      {
+        "id": "local-20260307164923",
+        "task_id": "T9.1",
+        "description": "T9.1: Webhook security hardening [AUDIT-001, AUDIT-008]",
+        "start": "2026-03-07T16:49:23.378033",
+        "end": "2026-03-07T16:53:21.504684",
+        "duration_seconds": 238.126651,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 238.126651
+  },
+  "T9.2": {
+    "entries": [
+      {
+        "id": "local-20260307165525",
+        "task_id": "T9.2",
+        "description": "T9.2: Proxy + monitoring auth [AUDIT-002, AUDIT-004, AUDIT-014]",
+        "start": "2026-03-07T16:55:25.838587",
+        "end": "2026-03-07T16:57:54.496797",
+        "duration_seconds": 148.65821,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 148.65821
+  },
+  "T9.3": {
+    "entries": [
+      {
+        "id": "local-20260307165825",
+        "task_id": "T9.3",
+        "description": "T9.3: Secrets cleanup + startup warnings [AUDIT-003, AUDIT-009, AUDIT-016]",
+        "start": "2026-03-07T16:58:25.105656",
+        "end": "2026-03-07T17:01:06.829785",
+        "duration_seconds": 161.724129,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 161.724129
+  },
+  "T9.4": {
+    "entries": [
+      {
+        "id": "local-20260307170619",
+        "task_id": "T9.4",
+        "description": "T9.4: Frontend security headers + redirect validation [AUDIT-005, AUDIT-007]",
+        "start": "2026-03-07T17:06:19.233071",
+        "end": "2026-03-07T17:10:07.966887",
+        "duration_seconds": 228.733816,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 228.733816
+  },
+  "T9.5": {
+    "entries": [
+      {
+        "id": "local-20260307171512",
+        "task_id": "T9.5",
+        "description": "T9.5: Backend response + middleware hardening [AUDIT-006, AUDIT-012, AUDIT-013]",
+        "start": "2026-03-07T17:15:12.315327",
+        "end": "2026-03-07T17:19:38.538751",
+        "duration_seconds": 266.223424,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 266.223424
+  },
+  "T9.6": {
+    "entries": [
+      {
+        "id": "local-20260307172356",
+        "task_id": "T9.6",
+        "description": "T9.6: Auth cache bounds + frontend UX [AUDIT-011, AUDIT-015]",
+        "start": "2026-03-07T17:23:56.218233",
+        "end": "2026-03-07T17:32:33.921660",
+        "duration_seconds": 517.703427,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 517.703427
+  },
+  "T9.7": {
+    "entries": [
+      {
+        "id": "local-20260307173503",
+        "task_id": "T9.7",
+        "description": "T9.7: Documentation + CI gaps [AUDIT-010, AUDIT-017, AUDIT-018]",
+        "start": "2026-03-07T17:35:03.255114",
+        "end": "2026-03-07T17:36:58.895339",
+        "duration_seconds": 115.640225,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 115.640225
+  },
+  "T10.1": {
+    "entries": [
+      {
+        "id": "local-20260307191222",
+        "task_id": "T10.1",
+        "description": "T10.1: CSP: Replace unsafe-inline/unsafe-eval with nonce-based script-src",
+        "start": "2026-03-07T19:12:22.208998",
+        "end": "2026-03-07T19:15:59.614914",
+        "duration_seconds": 217.405916,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 217.405916
+  },
+  "T10.2": {
+    "entries": [
+      {
+        "id": "local-20260307191611",
+        "task_id": "T10.2",
+        "description": "T10.2: Prometheus scrape auth: uncomment prod config + deployment docs",
+        "start": "2026-03-07T19:16:11.641780",
+        "end": "2026-03-07T19:17:59.606473",
+        "duration_seconds": 107.964693,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 107.964693
+  },
+  "T10.3": {
+    "entries": [
+      {
+        "id": "local-20260307191806",
+        "task_id": "T10.3",
+        "description": "T10.3: Frontend DB layer: read-only enforcement + token validation",
+        "start": "2026-03-07T19:18:06.163570",
+        "end": "2026-03-07T19:19:54.922333",
+        "duration_seconds": 108.758763,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 108.758763
+  },
+  "T10.4": {
+    "entries": [
+      {
+        "id": "local-20260307192001",
+        "task_id": "T10.4",
+        "description": "T10.4: Operational docs: Grafana creds, Clerk key guidance, SOC2 update",
+        "start": "2026-03-07T19:20:01.121264",
+        "end": "2026-03-07T19:21:03.109961",
+        "duration_seconds": 61.988697,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 61.988697
+  },
+  "T11.1": {
+    "entries": [
+      {
+        "id": "local-20260308034443",
+        "task_id": "T11.1",
+        "description": "T11.1: Streaming body size enforcement for chunked transfer encoding",
+        "start": "2026-03-08T03:44:43.140678",
+        "end": "2026-03-08T03:49:45.317356",
+        "duration_seconds": 302.176678,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 302.176678
+  },
+  "T11.2": {
+    "entries": [
+      {
+        "id": "local-20260308035019",
+        "task_id": "T11.2",
+        "description": "T11.2: Backend URL validation \u2014 reject embedded credentials",
+        "start": "2026-03-08T03:50:19.649925",
+        "end": "2026-03-08T03:51:59.062399",
+        "duration_seconds": 99.412474,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 99.412474
+  },
+  "T11.3": {
+    "entries": [
+      {
+        "id": "local-20260308035215",
+        "task_id": "T11.3",
+        "description": "T11.3: DevAuthProvider production build guard",
+        "start": "2026-03-08T03:52:15.492650",
+        "end": "2026-03-08T03:55:21.277589",
+        "duration_seconds": 185.784939,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 185.784939
+  },
+  "T11.4": {
+    "entries": [
+      {
+        "id": "local-20260308035530",
+        "task_id": "T11.4",
+        "description": "T11.4: Config cleanup \u2014 Stripe key prefix and Prometheus dev auth docs",
+        "start": "2026-03-08T03:55:30.979070",
+        "end": "2026-03-08T03:57:39.715706",
+        "duration_seconds": 128.736636,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 128.736636
+  },
+  "T12.1": {
+    "entries": [
+      {
+        "id": "local-20260308044025",
+        "task_id": "T12.1",
+        "description": "T12.1: Evaluate and implement sqlalchemy-libsql or PostgreSQL migration",
+        "start": "2026-03-08T04:40:25.781804",
+        "end": "2026-03-08T04:52:44.043185",
+        "duration_seconds": 738.261381,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 738.261381
+  },
+  "T12.2": {
+    "entries": [
+      {
+        "id": "local-20260308045254",
+        "task_id": "T12.2",
+        "description": "T12.2: Remove or justify frontend DB layer (src/db/)",
+        "start": "2026-03-08T04:52:54.388103",
+        "end": "2026-03-08T04:56:28.323657",
+        "duration_seconds": 213.935554,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 213.935554
+  },
+  "T12.3": {
+    "entries": [
+      {
+        "id": "local-20260308045638",
+        "task_id": "T12.3",
+        "description": "T12.3: Consolidate to single migration system",
+        "start": "2026-03-08T04:56:38.536004",
+        "end": "2026-03-08T04:57:18.481846",
+        "duration_seconds": 39.945842,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 39.945842
+  },
+  "T12.4": {
+    "entries": [
+      {
+        "id": "local-20260308045729",
+        "task_id": "T12.4",
+        "description": "T12.4: Create database seed script",
+        "start": "2026-03-08T04:57:29.364228",
+        "end": "2026-03-08T05:08:46.747369",
+        "duration_seconds": 677.383141,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 677.383141
+  },
+  "T13.1": {
+    "entries": [
+      {
+        "id": "local-20260308175215",
+        "task_id": "T13.1",
+        "description": "T13.1: Create users/customers table with Stripe customer mapping",
+        "start": "2026-03-08T17:52:15.986278",
+        "end": "2026-03-08T17:57:23.578771",
+        "duration_seconds": 307.592493,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 307.592493
+  },
+  "T13.2": {
+    "entries": [
+      {
+        "id": "local-20260308183012",
+        "task_id": "T13.2",
+        "description": "T13.2: Webhook handler \u2014 store subscription state from Stripe events",
+        "start": "2026-03-08T18:30:12.671261",
+        "end": "2026-03-08T18:36:56.012671",
+        "duration_seconds": 403.34141,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 403.34141
+  },
+  "T13.3": {
+    "entries": [
+      {
+        "id": "local-20260308185211",
+        "task_id": "T13.3",
+        "description": "T13.3: Implement billing portal endpoint",
+        "start": "2026-03-08T18:52:11.888313",
+        "end": "2026-03-08T18:55:54.755804",
+        "duration_seconds": 222.867491,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 222.867491
+  },
+  "T13.4": {
+    "entries": [
+      {
+        "id": "local-20260308192446",
+        "task_id": "T13.4",
+        "description": "T13.4: Feature gating middleware \u2014 check subscription entitlements",
+        "start": "2026-03-08T19:24:46.391999",
+        "end": "2026-03-08T19:30:10.435108",
+        "duration_seconds": 324.043109,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 324.043109
+  },
+  "T13.5": {
+    "entries": [
+      {
+        "id": "local-20260309015313",
+        "task_id": "T13.5",
+        "description": "T13.5: Dashboard \u2014 display real subscription plan and status",
+        "start": "2026-03-09T01:53:13.221272",
+        "end": "2026-03-09T01:58:19.285820",
+        "duration_seconds": 306.064548,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 306.064548
+  },
+  "T14.1": {
+    "entries": [
+      {
+        "id": "local-20260309073237",
+        "task_id": "T14.1",
+        "description": "T14.1: Configure Grafana alert rules (error rate, auth failures, latency)",
+        "start": "2026-03-09T07:32:37.533183",
+        "end": "2026-03-09T07:39:01.790552",
+        "duration_seconds": 384.257369,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 384.257369
+  },
+  "T14.2": {
+    "entries": [
+      {
+        "id": "local-20260309134025",
+        "task_id": "T14.2",
+        "description": "T14.2: Create incident response runbook",
+        "start": "2026-03-09T13:40:25.524440",
+        "end": "2026-03-09T13:44:21.434683",
+        "duration_seconds": 235.910243,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 235.910243
+  },
+  "T14.3": {
+    "entries": [
+      {
+        "id": "local-20260309135538",
+        "task_id": "T14.3",
+        "description": "T14.3: Automated database backups with RPO/RTO targets",
+        "start": "2026-03-09T13:55:38.993655",
+        "end": "2026-03-09T14:00:14.364149",
+        "duration_seconds": 275.370494,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 275.370494
+  },
+  "T14.4": {
+    "entries": [
+      {
+        "id": "local-20260309140120",
+        "task_id": "T14.4",
+        "description": "T14.4: Wire Playwright E2E tests into CI pipeline",
+        "start": "2026-03-09T14:01:20.718081",
+        "end": "2026-03-09T14:04:49.265719",
+        "duration_seconds": 208.547638,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 208.547638
+  },
+  "T14.5": {
+    "entries": [
+      {
+        "id": "local-20260309140518",
+        "task_id": "T14.5",
+        "description": "T14.5: Add staging/production deployment stages to GitHub Actions",
+        "start": "2026-03-09T14:05:18.406022",
+        "end": "2026-03-09T14:07:55.941591",
+        "duration_seconds": 157.535569,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 157.535569
+  },
+  "T14.6": {
+    "entries": [
+      {
+        "id": "local-20260309143535",
+        "task_id": "T14.6",
+        "description": "T14.6: Add frontend Docker build verification in CI",
+        "start": "2026-03-09T14:35:35.058322",
+        "end": "2026-03-09T14:37:35.227921",
+        "duration_seconds": 120.169599,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 120.169599
+  },
+  "T14.7": {
+    "entries": [
+      {
+        "id": "local-20260309144043",
+        "task_id": "T14.7",
+        "description": "T14.7: Create CHANGELOG.md with conventional commit automation",
+        "start": "2026-03-09T14:40:43.180927",
+        "end": "2026-03-09T14:43:09.804851",
+        "duration_seconds": 146.623924,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 146.623924
+  },
+  "T15.1": {
+    "entries": [
+      {
+        "id": "local-20260309151452",
+        "task_id": "T15.1",
+        "description": "T15.1: Single-command dev setup (Makefile)",
+        "start": "2026-03-09T15:14:52.994914",
+        "end": "2026-03-09T15:16:55.059857",
+        "duration_seconds": 122.064943,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 122.064943
+  },
+  "T15.2": {
+    "entries": [
+      {
+        "id": "local-20260309151917",
+        "task_id": "T15.2",
+        "description": "T15.2: Central configuration reference document",
+        "start": "2026-03-09T15:19:17.500535",
+        "end": "2026-03-09T15:21:10.292367",
+        "duration_seconds": 112.791832,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 112.791832
+  },
+  "T15.3": {
+    "entries": [
+      {
+        "id": "local-20260309152434",
+        "task_id": "T15.3",
+        "description": "T15.3: Centralized log aggregation with Fluent Bit",
+        "start": "2026-03-09T15:24:34.347158",
+        "end": "2026-03-09T15:29:18.803569",
+        "duration_seconds": 284.456411,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 284.456411
+  },
+  "T15.4": {
+    "entries": [
+      {
+        "id": "local-20260309152958",
+        "task_id": "T15.4",
+        "description": "T15.4: External uptime monitoring with PagerDuty integration",
+        "start": "2026-03-09T15:29:58.038013",
+        "end": "2026-03-09T15:33:47.673770",
+        "duration_seconds": 229.635757,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 229.635757
+  },
+  "T15.5": {
+    "entries": [
+      {
+        "id": "local-20260309153425",
+        "task_id": "T15.5",
+        "description": "T15.5: On-call rotation, escalation policies, and PIR process",
+        "start": "2026-03-09T15:34:25.286197",
+        "end": "2026-03-09T15:36:29.055156",
+        "duration_seconds": 123.768959,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 123.768959
+  },
+  "T15.6": {
+    "entries": [
+      {
+        "id": "local-20260309153657",
+        "task_id": "T15.6",
+        "description": "T15.6: Tested database restore process and backup monitoring",
+        "start": "2026-03-09T15:36:57.772265",
+        "end": "2026-03-09T15:39:40.899917",
+        "duration_seconds": 163.127652,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 163.127652
+  },
+  "T15.7": {
+    "entries": [
+      {
+        "id": "local-20260309154016",
+        "task_id": "T15.7",
+        "description": "T15.7: Monorepo workspace configuration (pnpm/turborepo)",
+        "start": "2026-03-09T15:40:16.475191",
+        "end": "2026-03-09T15:41:40.610031",
+        "duration_seconds": 84.13484,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 84.13484
+  },
+  "T16.1": {
+    "entries": [
+      {
+        "id": "local-20260309161908",
+        "task_id": "T16.1",
+        "description": "T16.1: Email/notification system with transactional templates",
+        "start": "2026-03-09T16:19:08.188568",
+        "end": "2026-03-09T16:24:14.199567",
+        "duration_seconds": 306.010999,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 306.010999
+  },
+  "T16.2": {
+    "entries": [
+      {
+        "id": "local-20260309162514",
+        "task_id": "T16.2",
+        "description": "T16.2: RBAC -- roles, permissions, and admin role",
+        "start": "2026-03-09T16:25:14.445802",
+        "end": "2026-03-09T16:30:08.829876",
+        "duration_seconds": 294.384074,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 294.384074
+  },
+  "T16.3": {
+    "entries": [
+      {
+        "id": "local-20260309163044",
+        "task_id": "T16.3",
+        "description": "T16.3: Admin dashboard for user management and system health",
+        "start": "2026-03-09T16:30:44.623512",
+        "end": "2026-03-09T16:40:18.794830",
+        "duration_seconds": 574.171318,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 574.171318
+  },
+  "T16.4": {
+    "entries": [
+      {
+        "id": "local-20260309164400",
+        "task_id": "T16.4",
+        "description": "T16.4: User profile management -- avatar, name, account deletion",
+        "start": "2026-03-09T16:44:00.428738",
+        "end": "2026-03-09T16:49:11.866091",
+        "duration_seconds": 311.437353,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 311.437353
+  },
+  "T16.5": {
+    "entries": [
+      {
+        "id": "local-20260309165124",
+        "task_id": "T16.5",
+        "description": "T16.5: Search, sort, and filter on list endpoints",
+        "start": "2026-03-09T16:51:24.418913",
+        "end": "2026-03-09T17:00:02.013807",
+        "duration_seconds": 517.594894,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 517.594894
+  },
+  "T17.1": {
+    "entries": [
+      {
+        "id": "local-20260309180000",
+        "task_id": "T17.1",
+        "description": "T17.1: File upload with S3/R2 presigned URLs",
+        "start": "2026-03-09T18:00:00.567926",
+        "end": "2026-03-09T18:11:08.244961",
+        "duration_seconds": 667.677035,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 667.677035
+  },
+  "T17.2": {
+    "entries": [
+      {
+        "id": "local-20260309181528",
+        "task_id": "T17.2",
+        "description": "T17.2: Real-time features -- WebSocket or SSE support",
+        "start": "2026-03-09T18:15:28.568810",
+        "end": "2026-03-09T18:24:43.075993",
+        "duration_seconds": 554.507183,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 554.507183
+  },
+  "T17.3": {
+    "entries": [
+      {
+        "id": "local-20260309183202",
+        "task_id": "T17.3",
+        "description": "T17.3: User onboarding flow -- guided setup wizard",
+        "start": "2026-03-09T18:32:02.899152",
+        "end": "2026-03-09T18:42:53.478850",
+        "duration_seconds": 650.579698,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 650.579698
+  }
+}

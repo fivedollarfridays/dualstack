@@ -132,7 +132,7 @@ trello:
     on_task_block:
       move_to_list: Issues/Tech Debt
       set_status: Blocked
-version: 2.15.11
+version: 2.21.4
 pack:
   default_name: agent_pack.tgz
   excludes:
@@ -212,32 +212,36 @@ metrics:
 hooks:
   enabled: true
   on_task_ready:
-  - sync_trello
+  - sync_pm
   - update_state
+  - sync_trello
   on_task_start:
   - select_model
   - check_token_budget
   - start_timer
-  - sync_trello
+  - sync_pm
   - update_state
+  - sync_trello
   on_task_review:
-  - sync_trello
+  - sync_pm
   - update_state
+  - sync_trello
   on_task_complete:
   - arch_check_modified
   - contract_break_check
   - stop_timer
-  - record_token_usage
-  - apply_token_learning
   - workspace_impact_scan
   - telemetry_snapshot
   - calibration_update_incremental
   - feedback_calibrate
-  - sync_trello
+  - sync_pm
   - update_state
   - check_unblocked
-  on_task_block:
   - sync_trello
+  on_task_block:
+  - sync_pm
   - update_state
-
-
+  - sync_trello
+pm:
+  provider: none
+  workflow: simple

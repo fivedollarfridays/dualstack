@@ -1,0 +1,7 @@
+id: plan-2026-03-clerk-auth-bypass
+title: Strip Clerk Dependency — Auth Bypass Mode
+type: refactor
+status: planned
+created_at: '2026-03-03T23:19:59.560037'
+skills:
+- planning-with-trello

@@ -1,0 +1,8 @@
+{
+  "version": "2.0",
+  "task_id": "T8.2",
+  "source_agent": "driver",
+  "target_agent": "reviewer",
+  "task_description": "[T8.2] Error handling hardening: webhook signature + 422 sanitization [NEW-003, NEW-004]",
+  "acceptance_criteria": [
+    

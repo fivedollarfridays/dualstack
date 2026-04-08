@@ -1,0 +1,43 @@
+id: plan-2026-03-tenantforge-extraction
+title: 'Qluo / TenantForge — Get Sellable'
+type: feature
+status: planned
+created_at: '2026-03-16T00:00:00.000000'
+estimated_complexity: 300
+sprint_budget: 4
+skills:
+- planning-with-pm
+- implementing-with-tdd
+tasks:
+- id: T1
+  title: Create TenantForge repo
+  sprint: 1
+  complexity: 20
+- id: T2
+  title: Transfer 11 generic modules
+  sprint: 1
+  complexity: 60
+- id: T3
+  title: Triage 8 dual-purpose modules
+  sprint: 2
+  complexity: 40
+- id: T4
+  title: Build reference entity
+  sprint: 2
+  complexity: 40
+- id: T5
+  title: Adapt frontend
+  sprint: 3
+  complexity: 50
+- id: T6
+  title: Write documentation
+  sprint: 3
+  complexity: 30
+- id: T7
+  title: Test suite to EdgeStack standards
+  sprint: 4
+  complexity: 40
+- id: T8
+  title: DevStack Store listing + publish
+  sprint: 4
+  complexity: 20
