@@ -1062,5 +1062,19 @@
       }
     ],
     "total_seconds": 650.579698
+  },
+  "OSS1.1": {
+    "entries": [
+      {
+        "id": "local-20260407211509",
+        "task_id": "OSS1.1",
+        "description": "OSS1.1: Replace LICENSE with MIT",
+        "start": "2026-04-07T21:15:09.871043",
+        "end": "2026-04-07T21:16:40.627303",
+        "duration_seconds": 90.75626,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 90.75626
   }
 }

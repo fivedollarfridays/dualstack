@@ -354,5 +354,9 @@
   "T23.1": {
     "last_cli_update": "2026-03-18T00:24:50.800814",
     "last_status": "done"
+  },
+  "OSS1.1": {
+    "last_cli_update": "2026-04-07T21:16:40.517213",
+    "last_status": "done"
   }
 }

@@ -497,4 +497,4 @@ This project was built using [PairCoder](https://github.com/bpsai-labs/paircoder
 
 ## License
 
-Personal Use License - Copyright (c) 2026 Kevin Masterson. See [LICENSE](LICENSE) for details.
+MIT License - Copyright (c) 2026 Kevin Masterson. See [LICENSE](LICENSE) for details.
