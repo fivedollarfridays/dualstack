@@ -11,7 +11,16 @@ unreleased entries into a new version section. Use conventional commit prefixes
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+## [2.0.0] - 2026-04-07
+
+Open source release under the MIT License.
+
 ### Added
+- `CONTRIBUTING.md` — contributor guide with PR process and coding standards
+- `CLAUDE.md` — AI-assisted contributor guide
+- GitHub issue and PR templates (`.github/`)
 - Grafana alerting provisioning — error rate, auth failure, P99 latency alerts
 - Incident response runbook (`docs/INCIDENT-RESPONSE.md`)
 - Database backup script with RPO/RTO targets (`scripts/backup.sh`)
@@ -19,6 +28,11 @@ unreleased entries into a new version section. Use conventional commit prefixes
 - Staging/production deployment workflow with approval gates
 - Frontend Docker build verification in CI
 - SOC2 compliance gap analysis updates (CC7.1, CC7.2, CC6.1)
+
+### Changed
+- Project is now publicly available under the MIT License
+- `README.md` rewritten for open source audience
+- `SECURITY.md` updated with public vulnerability disclosure process
 
 ## [1.0.0] - 2026-03-07
 

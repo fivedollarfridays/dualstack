@@ -1,7 +1,7 @@
-"""Doc accuracy tests — validates README.md and LISTING.md claims.
+"""Doc accuracy tests — validates README.md claims.
 
 Ensures no stale Drizzle references, correct test counts, and qualified
-email feature descriptions across documentation files.
+email feature descriptions in documentation.
 """
 
 from pathlib import Path
@@ -35,36 +35,20 @@ class TestReadmeTestCounts:
     def test_readme_test_count_badge(self) -> None:
         text = (ROOT / "README.md").read_text()
         # Badge line uses format: tests-NNNN_passing
-        assert "tests-1357_passing" in text, (
-            "README badge must show 1357 tests passing"
+        assert "tests-1460_passing" in text, (
+            "README badge must show 1460 tests passing"
         )
 
     def test_readme_test_count_backend(self) -> None:
         text = (ROOT / "README.md").read_text()
-        assert "863 tests" in text, (
-            "README must reference 863 backend tests"
+        assert "927 tests" in text, (
+            "README must reference 927 backend tests"
         )
 
     def test_readme_test_count_frontend(self) -> None:
         text = (ROOT / "README.md").read_text()
-        assert "494 tests" in text, (
-            "README must reference 494 frontend tests"
-        )
-
-
-class TestListingTestCounts:
-    """Verify LISTING.md test counts match current numbers."""
-
-    def test_listing_test_count_total(self) -> None:
-        text = (ROOT / "badges" / "LISTING.md").read_text()
-        assert "1,357" in text, (
-            "LISTING.md must reference 1,357 total tests"
-        )
-
-    def test_listing_test_count_frontend(self) -> None:
-        text = (ROOT / "badges" / "LISTING.md").read_text()
-        assert "494 frontend" in text, (
-            "LISTING.md must reference 494 frontend tests"
+        assert "533 tests" in text, (
+            "README must reference 533 frontend tests"
         )
 
 
@@ -80,14 +64,4 @@ class TestEmailFeatureQualified:
         ]
         assert any("infrastructure" in line.lower() for line in email_lines), (
             "README email feature must be qualified as infrastructure-ready"
-        )
-
-    def test_email_feature_qualified_listing(self) -> None:
-        text = (ROOT / "badges" / "LISTING.md").read_text()
-        email_lines = [
-            line for line in text.splitlines()
-            if "email" in line.lower() and "resend" in line.lower()
-        ]
-        assert any("infrastructure" in line.lower() for line in email_lines), (
-            "LISTING.md email feature must be qualified as infrastructure-ready"
         )

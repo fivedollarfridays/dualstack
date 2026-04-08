@@ -347,4 +347,4 @@ The API logs a warning on startup when storage is not configured. Set all four s
 
 ---
 
-Built with [PairCoder](https://github.com/bpsai-labs/paircoder) -- AI-augmented pair programming by BPS AI.
+Built with [Claude Code](https://claude.ai/code) — AI-augmented pair programming.

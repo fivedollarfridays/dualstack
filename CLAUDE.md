@@ -1,283 +1,145 @@
-# Claude Code Instructions
+# DualStack — Contributor Guide
 
-> **bpsai-pair** — AI-augmented pair programming framework
-
----
-
-## ⚠️ NON-NEGOTIABLE REQUIREMENTS
-
-These requirements MUST be followed. Failure to follow them is a serious workflow violation.
-
-### 0. Follow TDD for ALL Code Changes
-
-**MANDATORY for any task involving code:**
-1. **Write failing tests FIRST** - before writing any implementation code
-2. **Write minimal code to pass** - only enough to make tests green
-3. **Refactor** - clean up while keeping tests green
-4. **Repeat** - for each piece of functionality
-
-**USE THE SKILL:** When implementing code, invoke the `implementing-with-tdd` skill:
-```
-Use Skill tool with skill: "implementing-with-tdd"
-```
-
-**DO NOT:**
-- Write implementation code before tests exist
-- Write all code then add tests after
-- Skip tests for "simple" code
-
-### 1. Update state.md After EVERY Task Completion
-
-**IMMEDIATELY after completing any task**, you MUST update `.paircoder/context/state.md`:
-- Mark the task as done in the task list
-- Add a session entry under "What Was Just Done" describing what was accomplished
-- Update "What's Next" if applicable
-
-**DO NOT:**
-- Proceed to other work before updating state.md
-- Batch multiple task completions before updating
-- Claim a task is complete without documenting it in state.md
-
-### 2. Follow Trello Completion Workflow
-
-When completing tasks with Trello cards:
-1. `bpsai-pair ttask done TRELLO-XX --summary "..."`
-   - ✓ Checks acceptance criteria
-   - ✓ Moves card to Done list
-   - ✓ Auto-updates local task file
-   - ✓ Runs completion hooks (updates state.md)
-
-**DO NOT** use `task update --status done` for Trello-linked tasks.
-The `ttask done` command handles everything automatically.
-
-**Bypasses (audited):**
-- `--no-strict`: Skip AC check (logged to bypass_log.jsonl)
-- `task update --local-only --reason "..."`: Update local only (logged)
+> Full-stack SaaS starter: FastAPI + Next.js 15 + SQLAlchemy + Clerk + Stripe
 
 ---
 
-## Before Doing Anything
-
-1. **Read** `.paircoder/capabilities.yaml` — understand what you can do
-2. **Read** `.paircoder/context/state.md` — understand current status
-3. **Check** if a skill applies to the user's request (see `.claude/skills/`)
-4. **If starting a task**: Run `bpsai-pair task update TASK-XXX --status in_progress`
-
----
-
-## ⚠️ BEFORE ANY TRELLO OPERATIONS
-
-**MANDATORY:** Before creating plans, syncing to Trello, or updating cards:
-
-1. **Configure your board** — Run `bpsai-pair trello use-board <board-id>` to set your active board
-2. **Set project defaults** — Configure your project name, stack, and repo URL in `.paircoder/config.yaml`
-3. **Use valid values** — Only use dropdown values that exist on your Trello board
-
-**NEVER:**
-- Create new custom field dropdown values without checking the board first
-- Use `maintenance` as plan type (use `chore`)
-
----
-
-
-## Task Naming Convention
-
-| Sprint Tasks | Format | Example |
-|--------------|--------|---------|
-| Current sprint | `T{sprint}.{seq}` | T18.1, T18.2, T19.1 |
-| Legacy | `TASK-{num}` | TASK-150 |
-| Release | `REL-{sprint}-{seq}` | REL-18-01 |
-
-**Use the format specified in the backlog document.** If backlog says `T18.1`, create task with id `T18.1`, not `TASK-###`.
-
----
-
-## Valid Plan Types
+## Project Structure
 
 ```
-feature  - New functionality
-bugfix   - Bug fixes  
-refactor - Code improvements
-chore    - Maintenance, cleanup, docs, releases
+backend/           # FastAPI application (Python 3.13, async SQLAlchemy)
+  app/
+    core/          # Auth, config, database, rate limiting, metrics, errors
+    items/         # Reference CRUD module (models, schemas, routes, service)
+    users/         # User profiles and account management
+    billing/       # Stripe checkout, portal, webhooks
+    files/         # S3/R2 presigned upload/download
+    admin/         # Admin endpoints (users, health, audit)
+  tests/           # Backend tests (mirrors app/ structure)
+frontend/          # Next.js 15 (React, TypeScript, pnpm)
+  src/
+    app/           # App Router pages (dashboard, items, billing, admin)
+    components/    # Shared UI components
+    hooks/         # Custom hooks (useItems, useWebSocket, etc.)
+    lib/api/       # API client modules
+  e2e/             # Playwright end-to-end tests
+monitoring/        # Prometheus + Grafana + Alertmanager + Loki (Docker Compose)
+scripts/           # Seed data, env checker, rename utility
+docs/              # Architecture and operations docs
 ```
 
-**`maintenance` is NOT valid.** Use `chore` instead.
+## Adding a New API Endpoint
 
----
-
-## Key Files
+Follow the Items module pattern in `backend/app/items/`. Each domain module has four files:
 
 | File | Purpose |
 |------|---------|
-| `.paircoder/capabilities.yaml` | Your capabilities and when to use them |
-| `.paircoder/context/project.md` | Project overview and constraints |
-| `.paircoder/context/state.md` | Current plan, tasks, and status |
-| `.paircoder/context/workflow.md` | How we work here |
-| `.paircoder/config.yaml` | Project configuration |
+| `models.py` | SQLAlchemy ORM model (inherit from `Base`) |
+| `schemas.py` | Pydantic request/response schemas |
+| `service.py` | Async business logic functions |
+| `routes.py` | FastAPI `APIRouter` with auth, rate limiting, audit logging |
 
-## Your Roles
+**Steps:**
 
-You can operate in different roles depending on the work:
+1. Copy `backend/app/items/` to `backend/app/<yourmodule>/` (or run `python scripts/rename.py --from item --to <yourname>`)
+2. Define your model, schemas, service functions, and routes
+3. Register the router in `backend/app/main.py`: `app.include_router(router, prefix="/api/v1")`
+4. Create an Alembic migration: `alembic revision --autogenerate -m "add <table> table"`
+5. Write tests in `backend/tests/<yourmodule>/`
 
-### Navigator (Planning & Design)
-- Clarify goals, ask questions
-- Propose approaches with tradeoffs
-- Create/update plans and tasks
-- Strategic thinking
+**Key conventions in routes:**
+- All routes require JWT auth via `get_current_user_id` dependency
+- Rate limiting: `@limiter.limit("60/minute")` for reads, `"30/minute"` for writes
+- All mutations log audit events
+- User-scoped data access (queries filtered by `user_id`)
 
-### Driver (Implementation)
-- Write and update code
-- Run tests
-- Follow task specifications
-- Tactical execution
+## Adding a Frontend Page
 
-### Reviewer (Quality)
-- Review code changes
-- Check for issues
-- Ensure gates pass
-- Suggest improvements
+Pages use the Next.js App Router in `frontend/src/app/`.
 
-## Skills
+- **Protected pages** go under `(dashboard)/` (requires Clerk auth)
+- **Public pages** go at the top level
 
-Skills in `.claude/skills/` are auto-discovered by Claude Code:
+**Steps:**
 
-| Skill | Purpose |
-|-------|---------|
-| `designing-and-implementing` | Feature development workflow |
-| `implementing-with-tdd` | Test-driven development |
-| `reviewing-code` | Code review workflow |
-| `finishing-branches` | Branch completion |
-| `managing-task-lifecycle` | Task workflow with Trello |
-| `planning-with-trello` | Planning with Trello integration |
-| `creating-skills` | Skill creation guide |
-| `releasing-versions` | Version release workflow |
+1. Create `frontend/src/app/(dashboard)/<yourpage>/page.tsx`
+2. Add an API client in `frontend/src/lib/api/<yourmodule>.ts`
+3. Create a React Query hook in `frontend/src/hooks/use-<yourmodule>.ts`
+4. Add navigation in the sidebar layout (`(dashboard)/layout.tsx`)
 
-## Skill Triggers
+**State management:** React Query for server state, Zustand for client state.
 
-When you see these patterns, use the corresponding skill:
+## Testing Conventions
 
-| User Says | Suggested Skill |
-|-----------|-----------------|
-| "build a...", "create a...", "add a..." | `designing-and-implementing` |
-| "fix", "bug", "broken", "error" | `implementing-with-tdd` |
-| "review", "check", "look at" | `reviewing-code` |
-| "done", "finished", "ready to merge" | `finishing-branches` |
-| "start task", "work on TRELLO-" | `managing-task-lifecycle` |
-
-## After Completing Work
-
-**⚠️ This is a NON-NEGOTIABLE requirement. See top of this document.**
-
-1. **Trello** (if card exists): `bpsai-pair ttask done TRELLO-XX --summary "..."`
-   - This automatically updates local task file and runs completion hooks
-2. **Non-Trello tasks only**: `bpsai-pair task update <id> --status done`
-3. **IMMEDIATELY update** `.paircoder/context/state.md`:
-   - Mark task as done in task list (✓)
-   - Add session entry under "What Was Just Done"
-   - Update "What's Next"
-
-**You are NOT done until state.md is updated.**
-
-## Project-Specific Notes
-
-## Slash Commands
-
-Quick commands available via `/command` in Claude Code:
-
-| Command | Purpose |
-|---------|---------|
-| `/pc-plan` | Enter Navigator role, create plan with budget validation |
-| `/start-task <ID>` | Enter Driver role, work on task with verification gates |
-| `/prep-release <ver>` | Enter Release Engineer role, prepare release |
-
-**Usage**: Type `/pc-plan backlog-sprint-28.md` in the chat to run the planning workflow.
-
-**Note**: For project status, use `bpsai-pair status` CLI command (no slash command).
-
-## CLI Reference
+### Backend — pytest
 
 ```bash
-# Status
-bpsai-pair status
-
-# Plans
-bpsai-pair plan list
-bpsai-pair plan show <id>
-
-# Tasks
-bpsai-pair task list --plan <id>
-# For non-Trello tasks:
-bpsai-pair task update <id> --status done
-# For Trello-linked tasks - use ttask done instead (handles local update)
-# Emergency local-only update (audited):
-bpsai-pair task update <id> --status done --local-only --reason "..."
-
-# Skills
-bpsai-pair skill list
-bpsai-pair skill validate
-bpsai-pair skill export --all --format cursor
-
-# Trello Tasks
-bpsai-pair ttask start TRELLO-XX           # Budget check runs automatically
-bpsai-pair ttask start TRELLO-XX --budget-override  # Override budget (audited)
-bpsai-pair ttask done TRELLO-XX --summary "..."     # Complete with AC check
-bpsai-pair ttask done TRELLO-XX --no-strict         # Skip AC check (audited)
-
-# Budget
-bpsai-pair budget status
-bpsai-pair budget check --task <id>
-
-# Context
-bpsai-pair context-sync --last "..." --next "..."
-bpsai-pair pack
+cd backend && pytest --cov=app --cov-report=term-missing tests/
 ```
 
----
+- `asyncio_mode = auto` — all async tests run automatically
+- Tests mirror the `app/` directory structure
+- Use the existing fixtures in `conftest.py` for DB sessions, auth, and test client
 
-## Contained Autonomy Mode
+### Frontend — Jest
 
-You may be running in **Contained Autonomy Mode**. This mode restricts your ability to modify certain files while allowing full autonomous operation in the working area.
-
-### Understanding Your Access Restrictions
-
-In containment mode, files are organized into three tiers:
-
-| Tier | Access | You Can |
-|------|--------|---------|
-| **Blocked** | No read/write | Not access at all |
-| **Read-only** | Read only | Read to understand context |
-| **Read-write** | Full access | Modify freely |
-
-### Protected Paths (Read-only)
-
-You **cannot modify** these paths in containment mode:
-- `.claude/agents/`, `.claude/commands/`, `.claude/skills/`
-- `CLAUDE.md`, `AGENTS.md`
-
-### Blocked Paths (No Access)
-
-You **cannot read or write** these in containment mode:
-- `.env`, `.env.local`, `.env.production`
-- `credentials.json`, `secrets.yaml`
-
-### What You CAN Do
-
-In containment mode, you have full access to:
-- Source code in `src/`, `lib/`, etc.
-- Tests in `tests/`
-- Documentation (except protected files)
-- Task files in `.paircoder/tasks/`
-- State file `.paircoder/context/state.md`
-
-### If You Encounter Restrictions
-
-1. **For legitimate needs**: Ask the user to exit containment mode
-2. **For protected file changes**: The user can make changes manually
-3. **Don't attempt workarounds**: Violations are logged for audit
-
-### Checking Your Mode
-
-If unsure whether you're in containment mode, the user can run:
 ```bash
-bpsai-pair containment status
+cd frontend && pnpm test            # run tests
+cd frontend && pnpm test:coverage   # with coverage
 ```
+
+- Test environment: jsdom
+- Path alias: `@/` maps to `src/`
+- Coverage threshold: 99% (statements, branches, functions, lines)
+
+### End-to-End — Playwright
+
+```bash
+cd frontend && pnpm exec playwright test
+```
+
+- Auth state stored at `playwright/.clerk/user.json`
+- Public tests (landing page) run without auth
+- Authenticated tests run with stored Clerk session
+
+### TDD Workflow
+
+Write failing tests first, then implement. For every change:
+
+1. Write a test that fails
+2. Write minimal code to make it pass
+3. Refactor while keeping tests green
+
+## Architecture Constraints
+
+Keep files small and focused:
+
+| Metric | Source Files | Test Files |
+|--------|-------------|------------|
+| Max lines (error) | 400 | 600 |
+| Max lines (warning) | 200 | 400 |
+| Max function length | 50 lines | 50 lines |
+| Max functions per file | 15 | 30 |
+| Max imports per file | 20 | 40 |
+
+When a file exceeds limits, extract helpers into a separate module.
+
+## Common Commands
+
+```bash
+make setup          # Install all dependencies
+make dev            # Start backend + frontend dev servers
+make test           # Run all tests
+make lint           # Run linters (ruff + eslint)
+make seed           # Seed database with sample data
+make check-env      # Validate environment variables
+```
+
+## Key References
+
+- [README.md](README.md) — Full tech stack, API reference, environment variables
+- [GETTING_STARTED.md](GETTING_STARTED.md) — Setup walkthrough
+- [CONTRIBUTING.md](CONTRIBUTING.md) — PR process and coding standards
+- [SECURITY.md](SECURITY.md) — Security controls documentation
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Database and data flow decisions
+- [docs/MONITORING.md](docs/MONITORING.md) — Prometheus/Grafana operations guide
