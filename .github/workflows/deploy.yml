@@ -55,7 +55,7 @@ jobs:
       group: deploy-staging
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Deploy to Render (staging)
         run: |
@@ -101,7 +101,7 @@ jobs:
       group: deploy-production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Deploy to Render (production)
         run: |
