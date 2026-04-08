@@ -1,8 +1,33 @@
 # DualStack
 
-![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1520_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
+![Security](https://img.shields.io/badge/security-0_vulnerabilities-brightgreen) ![Tests](https://img.shields.io/badge/tests-1460_passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen) ![Bundle](https://img.shields.io/badge/bundle-102kB_shared-brightgreen) ![Deploy](https://img.shields.io/badge/deploy-84s-brightgreen) ![Built with PairCoder](https://img.shields.io/badge/built%20with-PairCoder-blueviolet)
 
 Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, file uploads, real-time WebSocket, and monitoring out of the box.
+
+## Quick Start
+
+```bash
+git clone https://github.com/YOUR_USERNAME/dualstack.git
+cd dualstack
+make setup   # Install deps, create .env files, run migrations
+make dev     # Start backend + frontend dev servers
+```
+
+Then open http://localhost:3000 (frontend) and http://localhost:8000/docs (API docs).
+
+> See [GETTING_STARTED.md](GETTING_STARTED.md) for a detailed walkthrough including environment variables and third-party service setup.
+
+## Why DualStack?
+
+Most SaaS starters are tutorials in disguise. DualStack is what you'd build if you spent months getting a production stack right:
+
+- **1,460 tests** across backend (pytest), frontend (Jest), and end-to-end (Playwright) with 95% coverage
+- **Security depth** -- CSP with nonces, HSTS, rate limiting, input sanitization, RBAC, audit logging
+- **Full monitoring stack** -- Prometheus + Grafana + Alertmanager with alerting rules, not just a metrics endpoint
+- **Real auth and payments** -- Clerk JWT verification (not mock auth) and Stripe with webhook handling
+- **Production patterns** -- health probes, structured logging, background jobs, presigned uploads, WebSocket with JWT
+
+Skip the boilerplate. Start building your product.
 
 ## What's Included
 
@@ -19,7 +44,7 @@ Production-ready **FastAPI + Next.js** SaaS starter kit with auth, payments, fil
 - **Health Checks** -- Kubernetes liveness + readiness probes
 - **Background Jobs** -- APScheduler for async task scheduling
 - **Email** -- Resend transactional email (infrastructure-ready: service + templates included, wire your own triggers)
-- **Testing** -- pytest (1026 tests, backend) + Jest + Playwright (494 tests, frontend)
+- **Testing** -- pytest (927 tests, backend) + Jest + Playwright (533 tests, frontend)
 - **Generic CRUD Entity** -- "Items" module demonstrating the full pattern to extend
 
 ## Tech Stack
@@ -57,7 +82,7 @@ dualstack/
 │   │   ├── admin/            # Admin dashboard (user mgmt, audit, health)
 │   │   ├── billing/          # Stripe integration (checkout, portal, webhooks)
 │   │   └── files/            # File upload/download (S3/R2 presigned URLs)
-│   ├── tests/                # pytest (1026 tests, 95% coverage)
+│   ├── tests/                # pytest (927 tests, 95% coverage)
 │   ├── alembic/              # DB migrations
 │   └── scripts/              # Seed scripts
 ├── frontend/                 # Next.js 15 (TypeScript)
@@ -73,9 +98,7 @@ dualstack/
     └── alertmanager/
 ```
 
-## Quickstart
-
-See [GETTING_STARTED.md](GETTING_STARTED.md) for a detailed walkthrough.
+## Setup
 
 ### Prerequisites
 
@@ -83,15 +106,6 @@ See [GETTING_STARTED.md](GETTING_STARTED.md) for a detailed walkthrough.
 - Node.js 18+
 - pnpm (`npm install -g pnpm` or `corepack enable`)
 - Docker (for monitoring stack)
-
-### Quick Start (Makefile)
-
-```bash
-make setup   # Install deps, create .env files, run migrations
-make dev     # Start backend, frontend, and monitoring
-```
-
-Edit `backend/.env` and `frontend/.env.local` with your Clerk, Stripe, and database keys.
 
 ### Available Make Targets
 
@@ -312,12 +326,12 @@ Use any future expiry date, any CVC, and any postal code.
 ## Running Tests
 
 ```bash
-# Backend (863 tests)
+# Backend (927 tests)
 cd backend
 pip install -r requirements-dev.txt
 pytest --cov=app --cov-report=term-missing tests/
 
-# Frontend (494 tests)
+# Frontend (521 tests + 12 e2e)
 cd frontend
 pnpm test
 pnpm run test:coverage
@@ -491,9 +505,13 @@ const navItems = [
 2. Edit `frontend/src/app/(dashboard)/billing/page.tsx` to match your plan names and pricing
 3. Modify `backend/app/billing/plans.py` to adjust tier limits and features
 
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to submit pull requests, report issues, and suggest improvements.
+
 ## Built With
 
-This project was built using [PairCoder](https://github.com/bpsai-labs/paircoder) -- an AI-augmented pair programming framework for sprint-based development with enforcement gates, typed memory, and Trello integration.
+This project was built using [PairCoder](https://paircoder.ai) -- an AI-augmented pair programming framework for sprint-based development with enforcement gates, typed memory, and Trello integration.
 
 ## License
 
