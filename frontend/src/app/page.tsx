@@ -53,12 +53,12 @@ export default function Home() {
         <p>
           Built and audited with{' '}
           <a
-            href="https://github.com/bpsai-labs/paircoder"
+            href="https://claude.ai/code"
             className="text-blue-400 underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            PairCoder
+            Claude Code
           </a>
         </p>
       </footer>

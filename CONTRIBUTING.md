@@ -151,8 +151,8 @@ scripts/         # Utility scripts (seed, env check, smoke test)
 
 ## Questions?
 
-- **Bug reports and feature requests**: Open a [GitHub Issue](https://github.com/bpsai-kit/dualstack/issues)
-- **Discussions**: Use [GitHub Discussions](https://github.com/bpsai-kit/dualstack/discussions) for questions and ideas
+- **Bug reports and feature requests**: Open a [GitHub Issue](https://github.com/YOUR_USERNAME/dualstack/issues)
+- **Discussions**: Use [GitHub Discussions](https://github.com/YOUR_USERNAME/dualstack/discussions) for questions and ideas
 
 ## License
 

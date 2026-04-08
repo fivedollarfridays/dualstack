@@ -37,7 +37,7 @@ name: Deploy
 
 # Disabled — self-hosting with Docker Compose.
 # Re-enable when a managed deployment target (Render, Fly.io, etc.) is configured.
-# See: https://github.com/fivedollarfridays/dualstack/issues/TBD
+# See: https://github.com/YOUR_USERNAME/dualstack/issues
 on:
   workflow_dispatch:  # manual-only until deployment target is configured
 
