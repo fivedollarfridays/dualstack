@@ -35,20 +35,20 @@ class TestReadmeTestCounts:
     def test_readme_test_count_badge(self) -> None:
         text = (ROOT / "README.md").read_text()
         # Badge line uses format: tests-NNNN_passing
-        assert "tests-1520_passing" in text, (
-            "README badge must show 1520 tests passing"
+        assert "tests-1460_passing" in text, (
+            "README badge must show 1460 tests passing"
         )
 
     def test_readme_test_count_backend(self) -> None:
         text = (ROOT / "README.md").read_text()
-        assert "1026 tests" in text, (
-            "README must reference 1026 backend tests"
+        assert "927 tests" in text, (
+            "README must reference 927 backend tests"
         )
 
     def test_readme_test_count_frontend(self) -> None:
         text = (ROOT / "README.md").read_text()
-        assert "494 tests" in text, (
-            "README must reference 494 frontend tests"
+        assert "533 tests" in text, (
+            "README must reference 533 frontend tests"
         )
 
 
