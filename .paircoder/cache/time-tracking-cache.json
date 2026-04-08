@@ -1090,5 +1090,19 @@
       }
     ],
     "total_seconds": 130.533954
+  },
+  "OSS1.3": {
+    "entries": [
+      {
+        "id": "local-20260407211937",
+        "task_id": "OSS1.3",
+        "description": "OSS1.3: Delete marketplace test files",
+        "start": "2026-04-07T21:19:37.248490",
+        "end": "2026-04-07T21:22:24.324549",
+        "duration_seconds": 167.076059,
+        "provider_id": null
+      }
+    ],
+    "total_seconds": 167.076059
   }
 }

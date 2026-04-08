@@ -5,9 +5,10 @@ plan: plan-sprint-1-engage
 type: feature
 priority: P0
 complexity: 1
-status: pending
+status: done
 sprint: '1'
 depends_on: []
+completed_at: '2026-04-07T21:22:24.202291'
 ---
 
 # Delete marketplace test files
@@ -16,9 +17,9 @@ Delete test files that validate the paid product experience: `tests/test_paircod
 
 # Acceptance Criteria
 
-- [ ] `tests/test_paircoder_branding.py` deleted
-- [ ] `tests/test_listing_md.py` deleted
-- [ ] `tests/test_buyer_experience.py` deleted
-- [ ] `grep -rn "test_paircoder_branding\|test_listing_md\|test_buyer_experience" tests/` returns no results
-- [ ] README test count badge updated to actual count
-- [ ] Full test suite passes with no import errors
+- [x] `tests/test_paircoder_branding.py` deleted
+- [x] `tests/test_listing_md.py` deleted
+- [x] `tests/test_buyer_experience.py` deleted
+- [x] `grep -rn "test_paircoder_branding\|test_listing_md\|test_buyer_experience" tests/` returns no results
+- [x] README test count badge updated to actual count
+- [x] Full test suite passes with no import errors
