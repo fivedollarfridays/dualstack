@@ -2,6 +2,17 @@
 
 This document describes the security controls implemented in DualStack. Every claim is verifiable in the referenced source files.
 
+## Reporting a Vulnerability
+
+If you discover a security vulnerability, please report it responsibly:
+
+1. **GitHub Security Advisories (preferred):** Use the **Security** tab in this repository to open a private advisory. This keeps the report private until a fix is released.
+2. **Email:** Send details to **security@dualstack.dev**.
+
+**Please do not** open a public GitHub issue for security vulnerabilities.
+
+We will acknowledge your report within 48 hours and aim to release a fix within 7 days for critical issues. After the fix is published, we will credit you in the release notes (unless you prefer to remain anonymous).
+
 ## Content Security Policy (CSP)
 
 **Backend** (`backend/app/core/security_headers.py`): Applies a restrictive CSP to all non-JSON responses: `default-src 'self'; script-src 'none'; style-src 'none'; frame-ancestors 'none'; form-action 'none'`. JSON API responses omit CSP since browsers do not render them. Additional headers include HSTS (1 year, includeSubDomains, preload), X-Frame-Options DENY, X-Content-Type-Options nosniff, and a restrictive Permissions-Policy.
