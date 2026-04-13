@@ -39,7 +39,7 @@ slowapi==0.1.9
 alembic==1.18.4
 
 # Email
-resend==2.26.0
+resend==2.27.0
 
 # Object storage
 boto3==1.42.88
