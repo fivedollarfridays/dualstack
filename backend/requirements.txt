@@ -17,7 +17,7 @@ sqlalchemy-libsql==0.2.0
 
 # Config
 python-dotenv==1.2.2
-python-multipart==0.0.22
+python-multipart==0.0.26
 
 # Payments
 stripe==14.4.1
