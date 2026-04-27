@@ -20,7 +20,7 @@ python-dotenv==1.2.2
 python-multipart==0.0.26
 
 # Payments
-stripe==14.4.1
+stripe==15.1.0
 
 # Logging
 structlog==25.5.0
